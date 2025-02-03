@@ -121,7 +121,8 @@ if ("unitTest"%in%args){
 #### deployment ####
 # load data
 tree <- read.tree(args[1])
-tree <- root(tree, args[2])
+rootName = tree$tip.label[grep(args[2],tree$tip.label)]
+tree <- root(tree, rootName)
 TargetsName <- read.table(args[3])[,1]
 
 # tree <- read.tree("Dropbox/postDoc/projects/p_phyloGWAS/output/RAxML_bestTree.OG0000928.tree")
