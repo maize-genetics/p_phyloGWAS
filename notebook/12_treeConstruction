@@ -9,6 +9,7 @@ find output/OrthofinderMAFFT_additionalOGs -type f|cut -d / -f 3|sed 's/_mafft.f
 
 ## 4d species phylogeny
 ## -l 0
+find output/CDSMSAPerOG_gs -name *.fa -type f -empty -delete
 find output/CDSMSAPerOG_gs -name *.gs.fa -type f | parallel -j 30 "sed 's/> />/g' {} | /programs/seqtk/seqtk seq -l0 > {= s/.gs.fa/.gs.l0.fa/  =}"
 
 ## generate dummy features
