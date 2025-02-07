@@ -121,7 +121,7 @@ if ("unitTest"%in%args){
 #### deployment ####
 # load data
 tree <- read.tree(args[1])
-rootName = tree$tip.label[grep(args[2],tree$tip.label)]
+rootName = tree$tip.label[grep(args[2],tree$tip.label)[1]]
 tree <- root(tree, rootName)
 TargetsName <- read.table(args[3])[,1]
 
