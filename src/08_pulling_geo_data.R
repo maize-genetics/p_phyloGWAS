@@ -66,7 +66,7 @@ gbif_data <- foreach::foreach(j = 1:length(missing_taxa),  .packages = c('rgbif'
     if(nrow(data) >0)
     {
       # saving all metadata
-      data.table::fwrite(file = paste0(path_species,'/',data_name,'.csv'), data)
+      data.table::fwrite(file = paste0(path_species,'/',data_name,'.tsv'), data,sep ="\t")
       
       output <-   data.frame(scientificName=missing_taxa[j],decimalLatitude=data$decimalLatitude,decimalLongitude=data$decimalLongitude)
       #data[,c('key','scientificName','decimalLatitude','decimalLongitude')]
@@ -77,6 +77,18 @@ gbif_data <- foreach::foreach(j = 1:length(missing_taxa),  .packages = c('rgbif'
     return(output)
   }
 
+# to register as a derived dataset
+gbifData = data.table::fread("/workdir/sh2246/p_phyloGWAS/output/metadataFormalOut/species_metadata_gbif_merged.tsv",fill=Inf,sep = "\t",na.strings = "")
+derived_data <- gbifData[,6] %>%
+  group_by(datasetKey) %>% 
+  count()
+
+# derived_dataset(user = "shengkaihsu",pwd = "***!",
+#                 citation_data = derived_data,
+#                 title = "occurrence data for 614 Poaceae species with associated genome assemblies",
+#                 description = "This dataset is obtain using rgbif::occ_search() function for 614 Poaceae species.\n
+#                 In the subsequent analysis, this dataset is combined with occurrence data from BIEN database and furhter cleaned with CoordinateCleaner package.",
+#                 source_url = "https://doi.org/10.5281/zenodo.14967967")
 
 #'------------------------------------------------------------------------------------------------------------
 # (3) using BIEN to access Botanical Information and Ecology Network , https://bien.nceas.ucsb.edu/bien/ #####
@@ -106,7 +118,7 @@ for(j in 1:length(missing_taxa)){
   if(nrow(data) >0)
   {
     # saving all metadata
-    data.table::fwrite(file = paste0(path_species2,'/',data_name,'.csv'), data)
+    data.table::fwrite(file = paste0(path_species2,'/',data_name,'.tsv'), data,sep = "\t")
     
     output <-   data.frame(scientificName=missing_taxa[j],decimalLatitude=data$latitude,decimalLongitude=data$longitude)
     #data[,c('key','scientificName','decimalLatitude','decimalLongitude')]
