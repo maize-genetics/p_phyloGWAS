@@ -26,6 +26,7 @@ zeroshot = c()
 for(j in 1:length(prob)) { # loop through sequences
   if(j%%100==0) print(j)
   tmp = strsplit(as.character(testfasta[[j]]),"")[[1]]
+  colnames(prob[[j]]) = limma::strsplit2("LAGVSERTIDPKQNFYMHWC","")
   refProb = c()
   secProb = c()
   for(i in 1:length(tmp)){ # loop through sites (max of 999) fixed by Jingjing

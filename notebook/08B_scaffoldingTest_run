@@ -1,3 +1,0 @@
-#!/bin/bash
-
-ragtag.py scaffold -q 60 -f 10000 -i 0.5 –remove-small ref.fasta query.fasta
