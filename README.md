@@ -33,4 +33,5 @@ bash 00_gatherData.sh
 11. 
 
 # Contact
-Sheng-Kai Hsu (sh2246@cornell.edu)
+Sheng-Kai Hsu (sh2246@cornell.edu), Aimee Schulz, Charlie Hale
+
