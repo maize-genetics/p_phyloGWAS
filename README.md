@@ -1,5 +1,5 @@
 # Introduction
-This is the repository to store the scripts for cross-species GWAS projects (Life history & env. adaptation).
+This is the repository to store the notebooks and source scripts for cross-species GWAS projects (Life history & env. adaptation).
 
 ## Environment configuration and dataloading
 - Environment loading
