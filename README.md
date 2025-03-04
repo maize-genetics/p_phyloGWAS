@@ -31,3 +31,6 @@ bash 00_gatherData.sh
 9. HyPhy - RELAX (under construction)
 10. Literature curation for stress-inducible genes (Sheng-Kai & teams)
 11. 
+
+# Contact
+Sheng-Kai Hsu (sh2246@cornell.edu)
