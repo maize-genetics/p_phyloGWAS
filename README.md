@@ -7,7 +7,7 @@ This is the repository to store the scripts for cross-species GWAS projects (Lif
 # load conda env. from yaml
 conda create -n 
 # Fork this repo
-git clone git@github.com:maize-genetics/dna_language_model.git
+git clone git@github.com:maize-genetics/p_phyloGWAS
 ```
 
 - Key data can be found on cbsublfs1: https://docs.google.com/spreadsheets/d/1XzyAfph4fuamt4h22uD1OMzkXGQXlFWmwgw7zDncKKY/edit?usp=sharing
