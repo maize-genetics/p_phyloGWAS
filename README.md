@@ -1,7 +1,7 @@
-# Introduction
+# The Genetic basis of adaptive and life history evolution in Poaceae using Phylogenetic mixed model
 This is the repository to store the notebooks and source scripts for cross-species GWAS projects (Life history & env. adaptation).
 
-## Environment configuration and dataloading
+## Environment setup and data loading
 - Environment loading
 ```
 # load conda env. from yaml
