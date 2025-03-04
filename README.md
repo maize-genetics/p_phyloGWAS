@@ -1,8 +1,22 @@
+# Introduction
 This is the repository to store the scripts for cross-species GWAS projects (Life history & env. adaptation).
 
-Key data can be found on cbsublfs1: https://docs.google.com/spreadsheets/d/1XzyAfph4fuamt4h22uD1OMzkXGQXlFWmwgw7zDncKKY/edit?usp=sharing
+## Environment configuration and dataloading
+- Environment loading
+```
+# load conda env. from yaml
+conda create -n 
+# Fork this repo
+git clone git@github.com:maize-genetics/dna_language_model.git
+```
 
-Key steps in these projects include
+- Key data can be found on cbsublfs1: https://docs.google.com/spreadsheets/d/1XzyAfph4fuamt4h22uD1OMzkXGQXlFWmwgw7zDncKKY/edit?usp=sharing
+```
+#download all data
+bash 00_gatherData.sh
+```
+
+## Key steps in these projects include
 1. assembly and QC of the genomes (Aimee, Charlie)
 2. manual curation of the species identity of the genomes and life history habits
 3. collection of species occurrence coordinates and habitat environment characterization (Sheng-Kai: rbien and rgbif -> env GIS data -> quantiles summary)
