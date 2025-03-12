@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# copy amino acid per taxa in fasta
+rsync -av cbsublfs1:/data1/users/ajs692/panand_data/panand_gwas/aminoAcidPerTaxa/aminoAcidPerTaxa_orthofinder output/aminoAcidPerTaxa/
+rsync -av cbsublfs1:/data1/users/ajs692/panand_data/panand_gwas/aminoAcidPerTaxa/aminoAcidPerTaxa_orthofinder_additionalOGs output/aminoAcidPerTaxa/
+
+# merging
+find output/aminoAcidPerTaxa/aminoAcidPerTaxa_orthofinder/ -type f|cut -f 4 -d "/"| parallel -j 20 'cat output/aminoAcidPerTaxa/aminoAcidPerTaxa_orthofinder/{} output/aminoAcidPerTaxa/aminoAcidPerTaxa_orthofinder_additionalOGs/{} > output/aminoAcidPerTaxa/{}'
+
+#cleaning
+rm -r output/aminoAcidPerTaxa/aminoAcidPerTaxa_orthofinder/
+rm -r output/aminoAcidPerTaxa/aminoAcidPerTaxa_orthofinder_additionalOGs/
+
