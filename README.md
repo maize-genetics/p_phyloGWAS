@@ -37,5 +37,5 @@ bash notebook/00_gatherData.sh
 
 
 # Contact
-Sheng-Kai Hsu (sh2246@cornell.edu), Aimee Schulz, Charlie Hale
+Sheng-Kai Hsu (sh2246@cornell.edu), Aimee Schulz
 
