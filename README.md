@@ -23,13 +23,20 @@ bash notebook/00_gatherData.sh
 4. OG construction and miniProt search (Sheng-Kai: orthoFinder among 32 high-quality representative genomes -> ancestral protein sequence reconstruction -> Aimee: query against all assemblies)
 5. MSA generation (Aimee)
 6. Species tree construction -> phyloK estimates (Sheng-Kai: angiosperm 353 loci -> 353 gene trees (pruned to 1 tips per taxa) -> species tree
-7. per OG summary stats: 
+7. per OG summary stats:
+ 
 (1) premature stop codon calling (Sheng-Kai) 
+
 (2) tip-to-outgroup dN/dS calculation (Sheng-Kai) 
+
 (3) avg. residue/nucleotide confidence score per sequence (ESM2: Sheng-Kai; PlantCaduceus: Aimee)
-8. Linear modeling: ASREML & ASREMLPlus (Sheng-Kai, Aimee and Charlie: still working on)
+
+9. Linear modeling: ASREML & ASREMLPlus (Sheng-Kai, Aimee and Charlie: still working on)
+
 (1) association (genome-wide features; per OG)
+
 (2) prediction
+
 10. HyPhy - RELAX (Sheng-Kai: under construction; need SCINET codes)
 11. Literature curation for stress-inducible genes (Sheng-Kai & teams)
 
