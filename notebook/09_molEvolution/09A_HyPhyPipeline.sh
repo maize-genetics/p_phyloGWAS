@@ -11,8 +11,14 @@ find output/CDSMSAPerOG_gs/ -name "*.l0.fa" -type f| cut -d / -f 3|sed 's/.gs.l0
 mkdir output/target_PAML_20250203
 find output/CDSMSAPerOG_HyPhy_20250203/ -name "*.fa" -type f| cut -d / -f 3|sed 's/.fa//g' |parallel -j 40 "grep -f data/annual_assemblies_20250203.txt output/CDSMSAPerOG_HyPhy_20250203/{}.fa|sed 's/>//g' > output/target_PAML_20250203/{}.target"
 
+#warm/cold adapted
+mkdir output/targetHyPhy_cold_20250415
+find output/CDSMSAPerOG_HyPhy_20250415/ -name "*.fa" -type f| cut -d / -f 3|sed 's/.fa//g' |parallel -j 40 "grep -f output/coldAdpatedAssemblies.txt output/CDSMSAPerOG_HyPhy_20250203/{}.fa|sed 's/>//g' > output/targetHyPhy_cold_20250415/{}.target"
+mkdir output/targetHyPhy_warm_20250415
+find output/CDSMSAPerOG_HyPhy_20250415/ -name "*.fa" -type f| cut -d / -f 3|sed 's/.fa//g' |parallel -j 40 "grep -f output/warmAdpatedAssemblies.txt output/CDSMSAPerOG_HyPhy_20250203/{}.fa|sed 's/>//g' > output/targetHyPhy_warm_20250415/{}.target"
+
 ## step 3: RAxML gene tree generation
-mkdir cd output/geneTree_allOGs_20250203/
+mkdir output/geneTree_allOGs_20250203/
 find /workdir/sh2246/p_phyloGWAS/output/CDSMSAPerOG_HyPhy_20250203/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/CDSMSAPerOG_HyPhy_20250203/{}.fa -# 1 -w /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs_20250203/ -n {}.tree'
 
 ## step 4: tree labeling
@@ -23,3 +29,4 @@ mkdir output/HyPhyResult
 find output/geneTree_allOGs/ -name "*.fa" -type f| cut -d / -f 3|sed 's/.fa//g' | parallel -j 10 "/programs/hyphy-2.5.49/bin/hyphy relax --alignment output/CDSMSAPerOG_HyPhy_20250203/{}.fa --tree output/geneTree_allOGs_20250203/RAxML_Labeled_bestTree.{}_Relax.tree --test Foreground --reference Background --models Minimal --output output/HyPhyResult/{}.RELAX.json"
 
 ## to extract test statistics from json files into final output
+
