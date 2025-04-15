@@ -39,7 +39,7 @@ while (i < I(length(args)-1)) {
 }
 
 dat=read.dna(inDir,format = "fasta")
-sampleID = gsub(".fasta","",strsplit2(inDir,"/")[,ncol(strsplit2(inDir,"/"))])
+sampleID = gsub(".fa","",strsplit2(inDir,"/")[,ncol(strsplit2(inDir,"/"))])
 # dat = dat[sort(rownames(dat)),]
-d = dist.dna(dat,pairwise.deletion = T,as.matrix = T,model = "TN93",gamma = T)
+d = dist.dna(dat,pairwise.deletion = T,as.matrix = T,model = "K81",gamma = T)
 write.table(d,paste0(outDir,sampleID,"_Dist.txt"),quote = F,sep = "\t")
