@@ -42,9 +42,9 @@ while (i < I(length(args)-1)) {
 # dat = dat[sort(rownames(dat)),]
 sampleID = gsub(".txt","",strsplit2(inDir,"/")[,ncol(strsplit2(inDir,"/"))])
 dat = read.table(inDir,header = T)
-refIdx = grepl("Zm-B73",colnames(dat))
+refIdx = grepl("B73",colnames(dat))
 if (any(refIdx)){
-  d  = dat[,refIdx]
+  d  = dat[,which(refIdx)[1]]
   d = cbind(d, limma::strsplit2(rownames(d),":"))
   d = d[d[,4]=="0",]
   d = d[,-4]
