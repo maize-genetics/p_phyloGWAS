@@ -53,6 +53,6 @@ if (any(refIdx)){
   print("filtered")
   d = d[,-4]
   print("4th column removed")
-  write.table(d,paste0(outDir,sampleID,"_toB73.txt"),quote = F,sep = "\t")
+  write.table(d,paste0(outDir,sampleID,"_toB73.txt"),quote = F,sep = "\t",row.names = F,col.names = F)
   
 }
