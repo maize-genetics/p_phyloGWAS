@@ -46,9 +46,13 @@ refIdx = grepl("B73",colnames(dat))
 print(which(refIdx))
 if (any(refIdx)){
   d  = dat[,which(refIdx)[1]]
+  print("got distToRef")
   d = cbind(d, limma::strsplit2(rownames(d),":"))
+  print("pasted")
   d = d[d[,4]=="0",]
+  print("filtered")
   d = d[,-4]
+  print("4th column removed")
   write.table(d,paste0(outDir,sampleID,"_toB73.txt"),quote = F,sep = "\t")
   
 }
