@@ -47,7 +47,7 @@ print(which(refIdx))
 if (any(refIdx)){
   d  = dat[,which(refIdx)[1]]
   print("got distToRef")
-  d = cbind(d, limma::strsplit2(rownames(d),":"))
+  d = cbind(d, limma::strsplit2(rownames(dat),":"))
   print("pasted")
   d = d[d[,4]=="0",]
   print("filtered")
