@@ -1,0 +1,457 @@
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.4     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::between()     masks data.table::between()
+✖ dplyr::filter()      masks stats::filter()
+✖ dplyr::first()       masks data.table::first()
+✖ lubridate::hour()    masks data.table::hour()
+✖ lubridate::isoweek() masks data.table::isoweek()
+✖ dplyr::lag()         masks stats::lag()
+✖ dplyr::last()        masks data.table::last()
+✖ lubridate::mday()    masks data.table::mday()
+✖ lubridate::minute()  masks data.table::minute()
+✖ lubridate::month()   masks data.table::month()
+✖ lubridate::quarter() masks data.table::quarter()
+✖ lubridate::second()  masks data.table::second()
+✖ purrr::transpose()   masks data.table::transpose()
+✖ lubridate::wday()    masks data.table::wday()
+✖ lubridate::week()    masks data.table::week()
+✖ lubridate::yday()    masks data.table::yday()
+✖ lubridate::year()    masks data.table::year()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+
+Attaching package: ‘ape’
+
+The following object is masked from ‘package:dplyr’:
+
+    where
+
+Loading required package: phytools
+Loading required package: maps
+
+Attaching package: ‘maps’
+
+The following object is masked from ‘package:purrr’:
+
+    map
+
+Loading required package: Matrix
+
+Attaching package: ‘Matrix’
+
+The following objects are masked from ‘package:tidyr’:
+
+    expand, pack, unpack
+
+Online License checked out Sat Sep 13 19:45:17 2025
+Loading ASReml-R version 4.2
+
+[1] "start loading data"
+[1] "trait data loaded"
+[1] "master table loaded"
+[1] "phyloK loaded"
+[1] "tree loaded"
+                                                     assemblyID  envPC_5
+10wheat_assembly_jagger                 10wheat_assembly_jagger -0.39494
+10wheat_assembly_stanley               10wheat_assembly_stanley -0.39494
+10wheat_assembly_lancer                 10wheat_assembly_lancer -0.39494
+Triticum_aestivum_Claire_EIv1.1 Triticum_aestivum_Claire_EIv1.1 -0.39494
+WEW_v2.1                                               WEW_v2.1  0.60664
+Svevo.v1                                               Svevo.v1  0.42735
+[1] "modeling start"
+                    OG               BIC_full            BIC_reduced 
+           "OG0000327"     "663.226670728279"     "639.120639774942" 
+                    LR                      p               phyloVAE 
+    "9.66698954410253"   "0.0852399294277575"    "0.896532821740513" 
+              totalVar       partialCoeff_PAV      partialCoeff_dNdS 
+   "0.940877830607001"    "-0.83541662987415"  "-0.0377177538108095" 
+     partialCoeff_ESM2  partialCoeff_plantCad       partialCoeff_PMS 
+"-0.00245760053743179"  "-0.0777052319459235"   "-0.479058240538477" 
+          partialP_PAV          partialP_dNdS          partialP_ESM2 
+  "0.0132052228761946"    "0.348096354536985"    "0.879071970597307" 
+     partialP_plantCad           partialP_PMS 
+  "0.0962068627660553"    "0.259159674637023" 
+[1] "perOG modeling start"
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+Terms with zero df listed in attribute 'zerodf' of the wald table.
+[1] "perOG modeling done and saved"
+  [1] "OG0000427" "OG0000742" "OG0000790" "OG0001043" "OG0001332" "OG0001938"
+  [7] "OG0002225" "OG0002291" "OG0002414" "OG0002460" "OG0002631" "OG0002643"
+ [13] "OG0002709" "OG0002860" "OG0002867" "OG0003470" "OG0003555" "OG0003895"
+ [19] "OG0003980" "OG0004081" "OG0004196" "OG0004207" "OG0004278" "OG0004349"
+ [25] "OG0004480" "OG0004510" "OG0004585" "OG0004597" "OG0005291" "OG0005329"
+ [31] "OG0005576" "OG0005671" "OG0005716" "OG0005757" "OG0005813" "OG0006193"
+ [37] "OG0006299" "OG0006546" "OG0006667" "OG0006688" "OG0006780" "OG0006791"
+ [43] "OG0006937" "OG0007147" "OG0007275" "OG0007333" "OG0007367" "OG0007379"
+ [49] "OG0007507" "OG0007556" "OG0007595" "OG0007770" "OG0008072" "OG0008517"
+ [55] "OG0008830" "OG0008950" "OG0009278" "OG0009349" "OG0009593" "OG0009816"
+ [61] "OG0010087" "OG0010330" "OG0010486" "OG0011176" "OG0011477" "OG0011942"
+ [67] "OG0012017" "OG0012067" "OG0012273" "OG0012905" "OG0012922" "OG0013068"
+ [73] "OG0013519" "OG0013551" "OG0013628" "OG0013811" "OG0013894" "OG0013950"
+ [79] "OG0013967" "OG0014078" "OG0014197" "OG0014257" "OG0014288" "OG0014592"
+ [85] "OG0014672" "OG0014734" "OG0015031" "OG0015131" "OG0015279" "OG0015399"
+ [91] "OG0015910" "OG0016239" "OG0016905" "OG0017012" "OG0017298" "OG0017385"
+ [97] "OG0017393" "OG0017518" "OG0017698" "OG0017993" "OG0018023" "OG0018642"
+[103] "OG0019366" "OG0019543" "OG0019545" "OG0019946" "OG0020336" "OG0020504"
+[109] "OG0020534" "OG0021060" "OG0021085" "OG0021228" "OG0021772" "OG0021910"
+[115] "OG0022207" "OG0023809" "OG0023842" "OG0024450" "OG0025286" "OG0025990"
+[121] "OG0027099" "OG0028889" "OG0029041" "OG0030603" "OG0033775"
