@@ -217,9 +217,9 @@ if(permulation&length(topOG_list)>1){
     return(tmp[,5])
   })
   rownames(testRes_permMat) = topOG_list
-  testRes_envPC1PeOG_permMat = cbind(testRes$p[testRes$p < 0.001],
+  testRes_permMat = cbind(testRes$p[testRes$p < 0.001],
                                      testRes_permMat[topOG_list,])
-  emp_p = apply(testRes_permMat,1,function(x) sum(x[-1]<x[1],na.rm = T))/ncol(testRes_permMat)
+  emp_p = apply(testRes_permMat,1,function(x) sum(x[-1]<x[1],na.rm = T))/ncol(testRes_permMat[,-1])
   testRes$emp_p = NA
   testRes$emp_p[testRes$p < 0.001] = emp_p
   write.table(testRes,paste0(dir.out,"/","ASREML_res_empPadded.txt"),quote = F,sep = "\t",row.names = F)
