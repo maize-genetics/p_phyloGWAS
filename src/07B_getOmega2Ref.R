@@ -11,6 +11,7 @@ library(Biostrings)
 library(MSA2dist)
 library(limma)
 library(doParallel)
+library(tidyverse)
 
 # patches to fix bug on negative dn/ds
 codonmat2pnps <- function(codonmat){
@@ -160,7 +161,7 @@ dnastring2kaks_modified <- function(cds,
       OUT <- foreach(j = seq_len(ncol(codonmat)), .combine = rbind, .packages = c('foreach')) %dopar% {
         # if (j != ref_index) {
           res <- codonmat2pnps(codonmat[, c(ref_index, j)])
-          data.frame(Comp1 = ref_index, Comp2 = j, t(as.data.frame(res)))
+          data.frame(Comp1 = ref_index, Comp2 = j, t(unlist(unclass(res))))
         # }
       }
       parallel::stopCluster(cl)
@@ -179,7 +180,7 @@ dnastring2kaks_modified <- function(cds,
       
       OUT <- foreach(j = seq_len(length(cds)), .combine = rbind, .packages = c('foreach')) %dopar% {
         # if (j != ref_index) {
-          res <- MSA2dist::codonmat2pnps(MSA2dist::dnastring2codonmat(MSA2dist::cds2codonaln(cds[ref_index], cds[j], ...)))
+          res <- codonmat2pnps(dnastring2codonmat(cds2codonaln(cds[ref_index], cds[j], ...)))
           data.frame(Comp1 = ref_index, Comp2 = j, seq1 = cds.names[ref_index], seq2 = cds.names[j], t(res))
         # }
       }
@@ -260,8 +261,8 @@ while (i < I(length(args)-1)) {
 }
 
 #loading
-# inDir = "~/Dropbox/postDoc/projects/p_phyloGWAS/output/OG0005032_mafft.fa"
-# ref = "ASM1935983v1"
+# inDir = "/workdir/sh2246/cop1_test/cop1_dup.cleanedMSA.cdna.fa"
+# ref = "Sorghum_bicolor.Sorghum_bicolor_NCBIv3.dna.toplevel:COP1"
 
 dat=readDNAStringSet(inDir,format = "fasta")
 
