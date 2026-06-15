@@ -1,4 +1,4 @@
-# Rscript to plot Figure 3j
+# Rscript to plot Figure S1
 # author: Sheng-Kai Hsu
 # date created: 2024.04.30
 # date last edit: 2024.04.30

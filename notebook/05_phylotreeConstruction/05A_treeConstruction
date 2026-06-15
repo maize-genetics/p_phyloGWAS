@@ -4,63 +4,28 @@
 ## gap strip
 mkdir output/CDSMSAPerOG_gs
 mkdir output/ref
-find output/OrthofinderMAFFT_additionalOGs -type f|cut -d / -f 3|sed 's/_mafft.fa//g' |parallel -j 30 "Rscript src/03_Ungap_MSA_SKH_v4.R output/OrthofinderMAFFT_additionalOGs/{}_mafft.fa ASM1935983v1 output/CDSMSAPerOG_gs/{}.gs.fa output/ref/{}.ref"
-
-
-## 4d species phylogeny
-## -l 0
-find output/CDSMSAPerOG_gs -name *.fa -type f -empty -delete
-find output/CDSMSAPerOG_gs -name *.gs.fa -type f | parallel -j 30 "sed 's/> />/g' {} | /programs/seqtk/seqtk seq -l0 > {= s/.gs.fa/.gs.l0.fa/  =}"
-
-## generate dummy features
-mkdir output/featureFiles_v2/
-find output/CDSMSAPerOG_gs/ -name *.gs.l0.fa -type f| cut -d / -f 3|sed 's/.gs.l0.fa//g' |parallel -j 30 "head -n 2 output/CDSMSAPerOG_gs/{}.gs.l0.fa |tail -n 1 |wc -c| awk '{print \"dummy\tCDS\t\"1\"\t\"\$0-1\"\t.\t+\t.\"\"\tID = gene1\"}' > output/featureFiles_v2/{}.tmp"
-
-find output/CDSMSAPerOG_gs/ -name *.gs.l0.fa -type f| cut -d / -f 3|sed 's/.gs.l0.fa//g' | parallel -j 30 'paste -d "\t" output/ref/{}.ref output/featureFiles_v2/{}.tmp > output/featureFiles_v2/{}.gff3'
-
-## get 4d MSA
-mkdir output/CDSMSAPerOG_4d
-find output/CDSMSAPerOG_gs/ -name *.gs.l0.fa -type f| cut -d / -f 3|sed 's/.gs.l0.fa//g' | parallel -j 30 'Rscript src/04_run_get4d.msa.R --feature output/featureFiles_v2/{}.gff3 --input output/CDSMSAPerOG_gs/{}.gs.l0.fa --output output/CDSMSAPerOG_4d/{}.4d.fa' 
-
-## construct RAxML tree per gene
-# mkdir output/geneNeutralTree_v2/
-# cd output/geneNeutralTree_v2/
-# find /workdir/sh2246/p_evolBNI/output/CDSMSAPerOG_v4_4d/ -name *.4d.fa -type f| cut -d / -f 7|sed 's/.4d.fa//g' | parallel -j 30 '/workdir/sh2246/p_panAndOGASR/paml_pipeline/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_evolBNI/output/CDSMSAPerOG_v4_4d/{}.4d.fa -o {} -# 1 -n {}.tree'
-# cd /workdir/sh2246/p_evolBNI/
-# mkdir output/localNeutralTree/
-# cd output/localNeutralTree/
-# find /workdir/sh2246/p_evolBNI/output/local_neutral_aln -name *.fa -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 30 '/workdir/sh2246/p_panAndOGASR/paml_pipeline/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_evolBNI/output/local_neutral_aln/{}.fa -# 1 -n {}.tree'
-# cd /workdir/sh2246/p_evolBNI/
-
-# run 07_neutralphylogeny for now (only 904 genes have real 4d sites...)
-# metadata is not necessary
-# Rscript src/05_4dMSA_sampling.R data/BNITaxa_translateTable.csv output/CDSMSAPerOG_v4_4d/ output/aln_4d_random5k_20bp_v2.fasta 
-# rewrite needed to take care of several hard-coded parameters and the multiple seq per taxa (pick the longer one or the first one)
-
-mkdir output/neutralTree_v2/
-cd output/neutralTree_v2/
-/workdir/sh2246/p_panAndOGASR/paml_pipeline/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/aln_4d_800taxa.fasta -# 1 -n aln_4d_800taxa.tree
-cd /workdir/sh2246/p_phyloGWAS/
+find output/OrthofinderMAFFT -type f|cut -d / -f 3|sed 's/_mafft.fa//g' |parallel -j 30 "Rscript src/03_Ungap_MSA_SKH_v4.R output/OrthofinderMAFFT/{}_mafft.fa ASM1935983v1 output/CDSMSAPerOG_gs/{}.gs.fa output/ref/{}.ref"
 
 ## gene tree
 cd output/geneTree_allOGs/
-find /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 '/workdir/sh2246/p_panAndOGASR/paml_pipeline/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs/{}.fa -# 1 -n {}.tree'
+find /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 '/workdir/sh2246/p_phyloGWAS/src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs/{}.fa -# 1 -n {}.tree'
 cd /workdir/sh2246/p_phyloGWAS/
 
 
 # angiosperm 353 loci gene tree for astral
 cd output/geneTree_angiosperm353/
-find /workdir/sh2246/p_phyloGWAS/output/geneTree_angiosperm353/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 '/workdir/sh2246/p_panAndOGASR/paml_pipeline/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/geneTree_angiosperm353/{}.fa -# 1 -n {}.tree'
+find /workdir/sh2246/p_phyloGWAS/output/geneTree_angiosperm353/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 '/workdir/sh2246/p_phyloGWAS/src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/geneTree_angiosperm353/{}.fa -# 1 -n {}.tree'
 cd /workdir/sh2246/p_phyloGWAS/
 
 
-# astral tree (no tip branch length; left out)
+# astral tree 
 printf "%s\n" output/geneTree_angiosperm353/RAxML_bestTree* | xargs cat > output/angiospermGeneTreeForest.nwk
-# while IFS=$'\t' read -r pattern replacement; do sed -i "s/$pattern/$replacement/g" output/geneNeutralTreeForest.nwk; done < data/BNITaxa_translateTable_forTree.txt 
-# sed -i -E 's/Pavag*[GK]*.*:/pvagin:/g' output/geneNeutralTreeForest.nwk
-astral-pro -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353_astral.nwk
+astral-pro -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353.nwk
+# src/ASTER/bin/astral-pro3 -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353_astral3_20250416.nwk
 
 
+
+# miniprot ID matching
 miniprot --gff-only -t 30 data/Angiosperms353_orysaSequences.fasta output/poaceaeHelixerOG_ancSeq_gapRemoved_filtered.fa > output/angiosperm353ToOG.gff
 grep "Rank=1" output/angiosperm353ToOG.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/angiosperm353ToOG_mapping.txt
 
