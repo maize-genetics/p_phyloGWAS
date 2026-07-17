@@ -9,7 +9,7 @@ require(tidyverse)
 require(plyr)
 require(reshape2)
 
-bien_data_clean = data.table::fread('/workdir/sh2246/p_phyloGWAS_archived/output/envData/speciesRange/bien_coordinates_clean_2023.12.04.csv')
+bien_data_clean = data.table::fread('/workdir/sh2246/p_phyloGWAS/output/envData/speciesRange/bien_coordinates_clean_2023.12.04.csv')
 head(bien_data_clean)
 dim(bien_data_clean)
 

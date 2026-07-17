@@ -88,7 +88,7 @@ derived_data <- gbifData[,6] %>%
 #                 title = "occurrence data for 614 Poaceae species with associated genome assemblies",
 #                 description = "This dataset is obtain using rgbif::occ_search() function for 614 Poaceae species.\n
 #                 In the subsequent analysis, this dataset is combined with occurrence data from BIEN database and furhter cleaned with CoordinateCleaner package.",
-#                 source_url = "https://doi.org/10.5281/zenodo.14967966")
+#                 source_url = "https://doi.org/10.5281/zenodo.14968186")
 
 #'------------------------------------------------------------------------------------------------------------
 # (3) using BIEN to access Botanical Information and Ecology Network , https://bien.nceas.ucsb.edu/bien/ #####
