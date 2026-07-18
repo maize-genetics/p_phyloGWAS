@@ -83,7 +83,7 @@ manuscript's Data Availability Statement — expected, not a repo bug.
 | ASReml-R v4.2.0 (licensed, VSNi) | `src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz` | 08C, 08D | T1/T2 |
 | HyPhy 2.5.49 | `/programs/hyphy-2.5.49/bin/hyphy` | molecular evolution (selection tests) | T1 |
 | RAxML | `src/standard-RAxML/raxmlHPC` (vendored) | phylogenetic tree inference | T1 |
-| seqkit 0.15.0 | assumed pre-installed | sequence utilities | T1 |
-| miniprot | assumed pre-installed | 03C | T1 |
+| seqkit 0.15.0 | `/programs/seqkit-0.15.0/seqkit` (verified; not on default `PATH`) | sequence utilities | T1 |
+| miniprot | `/programs/miniprot-0.13/miniprot` (verified; not on default `PATH`) | 03C | T1 |
 | gffread | `/programs/bin/cufflinks/gffread` | annotation/GFF processing | T1 |
 | GNU parallel | `/programs/bin/parallel` | pipeline parallelization | T1 |
