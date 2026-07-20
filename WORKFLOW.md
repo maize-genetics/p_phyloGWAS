@@ -1,6 +1,6 @@
 # WORKFLOW.md — Analysis Pipeline, Stage by Stage
 
-The pipeline runs as a numbered sequence of stages (`01` → `10`). Each row below maps in
+The pipeline runs as a numbered sequence of stages (`01` → `11`). Each row below maps in
 the data it needs (cross-referenced to `DATA.md`), the scripts/notebooks that do the work,
 and what it hands off to the next stage.
 
@@ -19,16 +19,24 @@ you want to re-derive them from scratch.
 | **01** `genomeAssembly` | Short-read genome assembly (megahit) | Raw sequencing reads (external; not tracked in this repo) | `notebook/01_genomeAssembly/README.md` — external pipeline: [bucklerlab/p_reelgene](https://bitbucket.org/bucklerlab/p_reelgene/src/master/short_read_assembly/) | Raw assembly FASTAs → `data/assemblies/` → 02 |
 | **02** `metadataCuration` | Merge PanAnd/LIMS QC metadata + manual species-ID curation into a filtered genome list | Poaceae accession metadata; per-assembly QC statistics | `02A_metadataProcessing.ipynb`, `02B_furtherFilter.ipynb` | Filtered metadata table → 03, 05, 08 |
 | **03** `orthogroup` | OrthoFinder (32 representative genomes) → orthogroups → ancestral AA sequence reconstruction → miniprot cross-mapping → OG filtering | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; OG→maize mapping; miniprot GFF annotations | `03A_buildHelixerOG.sh`, `03B_OGFilter.ipynb`, `03C_miniProtResult_eval.ipynb`, `03D_OGtranslation.R` | Filtered OG list + ancestral sequences → 04, 07 |
-| **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 |
-| **05** `phylotreeConstruction` | Gap-strip CDS MSAs → RAxML gene trees → ASTRAL-Pro species tree → phylogenetic K (relatedness) matrix | Angiosperms353 Oryza reference; maize v5 mRNA reference (regenerates OG→maize mapping and the species-name list as a side effect) | `05A_treeConstruction`, `05B_neutralPhylogenyVisualization.ipynb` | Species tree + phyloK matrix → 08, 09 |
+| **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
+| **05** `phylotreeConstruction` | Gap-strip CDS MSAs → RAxML gene trees → ASTRAL-Pro species tree → phylogenetic K (relatedness) matrix | Angiosperms353 Oryza reference; maize v5 mRNA reference (regenerates OG→maize mapping and the species-name list as a side effect) | `05A_treeConstruction`, `05B_neutralPhylogenyVisualization.ipynb` | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
 | **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06B_spCoordEnvData.sh`, `06C_visualizationEnvAdapt.ipynb`, `06D_supplFig_envPCpipeline.R` | envPC1–3 table (Fig. 1) → 08 |
 | **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; OrthoFinder protein MSAs; ESM2 weights; PlantCAD weights | `07Aa`/`07Ab`; `07Ba`/`07Bb` (SCINET); `07Ca`/`07Cb`/`07Cc` (SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
-| **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 10 |
-| **09** `molEvolution` | MSA cleaning → RAxML gene trees → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | Maize v5 GO annotation; OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 10 |
-| **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) → integrate ASReml + RELAX + expression evidence → final candidate OG list (Fig. 6 Sankey) | Per-species CDS FASTAs (stress genes); rice→OG mapping; DeepGO GO annotation; DEG study metadata; maize/switchgrass GO tables | `10A_DEG_IDconversion.sh`, `10B_candidateOGInvestigation.ipynb` | 17 high-confidence candidate OGs (final) |
+| **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
+| **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | Maize v5 GO annotation; OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
+| **10** `aprioriCandidate` (part 1) | OG→gene-ID mapping (Helixer) via miniprot | Per-species CDS FASTAs (stress genes); rice→OG mapping | `10A_DEG_IDconversion.sh` | Gene-ID mapping → 11 |
+| **11** `candidateOGInvestigation` (part 2 of `aprioriCandidate`) | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 6 Sankey) | DeepGO GO annotation; Maize v5 GO annotation; Switchgrass GO table; DEG study metadata | `10B_candidateOGInvestigation.ipynb` (file kept at this path — see note below) | 17 high-confidence candidate OGs (final) |
 
 `slurm/`, `XX_archived/`, and `*/archived/` subfolders hold SLURM job templates and
 superseded/exploratory notebooks — not part of the active sequence above.
+
+**Note on 10/11:** `10A_DEG_IDconversion.sh` and `10B_candidateOGInvestigation.ipynb` used
+to be presented as one stage. They're distinct enough in purpose (ID mapping vs. final
+candidate-list integration) to warrant separate numbers, so `10B` is now documented as its
+own stage, **11**. This is a documentation-only renumbering — the file itself is still at
+`notebook/10_aprioriCandidate/10B_candidateOGInvestigation.ipynb`, not physically moved or
+renamed (it has unrelated in-progress edits that shouldn't be disturbed).
 
 ---
 
