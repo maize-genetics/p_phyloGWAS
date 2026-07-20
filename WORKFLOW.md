@@ -26,17 +26,21 @@ you want to re-derive them from scratch.
 | **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
 | **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | Maize v5 GO annotation; OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
 | **10** `aprioriCandidate` (part 1) | OG→gene-ID mapping (Helixer) via miniprot | Per-species CDS FASTAs (stress genes); rice→OG mapping | `10A_DEG_IDconversion.sh` | Gene-ID mapping → 11 |
-| **11** `candidateOGInvestigation` (part 2 of `aprioriCandidate`) | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 6 Sankey) | DeepGO GO annotation; Maize v5 GO annotation; Switchgrass GO table; DEG study metadata | `10B_candidateOGInvestigation.ipynb` (file kept at this path — see note below) | 17 high-confidence candidate OGs (final) |
+| **11** `candidateOGInvestigation` | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 6 Sankey) | DeepGO GO annotation; Maize v5 GO annotation; Switchgrass GO table; DEG study metadata | `notebook/11_candidateOGInvestigation/11_candidateOGInvestigation.ipynb` | 17 high-confidence candidate OGs (final) |
 
 `slurm/`, `XX_archived/`, and `*/archived/` subfolders hold SLURM job templates and
 superseded/exploratory notebooks — not part of the active sequence above.
 
-**Note on 10/11:** `10A_DEG_IDconversion.sh` and `10B_candidateOGInvestigation.ipynb` used
-to be presented as one stage. They're distinct enough in purpose (ID mapping vs. final
-candidate-list integration) to warrant separate numbers, so `10B` is now documented as its
-own stage, **11**. This is a documentation-only renumbering — the file itself is still at
-`notebook/10_aprioriCandidate/10B_candidateOGInvestigation.ipynb`, not physically moved or
-renamed (it has unrelated in-progress edits that shouldn't be disturbed).
+**Note on 10/11:** `10A_DEG_IDconversion.sh` and the notebook formerly named
+`10B_candidateOGInvestigation.ipynb` used to be presented as one stage. They're distinct
+enough in purpose (ID mapping vs. final candidate-list integration) to warrant separate
+numbers and separate folders — the notebook has been moved and renamed to
+`notebook/11_candidateOGInvestigation/11_candidateOGInvestigation.ipynb` (its in-progress
+edits carried over with the move, untouched otherwise).
+
+**Note on notebook archiving:** `10B_stressInducedGene_enrichment.ipynb` had been
+mistakenly filed under `notebook/10_aprioriCandidate/archived/` despite being active
+(not superseded) — moved back up to `notebook/10_aprioriCandidate/`.
 
 ---
 
