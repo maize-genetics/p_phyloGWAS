@@ -58,7 +58,8 @@ the author) — not guessed.
 | OrthoFinder | 2.5.4 | 03 (orthogroup construction) | `envs/environment-tools.yml` |
 | miniprot | 0.13 | 03 (cross-mapping), 05 (tree construction), 10 (DEG ID conversion) | `envs/environment-tools.yml` |
 | RAxML | 8.2.12 | 05 (gene trees), 09 (gene trees for RELAX) | vendored source, `src/standard-RAxML` (compile from source; not a conda package) |
-| ASTER (astral-pro3) | commit `6df009e` | 05 (species tree) | vendored source, `src/ASTER` (compile from source; not a conda package — standardize on this going forward, even though the historical run used a bare `astral-pro` from PATH whose exact build is no longer known) |
+| astral-pro (`aster` package) | 1.16 | 05 (main species tree) | `envs/environment-tools.yml` |
+| ASTER (astral-pro3, vendored) | commit `6df009e` | 05 (secondary exploratory tree only, in 05B) | vendored source, `src/ASTER` (compile from source; not a conda package) |
 | HyPhy | 2.5.49 | 09 (RELAX) | `envs/environment-tools.yml` |
 | seqkit, gffread, GNU parallel | 0.15.0, unpinned, unpinned | utility use across multiple stages | `envs/environment-tools.yml` |
 | R | 4.2 | 02, 06, 08, 09, 11 (stats/envirotyping/modeling/visualization) | `envs/environment-r.yml` |

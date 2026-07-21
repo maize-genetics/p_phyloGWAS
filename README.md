@@ -11,13 +11,15 @@ git clone git@github.com:maize-genetics/p_phyloGWAS
   Python ML stack into one solve is slow/fragile. Activate whichever one a given stage needs
   (see `WORKFLOW.md`'s "Tools used across stages" table):
 ```
-conda env create -f envs/environment-tools.yml   # mafft, orthofinder, hyphy, seqkit, miniprot, gffread, parallel
+conda env create -f envs/environment-tools.yml   # mafft, orthofinder, hyphy, seqkit, miniprot, astral-pro, gffread, parallel
 conda env create -f envs/environment-r.yml       # R 4.2 + envirotyping/modeling/tree packages
 conda env create -f envs/environment-py.yml      # Python 3.11 + torch/transformers (ESM2/PlantCAD scoring)
 ```
-  RAxML (8.2.12) and ASTER (astral-pro3) are **not** in any environment file — they're vendored
-  as source in `src/standard-RAxML` and `src/ASTER` and need to be compiled once (see each
-  directory's own build instructions).
+  RAxML (8.2.12) is **not** in any environment file — it's vendored as source in
+  `src/standard-RAxML` and needs to be compiled once (see that directory's own build
+  instructions). `src/ASTER` is also vendored source (a newer `astral-pro3` build), but only
+  used for a secondary exploratory tree (05B) — the main species tree comes from
+  `envs/environment-tools.yml`'s `aster` package (provides `astral-pro`).
 
 - Licensed software (not distributed via conda, not covered by any `environment*.yml`):
   **ASReml-R**, used in stage 08 (`08C_perOGmodel.sh`, power simulation). The installer is
