@@ -1,0 +1,21 @@
+name: phyloGWAS-py
+channels:
+  - pytorch
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11           # confirmed with author: matches the pytorch-2-1 env used for
+  - pytorch=2.1.1         # ESM2/PlantCAD zero-shot scoring (notebook/07_summaryStats)
+  - transformers=4.40.0   #
+  - biopython             # src/*.py (Bio.SeqIO, Bio.Phylo)
+  - numpy
+  - pandas
+  - matplotlib
+  - tqdm
+  - msprime               # notebook/*.ipynb (Bio.Phylo / tskit-based simulation notebook)
+  - tskit
+
+# Stage 07's ESM2/PlantCAD scoring (07Ca/07Cb/07Cc) is documented as SCINET-GPU-only
+# (see WORKFLOW.md). This file installs a CPU/generic-CUDA pytorch build for portability;
+# on SCINET Atlas itself, follow SCINET's own module system for a CUDA build matched to
+# the allocated GPU node rather than relying on this file's pytorch build.

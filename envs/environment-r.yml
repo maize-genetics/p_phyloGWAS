@@ -1,0 +1,69 @@
+name: phyloGWAS-r
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.2            # confirmed with author: matches the R build the licensed ASReml-R
+                          # tarball (src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz) targets
+
+  # CRAN packages (r-* on conda-forge/bioconda)
+  - r-ape
+  - r-data.table
+  - r-doparallel
+  - r-dplyr
+  - r-geiger
+  - r-ggplot2
+  - r-phangorn
+  - r-phytools
+  - r-qqman
+  - r-reticulate
+  - r-rphast
+  - r-taxize
+  - r-testthat
+  - r-tidyr
+  - r-tidyverse
+  - r-bglr
+  - r-canprot
+  - r-cowplot
+  - r-desctools
+  - r-ggnewscale
+  - r-ggridges
+  - r-glmnet
+  - r-gridextra
+  - r-jsonlite
+  - r-lsd
+  - r-patchwork
+  - r-pheatmap
+  - r-phylolm
+  - r-plyr
+  - r-prroc
+  - r-raster
+  - r-reshape2
+  - r-rjson
+  - r-scales
+  - r-stringr
+  - r-terra
+  - r-upsetr
+  - r-viridis
+  - r-xgboost
+  - r-rgbif
+  - r-bien
+
+  # Bioconductor packages (bioconductor-* on bioconda)
+  - bioconductor-biostrings
+  - bioconductor-limma
+  - bioconductor-msa2dist
+  - bioconductor-rtracklayer
+  - bioconductor-treeio
+  - bioconductor-ggtree
+  - bioconductor-topgo
+
+# NOT included (licensed, per author instruction — install manually, see README.md
+# "Licensed software" section):
+#   - asreml       (src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz)
+#   - asremlPlus   (CRAN companion package to the above, only usable once asreml itself is installed)
+#
+# A few of the r-* names above (r-canprot, r-rphast, r-bien) are lower-traffic CRAN
+# packages that may not resolve on every conda channel snapshot; if `conda env create`
+# fails on one of them, install it from CRAN inside the env instead:
+#   R -e 'install.packages(c("canprot","rphast","BIEN"), repos="https://cloud.r-project.org")'

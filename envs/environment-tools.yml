@@ -1,0 +1,19 @@
+name: phyloGWAS-tools
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  # confirmed from the exact invocation paths hardcoded in the active scripts
+  - hyphy=2.5.49          # notebook/09_molEvolution/09A_HyPhyPipeline.sh (/programs/hyphy-2.5.49)
+  - seqkit=0.15.0         # notebook/03_orthogroup/03A_buildHelixerOG.sh, 09A_HyPhyPipeline.sh (/programs/seqkit-0.15.0)
+  - mafft=7.520           # notebook/04_msaGeneration/README.md (confirmed with author)
+  - orthofinder=2.5.4     # notebook/03_orthogroup/03A_buildHelixerOG.sh (confirmed with author)
+  - miniprot=0.13         # notebook/10_aprioriCandidate/10A_DEG_IDconversion.sh (confirmed with author)
+  - gffread               # notebook/03_orthogroup/03A_buildHelixerOG.sh; version not reproducibility-critical, left unpinned
+  - parallel              # GNU parallel, used for job fan-out throughout; version not reproducibility-critical
+
+# NOT included here (built from source, vendored in this repo instead of conda):
+#   - RAxML 8.2.12  -> src/standard-RAxML (compile with `make -f Makefile.SSE3.gcc` or similar; see src/standard-RAxML/README)
+#   - ASTER/astral-pro3 -> src/ASTER (see src/ASTER's own build instructions; this is what stage 05 should
+#     be standardized on going forward, per author, even though the historical run used bare `astral-pro`
+#     from PATH whose exact build is no longer known)
