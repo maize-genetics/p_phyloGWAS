@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd /workdir/sh2246/p_phyloGWAS/
+export PHYLOGWAS_ROOT="${PHYLOGWAS_ROOT:-/workdir/sh2246/p_phyloGWAS}"
+cd "${PHYLOGWAS_ROOT}/"
 
 
 ## step 1: MSA cleaning
@@ -9,7 +10,7 @@ find output/CDSMSAPerOG_gs/ -name "*.l0.fa" -type f| cut -d / -f 3|sed 's/.gs.l0
 
 ## step 2: RAxML gene tree generation
 mkdir output/geneTree_allOGs_20250203/
-find /workdir/sh2246/p_phyloGWAS/output/CDSMSAPerOG_HyPhy_20250203/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/CDSMSAPerOG_HyPhy_20250203/{}.fa -# 1 -w /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs_20250203/ -n {}.tree'
+find "${PHYLOGWAS_ROOT}/output/CDSMSAPerOG_HyPhy_20250203/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/CDSMSAPerOG_HyPhy_20250203/{}.fa -# 1 -w ${PHYLOGWAS_ROOT}/output/geneTree_allOGs_20250203/ -n {}.tree'
 
 # clean up MSA and rebuild tree for rhizome analyses (keep only perennial)
 mkdir output/CDSMSAPerOG_HyPhy_rhizome_20260303
@@ -19,7 +20,7 @@ cat output/candidateOG_rhizome.txt | parallel -j 35 'PAT=$(paste -sd"|" data/per
 find output/CDSMSAPerOG_HyPhy_rhizome_20260303/ -name "*.l0.fa" -type f| cut -d / -f 3|sed 's/.gs.l0.fa//g' | parallel -j 40 " /programs/hyphy-2.5.49/bin/hyphy cln Universal output/CDSMSAPerOG_HyPhy_rhizome_20260303/{}.gs.l0.fa No/No output/CDSMSAPerOG_HyPhy_rhizome_20260303/{}.fa" > output/MSAcleaning_perennial.log 2>&1
 rm output/CDSMSAPerOG_HyPhy_rhizome_20260303/*.gs.l0.fa
 mkdir output/geneTree_perennialOnly_rhizomeOGs_20260303/
-find /workdir/sh2246/p_phyloGWAS/output/CDSMSAPerOG_HyPhy_rhizome_20260303/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/CDSMSAPerOG_HyPhy_rhizome_20260303/{}.fa -# 1 -w /workdir/sh2246/p_phyloGWAS/output/geneTree_perennialOnly_rhizomeOGs_20260303/ -n {}.tree'
+find "${PHYLOGWAS_ROOT}/output/CDSMSAPerOG_HyPhy_rhizome_20260303/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/CDSMSAPerOG_HyPhy_rhizome_20260303/{}.fa -# 1 -w ${PHYLOGWAS_ROOT}/output/geneTree_perennialOnly_rhizomeOGs_20260303/ -n {}.tree'
 
 # clean up MSA and rebuild tree for annual analyses (keep only nonrhizomatous)
 mkdir output/CDSMSAPerOG_HyPhy_LH_20260415
@@ -29,7 +30,7 @@ cat output/candidateOG_lifeHistory2.txt | parallel -j 35 'PAT=$(paste -sd"|" dat
 find output/CDSMSAPerOG_HyPhy_LH_20260415/ -name "*.l0.fa" -type f| cut -d / -f 3|sed 's/.gs.l0.fa//g' | parallel -j 40 " /programs/hyphy-2.5.49/bin/hyphy cln Universal output/CDSMSAPerOG_HyPhy_LH_20260415/{}.gs.l0.fa No/No output/CDSMSAPerOG_HyPhy_LH_20260415/{}.fa" > output/MSAcleaning_nonrhizomatous.log 2>&1
 rm output/CDSMSAPerOG_HyPhy_LH_20260415/*.gs.l0.fa
 mkdir output/geneTree_nonrhizomatousOnly_LHOGs_20260415/
-find /workdir/sh2246/p_phyloGWAS/output/CDSMSAPerOG_HyPhy_LH_20260415/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/CDSMSAPerOG_HyPhy_LH_20260415/{}.fa -# 1 -w /workdir/sh2246/p_phyloGWAS/output/geneTree_nonrhizomatousOnly_LHOGs_20260415/ -n {}.tree'
+find "${PHYLOGWAS_ROOT}/output/CDSMSAPerOG_HyPhy_LH_20260415/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/CDSMSAPerOG_HyPhy_LH_20260415/{}.fa -# 1 -w ${PHYLOGWAS_ROOT}/output/geneTree_nonrhizomatousOnly_LHOGs_20260415/ -n {}.tree'
 
 
 ## step 3: get target tip names

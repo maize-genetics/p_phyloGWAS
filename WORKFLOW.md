@@ -77,8 +77,11 @@ the author) — not guessed.
    above (e.g. `conda activate phyloGWAS-tools` for stages 03/04/09/10, `phyloGWAS-r` for
    02/06/08/09/11, `phyloGWAS-py` for 07). Open the notebook(s)/script(s) listed under
    **Key scripts** for that stage.
-3. Hardcoded paths in notebooks/scripts assume the repo lives at
-   `/workdir/sh2246/p_phyloGWAS/` — adjust if running from a different mount point.
+3. Set `export PHYLOGWAS_ROOT=/path/to/your/clone` before running any stage **script**
+   (`.sh`/`.R`/`.r`) — they all read this var, falling back to `/workdir/sh2246/p_phyloGWAS`
+   if unset, so nothing changes if you're on this machine. **Notebooks (`.ipynb`) still
+   hardcode `/workdir/sh2246/p_phyloGWAS/` directly** — that pass hasn't been done yet;
+   edit those paths by hand if running a notebook from a different mount point.
 4. SCINET-only steps (07Ba/07Bb, 07Ca/07Cb/07Cc) require a SLURM allocation on USDA
    SCINET Atlas (`buckler_lab_panand` account) and are not runnable on this machine
    directly — their outputs are already present locally (see `DATA.md`).

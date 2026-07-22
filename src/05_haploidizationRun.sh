@@ -6,7 +6,9 @@
 # mkdir output/haploidizationRun/
 # mkdir output/haploidizationRun/outFasta
 # usage bash src/05_haploidizationRun.sh <path_to_fasta>
-# find /workdir/sh2246/p_phyloGWAS/data/final_8_19_22/ -name "*.fasta" -type f|parallel -j 11 "bash src/05_haploidizationRun.sh {}"
+# find ${PHYLOGWAS_ROOT}/data/final_8_19_22/ -name "*.fasta" -type f|parallel -j 11 "bash src/05_haploidizationRun.sh {}"
+
+export PHYLOGWAS_ROOT="${PHYLOGWAS_ROOT:-/workdir/sh2246/p_phyloGWAS}"
 
 # sampleID=`basename $1 .fasta`
 sampleID=`basename $1 .fa`
@@ -21,7 +23,7 @@ cd output/haploidizationRun/$sampleID
 /programs/seqkit-0.15.0/seqkit fx2tab -nl $1 |sort -k2,2nr |awk '{if($2>=1000000) print $1}' > goodScafName.txt 
 # /programs/seqkit-0.15.0/seqkit fx2tab -nl $1 |sort -k2,2nr |awk '{if($2<1000000) print $1}' > badScafName.txt
 # helixer annotation -> gff per scaffold -> CDS per scaffold
-cat goodScafName.txt | parallel -j 2 "grep -w '^{}' /workdir/sh2246/p_phyloGWAS/data/annotations/\${sampleID}_helixer.gff > ./gffPerScaf/{}.gff3"
+cat goodScafName.txt | parallel -j 2 "grep -w '^{}' ${PHYLOGWAS_ROOT}/data/annotations/\${sampleID}_helixer.gff > ./gffPerScaf/{}.gff3"
 
 cat goodScafName.txt | parallel -j 2 "anchorwave gff2seq -i gffPerScaf/{}.gff3 -r \${1} -o CDSPerScaf/{}.cds.fa"
 

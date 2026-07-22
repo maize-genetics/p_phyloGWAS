@@ -12,11 +12,12 @@ require(tidyverse)
 require(plyr)
 require(reshape2)
 
+PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
 
 #'------------------------------------------------------------------------------------------------------------
-# (1) load geo data 
+# (1) load geo data
 #'------------------------------------------------------------------------------------------------------------
-data_clean = data.table::fread('/workdir/sh2246/p_phyloGWAS/output/metadataFormalOut/coordinates_clean.csv')
+data_clean = data.table::fread(file.path(PHYLOGWAS_ROOT, 'output/metadataFormalOut/coordinates_clean.csv'))
 head(data_clean)
 dim(data_clean)
 
@@ -40,7 +41,7 @@ data_clean <- data_clean %>% na.omit()
 # check src_generating_FAO_GAEZ.R to see how to generate enviromeDB::WC_Bioclimate since the package is broken
 source('https://raw.githubusercontent.com/gcostaneto/envirotypeR/main/R/get_spatial_fun.R')
 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/WC_Bioclim.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/WC_Bioclim.rds')
 tmp = readRDS(url)
 geographic_ranges_bien  = 
   get_spatial( env.dataframe =data_clean,
@@ -73,7 +74,7 @@ geographic_ranges_bien =
 
 
 ########### FAO-GAEZ 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/GAEZ_AEZ.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/GAEZ_AEZ.rds')
 geographic_ranges_bien = 
   get_spatial( env.dataframe = geographic_ranges_bien,
                             lat = 'decimalLatitude',
@@ -82,7 +83,7 @@ geographic_ranges_bien =
                             digital.raster = readRDS(url))#
 
 ########### Soil Temperature 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/TEMP_soil.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/TEMP_soil.rds')
 geographic_ranges_bien = 
   get_spatial( env.dataframe = geographic_ranges_bien,
                             lat = 'decimalLatitude',
@@ -141,6 +142,6 @@ geographic_ranges_bien_filtered[,noNAIdx][geographic_ranges_bien_filtered[,noNAI
 
 
 write.table(geographic_ranges_bien_filtered,
-            "/workdir/sh2246/p_phyloGWAS/output/metadataFormalOut/formal_envData_20240820.txt",quote = F,sep = "\t")
+            file.path(PHYLOGWAS_ROOT, "output/metadataFormalOut/formal_envData_20240820.txt"),quote = F,sep = "\t")
 
 

@@ -17,11 +17,13 @@ require(foreach)
 require(BIEN) # to access BIEN data base
 require(rgbif) # to access GBIF data base
 
+PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
+
 args = commandArgs(trailingOnly=TRUE)
 # arg 1: path to species list (long format); arg 2: output directory
 
-# dir.data = "/workdir/sh2246/p_phyloGWAS/output/testMetadata.txt"
-# dir.output = "/workdir/sh2246/p_phyloGWAS/output/tMetadata_testout"
+# dir.data = file.path(PHYLOGWAS_ROOT, "output/testMetadata.txt")
+# dir.output = file.path(PHYLOGWAS_ROOT, "output/tMetadata_testout")
 dir.data = args[1]
 dir.output = args[2]
 
@@ -78,7 +80,7 @@ gbif_data <- foreach::foreach(j = 1:length(missing_taxa),  .packages = c('rgbif'
   }
 
 # to register as a derived dataset
-gbifData = data.table::fread("/workdir/sh2246/p_phyloGWAS/output/metadataFormalOut/species_metadata_gbif_merged.tsv",fill=Inf,sep = "\t",na.strings = "")
+gbifData = data.table::fread(file.path(PHYLOGWAS_ROOT, "output/metadataFormalOut/species_metadata_gbif_merged.tsv"),fill=Inf,sep = "\t",na.strings = "")
 derived_data <- gbifData[,6] %>%
   group_by(datasetKey) %>% 
   count()

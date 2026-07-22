@@ -12,18 +12,20 @@ require(tidyverse)
 require(plyr)
 require(reshape2)
 
+PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
+
 #'------------------------------------------------------------------------------------------------------------
 # (0) merge the sampleTracker name to assemblyID
 #'------------------------------------------------------------------------------------------------------------
-metadata = read.csv("/workdir/sh2246/p_phyloGWAS/data/Poaceae_metadata_2024.08.21.csv",header = T)
-specimenCoordinate = read.table("/workdir/sh2246/p_phyloGWAS/output/panAnd_sample_coordinate.tsv",header =T)
+metadata = read.csv(file.path(PHYLOGWAS_ROOT, "data/Poaceae_metadata_2024.08.21.csv"),header = T)
+specimenCoordinate = read.table(file.path(PHYLOGWAS_ROOT, "output/panAnd_sample_coordinate.tsv"),header =T)
 specimenCoordinate = specimenCoordinate[!duplicated(specimenCoordinate$sample),]
 specimenCoordinate_merged = merge(metadata,specimenCoordinate,by.x = "tracker_sample_name",by.y = "sample")
 
 #'------------------------------------------------------------------------------------------------------------
 # (1) load geo data 
 #'------------------------------------------------------------------------------------------------------------
-# data_clean = data.table::fread('/workdir/sh2246/p_phyloGWAS/output/metadataFormalOut/coordinates_clean.csv')
+# data_clean = data.table::fread(file.path(PHYLOGWAS_ROOT, 'output/metadataFormalOut/coordinates_clean.csv'))
 data_clean = specimenCoordinate_merged[,c(2,3,12,13)]
 colnames(data_clean)[2:4] = c("latest_name","decimalLatitude","decimalLongitude")
 head(data_clean)
@@ -49,7 +51,7 @@ data_clean <- data_clean %>% na.omit()
 # check src_generating_FAO_GAEZ.R to see how to generate enviromeDB::WC_Bioclimate since the package is broken
 source('https://raw.githubusercontent.com/gcostaneto/envirotypeR/main/R/get_spatial_fun.R')
 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/WC_Bioclim.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/WC_Bioclim.rds')
 tmp = readRDS(url)
 geographic_ranges_bien  = 
   get_spatial( env.dataframe =data_clean,
@@ -82,7 +84,7 @@ geographic_ranges_bien =
 
 
 ########### FAO-GAEZ 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/GAEZ_AEZ.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/GAEZ_AEZ.rds')
 geographic_ranges_bien = 
   get_spatial( env.dataframe = geographic_ranges_bien,
                             lat = 'decimalLatitude',
@@ -91,7 +93,7 @@ geographic_ranges_bien =
                             digital.raster = readRDS(url))#
 
 ########### Soil Temperature 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/TEMP_soil.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/TEMP_soil.rds')
 geographic_ranges_bien = 
   get_spatial( env.dataframe = geographic_ranges_bien,
                             lat = 'decimalLatitude',
@@ -150,12 +152,12 @@ geographic_ranges_bien_filtered[,noNAIdx][geographic_ranges_bien_filtered[,noNAI
 
 
 write.table(geographic_ranges_bien_filtered,
-            "/workdir/sh2246/p_phyloGWAS/output/panand_specimen_envData_20241126.txt",quote = F,sep = "\t")
+            file.path(PHYLOGWAS_ROOT, "output/panand_specimen_envData_20241126.txt"),quote = F,sep = "\t")
 
 
 ####comparison to perSpecies estimates####
 rownames(geographic_ranges_bien_filtered) = geographic_ranges_bien_filtered$assemblyID
-envData = readRDS('/workdir/sh2246/p_phyloGWAS/output/ePC_20240827.rds')
+envData = readRDS(file.path(PHYLOGWAS_ROOT, 'output/ePC_20240827.rds'))
 commonID = intersect(geographic_ranges_bien_filtered$assemblyID,rownames(envData$environmental.features))
 
 
@@ -180,7 +182,7 @@ plot(envData$environmental.features[commonID,"PMEH1_GSDE_5_quan50"],geographic_r
 par(mfrow = c(1,1),mar =c(12,5,1,1))
 barplot(sort(r),las =2, cex.names=.6,ylab = "Spearman's correlation coefficient (rho)")
 
-allSpeciesCoordinate = read.delim("/workdir/sh2246/p_phyloGWAS/output/metadataFormalOut/formal_envData_20240820.txt",
+allSpeciesCoordinate = read.delim(file.path(PHYLOGWAS_ROOT, "output/metadataFormalOut/formal_envData_20240820.txt"),
                                         header = T)
 par(mfrow = c(1,1),mar =c(12,5,1,1))
 tmp = allSpeciesCoordinate[grep("Zea",allSpeciesCoordinate$latest_name),]

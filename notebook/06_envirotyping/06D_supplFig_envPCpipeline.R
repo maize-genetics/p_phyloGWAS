@@ -9,7 +9,9 @@ require(tidyverse)
 require(plyr)
 require(reshape2)
 
-bien_data_clean = data.table::fread('/workdir/sh2246/p_phyloGWAS/output/envData/speciesRange/bien_coordinates_clean_2023.12.04.csv')
+PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
+
+bien_data_clean = data.table::fread(file.path(PHYLOGWAS_ROOT, 'output/envData/speciesRange/bien_coordinates_clean_2023.12.04.csv'))
 head(bien_data_clean)
 dim(bien_data_clean)
 
@@ -31,7 +33,7 @@ coordinates <- coordinates %>%
 v <- vect(coordinates, c("decimalLongitude", "decimalLatitude"), crs="+proj=longlat")
 vv <- project(v, crs(test))
 
-png("/workdir/sh2246/p_phyloGWAS/output/figure/suppFig/suppFig_envPCPipeline_a1.png",
+png(file.path(PHYLOGWAS_ROOT, "output/figure/suppFig/suppFig_envPCPipeline_a1.png"),
     width = 6,height = 3,units = "cm",res = 600,pointsize = 6)
 par(mar =c (2,2,1,1))
 plot(test,col = colorRampPalette(c("blue", "lightblue", "yellow","red"))(255),

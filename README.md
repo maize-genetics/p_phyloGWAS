@@ -33,6 +33,15 @@ conda env create -f envs/environment-py.yml      # Python 3.11 + torch/transform
   R -e 'install.packages("asremlPlus", repos="https://cloud.r-project.org")'
   ```
 
+- Repo root: scripts (`.sh`/`.R`/`.r`) read a `PHYLOGWAS_ROOT` env var for the repo's absolute
+  path, falling back to `/workdir/sh2246/p_phyloGWAS` if unset (this machine's layout) — so an
+  outside clone just needs:
+  ```
+  export PHYLOGWAS_ROOT=/path/to/your/clone
+  ```
+  Notebooks (`.ipynb`) don't use this yet — they still hardcode the path directly (see
+  `WORKFLOW.md`'s "Running a stage" note).
+
 - Key data can be found on cbsublfs1: https://docs.google.com/spreadsheets/d/1XzyAfph4fuamt4h22uD1OMzkXGQXlFWmwgw7zDncKKY/edit?usp=sharing
   — see `DATA.md` for the full input-data manifest and `WORKFLOW.md` for how each stage consumes it.
 
