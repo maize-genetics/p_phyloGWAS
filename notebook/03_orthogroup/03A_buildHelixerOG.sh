@@ -1,6 +1,6 @@
 
 # updated 2024.05.21
-# Charlie's 34 representive assemblies
+# Charlie's 32 representative assemblies (34 in an earlier, superseded version)
 rsync -av cbsublfs1:/data1/users/coh22/poaceae_tfbs/og_consensus ./
 
 # annotation: scp -r cbsublfs1:/data4/users/zrm22/HelixerRuns/annotations/ data/
