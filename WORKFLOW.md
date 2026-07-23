@@ -18,7 +18,7 @@ you want to re-derive them from scratch.
 |---|---|---|---|---|
 | **01** `genomeAssembly` | Short-read genome assembly (megahit) | Raw sequencing reads (external; not tracked in this repo) | `notebook/01_genomeAssembly/README.md` — external pipeline: [bucklerlab/p_reelgene](https://bitbucket.org/bucklerlab/p_reelgene/src/master/short_read_assembly/) | Raw assembly FASTAs → `data/assemblies/` → 02 |
 | **02** `metadataCuration` | Merge PanAnd/LIMS QC metadata + manual species-ID curation into a filtered genome list | Poaceae accession metadata; per-assembly QC statistics | `02A_metadataProcessing.ipynb`, `02B_furtherFilter.ipynb` | Filtered metadata table → 03, 05, 08 |
-| **03** `orthogroup` | OrthoFinder (32 representative genomes) → orthogroups → ancestral AA sequence reconstruction → miniprot cross-mapping → OG filtering | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; OG→maize mapping; miniprot GFF annotations | `03A_buildHelixerOG.sh`, `03B_OGFilter.ipynb`, `03C_miniProtResult_eval.ipynb`, `03D_OGtranslation.R` | Filtered OG list + ancestral sequences → 04, 07 |
+| **03** `orthogroup` | OrthoFinder (32 representative genomes) → OG filtering → ancestral AA sequence reconstruction (for the filtered OGs) → TableS5 summary; miniprot cross-mapping; OG-name translation | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; OG→maize mapping; miniprot GFF annotations | `03A_buildHelixerOG.sh` (build+OrthoFinder), `03B_OGFilter.ipynb` (filter), `03C_ancestralSeqReconstruction.sh` (ancestral seq), `03D_TableS5Generation.ipynb` (TableS5), `03E_miniProtResult_eval.ipynb` (miniprot eval), `03F_OGtranslation.R` (OG-name translation) | Filtered OG list + ancestral sequences → 04, 07 |
 | **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
 | **05** `phylotreeConstruction` | Gap-strip CDS MSAs → RAxML gene trees → ASTRAL-Pro species tree → phylogenetic K (relatedness) matrix | Angiosperms353 Oryza reference; maize v5 mRNA reference (regenerates OG→maize mapping and the species-name list as a side effect) | `05A_treeConstruction`, `05B_neutralPhylogenyVisualization.ipynb` | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
 | **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06B_spCoordEnvData.sh`, `06C_visualizationEnvAdapt.ipynb`, `06D_supplFig_envPCpipeline.R` | envPC1–3 table (Fig. 1) → 08 |
@@ -41,6 +41,17 @@ edits carried over with the move, untouched otherwise).
 **Note on notebook archiving:** `10B_stressInducedGene_enrichment.ipynb` had been
 mistakenly filed under `notebook/10_aprioriCandidate/archived/` despite being active
 (not superseded) — moved back up to `notebook/10_aprioriCandidate/`.
+
+**Note on 03A–03F:** originally `03A_buildHelixerOG.sh` bundled OG construction with
+ancestral-sequence reconstruction, and `03B_OGFilter.ipynb` bundled OG filtering with
+TableS5 generation and a standalone gffcompare-based ID-matching validation check. Per
+author review, the real dependency order is OG construction → filter → ancestral
+reconstruction (for the filtered OGs only) → TableS5, so these have been split into their
+own files (03A/03C from the old 03A; 03B/03D from the old 03B) and the old
+`03C_miniProtResult_eval.ipynb`/`03D_OGtranslation.R` renumbered to 03E/03F accordingly.
+The ID-matching validation check (output read by nothing downstream) was moved to
+`notebook/03_orthogroup/archived/03B_gffCompIDMatching.ipynb` rather than renumbered, since
+it isn't part of the active pipeline.
 
 ---
 
