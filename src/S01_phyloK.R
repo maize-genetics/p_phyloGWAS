@@ -16,7 +16,7 @@ phyloK=function(tree){
     }
     out=sum(tree$edge.length[anc_b_idx])
     max_brlen=max(node.depth.edgelength(tree))
-    out=2*out/max_brlen
+    out=out/max_brlen
     return(out)
   })
 }

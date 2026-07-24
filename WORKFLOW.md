@@ -81,11 +81,12 @@ Per author review: (1) moved to new `src/S04_angiosperm353_extractAndDist.R`, in
 input, but 05A's active `astral-pro` call only ever produces the unfiltered
 `output/PoaceaeTree_angiosperm353.nwk` — 05B's own filter/write logic (intersect with metadata,
 `keep.tip`, `write.tree`) was already correct, just reading the wrong file; and 05B's filtered/
-labeled tree outputs were writing "astral3"-suffixed, dated filenames matching the *inactive*
-`astral-pro3` line in 05A (commented out) rather than the non-"3" naming every real downstream
-consumer (`08C`/`src/12_runPermulation_perOGModel.R`, `06C`, `08B`, `11`) actually reads —
-corrected to `output/PoaceaeTree_angiosperm353_astral_filtered.nwk` and
-`..._astral_spLabeled.nwk` (undated, since these are now the current regenerable outputs).
+labeled tree outputs were writing "astral3"-suffixed filenames matching the *inactive*
+`astral-pro3` line in 05A (commented out) rather than the non-"3", `_20250407`-dated naming
+every real downstream consumer (`08C`/`src/12_runPermulation_perOGModel.R`, `06C`, `08B`, `11`)
+actually reads — corrected to `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk`
+and `..._astral_spLabeled_20250407.nwk`/`angiosperm353_astral_spLabeled_20250407.png` (dated,
+matching the same `20250407` batch as `phyloK_728Poaceae_astral_20250407.txt`).
 
 ---
 
