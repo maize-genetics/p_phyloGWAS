@@ -20,7 +20,7 @@ you want to re-derive them from scratch.
 | **02** `metadataCuration` | Merge PanAnd/LIMS QC metadata + manual species-ID curation into a filtered genome list | Poaceae accession metadata; per-assembly QC statistics | `02A_metadataProcessing.ipynb`, `02B_furtherFilter.ipynb` | Filtered metadata table → 03, 05, 08 |
 | **03** `orthogroup` | OrthoFinder (32 representative genomes) → OG filtering → ancestral AA sequence reconstruction (for the filtered OGs) → miniprot cross-mapping to Zm/Pv/At/Angiosperms353 → TableS5 summary; OG-name translation | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; Angiosperms353 Oryza reference; maize v5 mRNA reference; miniprot GFF annotations | `03A_buildHelixerOG.sh` (build+OrthoFinder), `03B_OGFilter.ipynb` (filter), `03C_ancestralSeqReconstruction.sh` (ancestral seq + miniprot ID matching), `03D_miniProtResult_eval.ipynb` (miniprot eval), `03E_TableS5Generation.ipynb` (TableS5), `03F_OGtranslation.R` (OG-name translation) | Filtered OG list + ancestral sequences + OG→maize/Pv/At/Angiosperms353 mapping → 04, 07, 08, 09, 11 |
 | **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
-| **05** `phylotreeConstruction` | Gap-strip CDS MSAs → RAxML gene trees → ASTRAL-Pro species tree → phylogenetic K (relatedness) matrix | Gap-stripped CDS MSAs (from 04) | `05A_treeConstruction`, `05B_neutralPhylogenyVisualization.ipynb` | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
+| **05** `phylotreeConstruction` | Gap-strip CDS MSAs → extract angiosperm353 per-gene sequences + genetic distance → RAxML gene trees → ASTRAL-Pro species tree → filter/visualize/annotate species tree → phylogenetic K (relatedness) matrix | Gap-stripped CDS MSAs (from 04); angiosperm353 OG-name list; Poaceae metadata (for tree filtering) | `05A_treeConstruction` (gap-strip, RAxML, ASTRAL), `src/S04_angiosperm353_extractAndDist.R` (invoked from 05A), `05B_neutralPhylogenyVisualization.ipynb` (filter/visualize/phyloK) | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
 | **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06B_spCoordEnvData.sh`, `06C_visualizationEnvAdapt.ipynb`, `06D_supplFig_envPCpipeline.R` | envPC1–3 table (Fig. 1) → 08 |
 | **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; OrthoFinder protein MSAs; ESM2 weights; PlantCAD weights | `07Aa`/`07Ab`; `07Ba`/`07Bb` (SCINET); `07Ca`/`07Cb`/`07Cc` (SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
 | **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
@@ -66,6 +66,27 @@ ancestral-seq file. `data/OGToZm_mapping_v2.txt`'s write target was also correct
 `src/12_runPermulation_perOGModel.R`) actually reads it from and where the current
 (2024-09-16) file lives.
 
+**Note on 05A/05B:** `05B_neutralPhylogenyVisualization.ipynb` originally mixed three
+unrelated things: (1) extraction of angiosperm353 per-gene sequences from the gap-stripped
+per-OG MSAs plus a K81 genetic-distance calc — this was actually prep that 05A's RAxML step
+needed but never had a producer for (`output/geneTree_angiosperm353/*.fa` had no source
+anywhere in the repo); (2) the core ASTRAL species-tree filter/visualize/phyloK block; and
+(3) supplemental cross-project analyses (a 14-species divergence-time figure, a Zea-only
+subtree, and a full comparison against an external collaborator's independently-built tree).
+Per author review: (1) moved to new `src/S04_angiosperm353_extractAndDist.R`, invoked from
+05A right before its RAxML step; (2) stays in a trimmed `05B_neutralPhylogenyVisualization.ipynb`;
+(3) moved to `notebook/05_phylotreeConstruction/archived/05B_supplementalTreeComparisons.ipynb`
+(unparameterized, matching the archived-code convention). Two real bugs fixed in the process:
+`05B` read `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk` as its species-tree
+input, but 05A's active `astral-pro` call only ever produces the unfiltered
+`output/PoaceaeTree_angiosperm353.nwk` — 05B's own filter/write logic (intersect with metadata,
+`keep.tip`, `write.tree`) was already correct, just reading the wrong file; and 05B's filtered/
+labeled tree outputs were writing "astral3"-suffixed, dated filenames matching the *inactive*
+`astral-pro3` line in 05A (commented out) rather than the non-"3" naming every real downstream
+consumer (`08C`/`src/12_runPermulation_perOGModel.R`, `06C`, `08B`, `11`) actually reads —
+corrected to `output/PoaceaeTree_angiosperm353_astral_filtered.nwk` and
+`..._astral_spLabeled.nwk` (undated, since these are now the current regenerable outputs).
+
 ---
 
 ## Tools used across stages
@@ -84,7 +105,7 @@ the author) — not guessed.
 | miniprot | 0.13 | 03 (cross-mapping), 05 (tree construction), 10 (DEG ID conversion) | `envs/environment-tools.yml` |
 | RAxML | 8.2.12 | 05 (gene trees), 09 (gene trees for RELAX) | vendored source, `src/standard-RAxML` (compile from source; not a conda package) |
 | astral-pro (`aster` package) | 1.16 | 05 (main species tree) | `envs/environment-tools.yml` |
-| ASTER (astral-pro3, vendored) | commit `6df009e` | 05 (secondary exploratory tree only, in 05B) | vendored source, `src/ASTER` (compile from source; not a conda package) |
+| ASTER (astral-pro3, vendored) | commit `6df009e` | 05 (secondary exploratory tree only; the invocation in 05A is commented out) | vendored source, `src/ASTER` (compile from source; not a conda package) |
 | HyPhy | 2.5.49 | 09 (RELAX) | `envs/environment-tools.yml` |
 | seqkit, gffread, GNU parallel | 0.15.0, unpinned, unpinned | utility use across multiple stages | `envs/environment-tools.yml` |
 | R | 4.2 | 02, 06, 08, 09, 11 (stats/envirotyping/modeling/visualization) | `envs/environment-r.yml` |

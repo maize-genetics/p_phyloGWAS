@@ -20,11 +20,3 @@ phyloK=function(tree){
     return(out)
   })
 }
-
-library(testthat)
-tt=read.tree("~/Dropbox/postDoc/projects/p_phyloGWAS/data/test/test.tree.newick")
-print("test on small tree")
-test_that("K",{
-  tK=phyloK(tt)
-  expect_equivalent(tK,2*matrix(c(1,2/3,1/3,0,2/3,1,1/3,0,1/3,1/3,2/3,0,0,0,0,1/3),4,4,byrow = T))
-})

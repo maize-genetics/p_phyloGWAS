@@ -1,26 +1,30 @@
 #!/bin/bash
+export PHYLOGWAS_ROOT="${PHYLOGWAS_ROOT:-/workdir/sh2246/p_phyloGWAS}"
+cd "${PHYLOGWAS_ROOT}"
 
 ## gap strip
 mkdir output/CDSMSAPerOG_gs
 mkdir output/ref
 find output/OrthofinderMAFFT -type f|cut -d / -f 3|sed 's/_mafft.fa//g' |parallel -j 30 "Rscript src/03_Ungap_MSA_SKH_v4.R output/OrthofinderMAFFT/{}_mafft.fa ASM1935983v1 output/CDSMSAPerOG_gs/{}.gs.fa output/ref/{}.ref"
 
+## extract angiosperm353 per-gene sequences + genetic distance (feeds the RAxML step below)
+Rscript src/S04_angiosperm353_extractAndDist.R
+
 ## gene tree
 cd output/geneTree_allOGs/
-find /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 '/workdir/sh2246/p_phyloGWAS/src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs/{}.fa -# 1 -n {}.tree'
-cd /workdir/sh2246/p_phyloGWAS/
+find "${PHYLOGWAS_ROOT}/output/geneTree_allOGs/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/geneTree_allOGs/{}.fa -# 1 -n {}.tree'
+cd "${PHYLOGWAS_ROOT}/"
 
 
 # angiosperm 353 loci gene tree for astral
 cd output/geneTree_angiosperm353/
-find /workdir/sh2246/p_phyloGWAS/output/geneTree_angiosperm353/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 '/workdir/sh2246/p_phyloGWAS/src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/geneTree_angiosperm353/{}.fa -# 1 -n {}.tree'
-cd /workdir/sh2246/p_phyloGWAS/
+find "${PHYLOGWAS_ROOT}/output/geneTree_angiosperm353/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/geneTree_angiosperm353/{}.fa -# 1 -n {}.tree'
+cd "${PHYLOGWAS_ROOT}/"
 
 
-# astral tree 
+# astral tree
 printf "%s\n" output/geneTree_angiosperm353/RAxML_bestTree* | xargs cat > output/angiospermGeneTreeForest.nwk
 astral-pro -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353.nwk
 # src/ASTER/bin/astral-pro3 -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353_astral3_20250416.nwk
 
-
-
+# continues in 05B_neutralPhylogenyVisualization.ipynb (species tree filtering, visualization, phyloK)
