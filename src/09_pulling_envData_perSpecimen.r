@@ -49,7 +49,7 @@ data_clean <- data_clean %>% na.omit()
 
 ########### Bioclimatic variables
 # check src_generating_FAO_GAEZ.R to see how to generate enviromeDB::WC_Bioclimate since the package is broken
-source('https://raw.githubusercontent.com/gcostaneto/envirotypeR/main/R/get_spatial_fun.R')
+source(file.path(PHYLOGWAS_ROOT, "src/get_spatial_fun.R"))
 
 url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/WC_Bioclim.rds')
 tmp = readRDS(url)

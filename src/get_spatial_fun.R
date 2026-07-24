@@ -7,6 +7,11 @@
 # Current Version: 0.0.1
 #
 # get_spatial()
+#
+# Vendored 2026-07-24 from https://github.com/gcostaneto/envirotypeR/blob/main/R/get_spatial_fun.R
+# (was previously source()'d live from that URL at runtime - no version pin, no offline
+# fallback; vendored here to match this repo's convention for external single-file deps,
+# e.g. src/process_synthetic_fun.R).
 #==================================================================================================
 
 
