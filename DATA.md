@@ -55,10 +55,10 @@ manuscript's Data Availability Statement — expected, not a repo bug.
 
 | Data | Path | Used by | Tier |
 |---|---|---|---|
-| WorldClim 2.1 elevation | `p_evolBNI/data/GIS_env_data/WorldClim_raw_2.5m_files/wc2.1_2.5m_elev/` | 06B, 06D | T1 |
-| WorldClim 2.1 bioclim variables | `p_evolBNI/data/GIS_env_data/WorldClim_raw_2.5m_files/wc2.1_2.5m_bio/` | 06B, 06D | T1 |
-| Global Hydrologic Soil Groups | `p_evolBNI/data/GIS_env_data/Global_Hydrologic_Soil_Group_1566/.../HYSOGs250m.tif` | 06B, 06D | T1 |
-| GSDE soil dataset (33 NetCDF files) | `p_evolBNI/data/GIS_env_data/GSDE_raw_nc_files/` | 06B, 06D | T1 |
+| WorldClim 2.1 elevation | `p_evolBNI/data/GIS_env_data/WorldClim_raw_2.5m_files/wc2.1_2.5m_elev/` | 06B (`src/09_pulling_envData.r`, via `GIS_DATA_ROOT`) | T1 |
+| WorldClim 2.1 bioclim variables | `p_evolBNI/data/GIS_env_data/WorldClim_raw_2.5m_files/wc2.1_2.5m_bio/` | 06C (envPC-pipeline map figure, via `GIS_DATA_ROOT`) | T1 |
+| Global Hydrologic Soil Groups | `p_evolBNI/data/GIS_env_data/Global_Hydrologic_Soil_Group_1566/.../HYSOGs250m.tif` | 06B (`src/09_pulling_envData.r`, via `GIS_DATA_ROOT`) | T1 |
+| GSDE soil dataset (33 NetCDF files) | `p_evolBNI/data/GIS_env_data/GSDE_raw_nc_files/` | 06B (`src/09_pulling_envData.r`, via `GIS_DATA_ROOT`) | T1 |
 
 ## Occurrence data (external DB)
 
@@ -66,7 +66,7 @@ manuscript's Data Availability Statement — expected, not a repo bug.
 |---|---|---|---|
 | GBIF occurrence records | live query (`rgbif::occ_search`) → `output/metadataFormalOut/` | 06B | T1 |
 | BIEN occurrence records | live query (`BIEN::BIEN_occurrence_species`) → `output/metadataFormalOut/` | 06B | T1 |
-| Derived occurrence dataset (cleaned GBIF+BIEN) | Zenodo `14968186` | 06B, 06D | T2 (shortcut for the two rows above) |
+| Derived occurrence dataset (cleaned GBIF+BIEN) | Zenodo `14968186` | 06B, 06C | T2 (shortcut for the two rows above) |
 
 ## Model weights
 
