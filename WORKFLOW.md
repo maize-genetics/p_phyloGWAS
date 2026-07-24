@@ -18,9 +18,9 @@ you want to re-derive them from scratch.
 |---|---|---|---|---|
 | **01** `genomeAssembly` | Short-read genome assembly (megahit) | Raw sequencing reads (external; not tracked in this repo) | `notebook/01_genomeAssembly/README.md` — external pipeline: [bucklerlab/p_reelgene](https://bitbucket.org/bucklerlab/p_reelgene/src/master/short_read_assembly/) | Raw assembly FASTAs → `data/assemblies/` → 02 |
 | **02** `metadataCuration` | Merge PanAnd/LIMS QC metadata + manual species-ID curation into a filtered genome list | Poaceae accession metadata; per-assembly QC statistics | `02A_metadataProcessing.ipynb`, `02B_furtherFilter.ipynb` | Filtered metadata table → 03, 05, 08 |
-| **03** `orthogroup` | OrthoFinder (32 representative genomes) → OG filtering → ancestral AA sequence reconstruction (for the filtered OGs) → TableS5 summary; miniprot cross-mapping; OG-name translation | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; OG→maize mapping; miniprot GFF annotations | `03A_buildHelixerOG.sh` (build+OrthoFinder), `03B_OGFilter.ipynb` (filter), `03C_ancestralSeqReconstruction.sh` (ancestral seq), `03D_TableS5Generation.ipynb` (TableS5), `03E_miniProtResult_eval.ipynb` (miniprot eval), `03F_OGtranslation.R` (OG-name translation) | Filtered OG list + ancestral sequences → 04, 07 |
+| **03** `orthogroup` | OrthoFinder (32 representative genomes) → OG filtering → ancestral AA sequence reconstruction (for the filtered OGs) → miniprot cross-mapping to Zm/Pv/At/Angiosperms353 → TableS5 summary; OG-name translation | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; Angiosperms353 Oryza reference; maize v5 mRNA reference; miniprot GFF annotations | `03A_buildHelixerOG.sh` (build+OrthoFinder), `03B_OGFilter.ipynb` (filter), `03C_ancestralSeqReconstruction.sh` (ancestral seq + miniprot ID matching), `03D_TableS5Generation.ipynb` (TableS5), `03E_miniProtResult_eval.ipynb` (miniprot eval), `03F_OGtranslation.R` (OG-name translation) | Filtered OG list + ancestral sequences + OG→maize/Pv/At/Angiosperms353 mapping → 04, 07, 08, 09, 11 |
 | **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
-| **05** `phylotreeConstruction` | Gap-strip CDS MSAs → RAxML gene trees → ASTRAL-Pro species tree → phylogenetic K (relatedness) matrix | Angiosperms353 Oryza reference; maize v5 mRNA reference (regenerates OG→maize mapping and the species-name list as a side effect) | `05A_treeConstruction`, `05B_neutralPhylogenyVisualization.ipynb` | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
+| **05** `phylotreeConstruction` | Gap-strip CDS MSAs → RAxML gene trees → ASTRAL-Pro species tree → phylogenetic K (relatedness) matrix | Gap-stripped CDS MSAs (from 04) | `05A_treeConstruction`, `05B_neutralPhylogenyVisualization.ipynb` | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
 | **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06B_spCoordEnvData.sh`, `06C_visualizationEnvAdapt.ipynb`, `06D_supplFig_envPCpipeline.R` | envPC1–3 table (Fig. 1) → 08 |
 | **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; OrthoFinder protein MSAs; ESM2 weights; PlantCAD weights | `07Aa`/`07Ab`; `07Ba`/`07Bb` (SCINET); `07Ca`/`07Cb`/`07Cc` (SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
 | **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
@@ -52,6 +52,16 @@ own files (03A/03C from the old 03A; 03B/03D from the old 03B) and the old
 The ID-matching validation check (output read by nothing downstream) was moved to
 `notebook/03_orthogroup/archived/03B_gffCompIDMatching.ipynb` rather than renumbered, since
 it isn't part of the active pipeline.
+
+**Note on miniprot cross-mapping (03C):** the miniprot ID-matching block (OG→maize/Pv/At/
+Angiosperms353 mapping) originally sat at the end of `05A_treeConstruction`, unrelated to
+that stage's actual tree-building work. Per author review, it's been moved into 03C
+(right after the ancestral-sequence fasta it depends on is generated) along with dropping
+several superseded pre-"_v2" mapping lines that referenced an older, no-longer-produced
+ancestral-seq file. `data/OGToZm_mapping_v2.txt`'s write target was also corrected from
+`output/` to `data/` in the move, matching where every active consumer (03D, 08B, 09B, 11,
+`src/12_runPermulation_perOGModel.R`) actually reads it from and where the current
+(2024-09-16) file lives.
 
 ---
 

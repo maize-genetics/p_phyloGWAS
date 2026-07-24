@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# step 4: tree construction 
 ## gap strip
 mkdir output/CDSMSAPerOG_gs
 mkdir output/ref
@@ -24,28 +23,4 @@ astral-pro -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_an
 # src/ASTER/bin/astral-pro3 -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353_astral3_20250416.nwk
 
 
-
-# miniprot ID matching
-miniprot --gff-only -t 30 data/Angiosperms353_orysaSequences.fasta output/poaceaeHelixerOG_ancSeq_gapRemoved_filtered.fa > output/angiosperm353ToOG.gff
-grep "Rank=1" output/angiosperm353ToOG.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/angiosperm353ToOG_mapping.txt
-
-
-miniprot --gff-only -t 30 output/Pv-672_v3.0_cds.fa output/poaceaeHelixerOG_ancSeq_gapRemoved_filtered.fa > output/OGToPv.gff
-grep "Rank=1" output/OGToPv.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToPv_mapping.txt
-
-
-miniprot --gff-only -t 30 data/Zea_mays_v5_mrna.fa output/poaceaeHelixerOG_ancSeq_gapRemoved_filtered.fa > output/OGToZm.gff
-grep "Rank=1" output/OGToZm.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToZm_mapping.txt
-
-
-miniprot --gff-only -t 30 data/Zea_mays_v5_mrna.fa output/poaceaeHelixerOG_ancSeq_gapRemoved_v2_20240909.fa > output/OGToZm_v2.gff
-grep "Rank=1;" output/OGToZm_v2.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToZm_mapping_v2.txt
-
-miniprot --gff-only -t 30 output/Pv-672_v3.0_cds.fa output/poaceaeHelixerOG_ancSeq_gapRemoved_v2_20240909.fa > output/OGToPv_v2.gff
-grep "Rank=1;" output/OGToPv_v2.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToPv_mapping_v2.txt
-
-
-miniprot --gff-only -t 30 data/Araport11_seq_20220914_representative_gene_model.fa.gz output/poaceaeHelixerOG_ancSeq_gapRemoved_v2_20240909.fa > output/OGToAt_v2.gff
-grep "Rank=1" output/OGToAt_v2.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToAt_mapping_v2.txt
-grep -f data/Yeaman2024_RAO_AtID.txt output/OGToAt_mapping_v2.txt > output/Yeaman2024RAO_OGID.txt
 
