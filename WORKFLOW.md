@@ -156,7 +156,7 @@ the author) — not guessed.
    upstream stage that produces them).
 2. Activate the conda env this stage's tools live in — check the **Provided by** column
    above (e.g. `conda activate phyloGWAS-tools` for stages 03/04/09/10, `phyloGWAS-r` for
-   02/06/08/09/11, `phyloGWAS-py` for 07). Open the notebook(s)/script(s) listed under
+   02/06/08/09/11, `pytorch-2-1` for 07). Open the notebook(s)/script(s) listed under
    **Key scripts** for that stage.
 3. Set `export PHYLOGWAS_ROOT=/path/to/your/clone` before running any stage **script**
    (`.sh`/`.R`/`.r`) — they all read this var, falling back to `/workdir/sh2246/p_phyloGWAS`
