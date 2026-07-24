@@ -78,6 +78,7 @@ the author) — not guessed.
 | Tool | Version | Used in stage(s) | Provided by |
 |---|---|---|---|
 | megahit | — (external repo) | 01 (assembly; external pipeline, see stage README) | not applicable — run outside this repo |
+| patch-scaffolds | 0.2.1 | 04 (extract per-assembly orthologous CDS/protein sequences via miniprot GFFs, see stage README) | vendored source/jar, `src/patch-scaffolds` (requires Java 17+; compile/build instructions in that directory) |
 | mafft | 7.520 | 04 (per-OG MSA generation) | `envs/environment-tools.yml` |
 | OrthoFinder | 2.5.4 | 03 (orthogroup construction) | `envs/environment-tools.yml` |
 | miniprot | 0.13 | 03 (cross-mapping), 05 (tree construction), 10 (DEG ID conversion) | `envs/environment-tools.yml` |
