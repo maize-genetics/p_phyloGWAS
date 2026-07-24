@@ -57,6 +57,13 @@ dependencies:
   - bioconductor-treeio
   - bioconductor-ggtree
   - bioconductor-topgo
+  # bioconductor-ggtree pins to 3.6.0 for r-base=4.2, but conda-forge's r-tidytree for r42
+  # only goes back to 0.4.5-0.4.6 - both renamed an internal helper (offspring.tbl_tree_item
+  # -> .offspring.tbl_tree_item) that ggtree 3.6.0's geom_cladelab() still calls under the
+  # old name, so tree-overlay figures (06C) fail with "could not find function
+  # offspring.tbl_tree_item" until tidytree is downgraded post-install:
+  #   R -e 'install.packages("https://cran.r-project.org/src/contrib/Archive/tidytree/tidytree_0.4.2.tar.gz", repos=NULL, type="source")'
+  # (confirmed via real-data testing of 06C_visualizationEnvAdapt.ipynb)
 
 # NOT included (licensed, per author instruction — install manually, see README.md
 # "Licensed software" section):
