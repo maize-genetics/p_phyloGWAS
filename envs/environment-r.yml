@@ -52,7 +52,15 @@ dependencies:
   # Bioconductor packages (bioconductor-* on bioconda)
   - bioconductor-biostrings
   - bioconductor-limma
-  - bioconductor-msa2dist
+  - bioconductor-msa2dist  # needed by src/07B_getOmega2Ref.R (stage 07 dN/dS). If your conda
+                           # config has an "r" channel active (not listed here, but easy to
+                           # pick up from a global .condarc), its r-stringi build can get
+                           # pulled in ahead of conda-forge's and links against an ICU version
+                           # older than what the rest of this env resolves to, breaking
+                           # anything depending on stringr (including MSA2dist) with
+                           # "unable to load ... libicui18nXX.so". Fix: force a conda-forge
+                           # build explicitly, e.g. `conda install "conda-forge::r-stringi=1.8.4"`
+                           # (confirmed via real-data testing of src/07B_getOmega2Ref.R)
   - bioconductor-rtracklayer
   - bioconductor-treeio
   - bioconductor-ggtree

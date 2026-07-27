@@ -1,3 +1,9 @@
+# Archived: earlier draft of ESM2 zero-shot score conversion, superseded by the complete,
+# actually-wired implementation, src/10_logit2zeroShot.R (called from
+# notebook/07_summaryStats/07Ca_ESM_SCINET.sh). Has a real bug - `resDic['name'] = df` uses
+# the literal string 'name' instead of the loop variable, so every iteration overwrites the
+# same dict key and only the last sequence's scores survive np.savez_compressed(). Kept for
+# reference only; do not use.
 import numpy as np
 import pandas as pd
 from Bio import SeqIO

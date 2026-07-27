@@ -22,7 +22,7 @@ you want to re-derive them from scratch.
 | **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
 | **05** `phylotreeConstruction` | Gap-strip CDS MSAs → extract angiosperm353 per-gene sequences + genetic distance → RAxML gene trees → ASTRAL-Pro species tree → filter/visualize/annotate species tree → phylogenetic K (relatedness) matrix | Gap-stripped CDS MSAs (from 04); angiosperm353 OG-name list; Poaceae metadata (for tree filtering) | `05A_treeConstruction` (gap-strip, RAxML, ASTRAL), `src/S04_angiosperm353_extractAndDist.R` (invoked from 05A), `05B_neutralPhylogenyVisualization.ipynb` (filter/visualize/phyloK) | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
 | **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 (PCA) → visualize distributions/tree overlay → ancestral state reconstruction | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06B_spCoordEnvData.sh` (coords → env data → envPC), `src/08_pulling_geo_data.R`/`src/09_pulling_envData.r` (invoked from 06B), `src/S05_envPC_analysis.R` (envPC computation, invoked from 06B), `06C_visualizationEnvAdapt.ipynb` (visualize + ASR) | envPC1–3 table (Fig. 1) → 08; ASR transition nodes → power simulation (08D) |
-| **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; OrthoFinder protein MSAs; ESM2 weights; PlantCAD weights | `07Aa`/`07Ab`; `07Ba`/`07Bb` (SCINET); `07Ca`/`07Cb`/`07Cc` (SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
+| **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; seqIDmapping tables; OrthoFinder protein MSAs; gap-stripped CDS MSAs (from 05A); ESM2 weights; PlantCAD weights | `07Aa` (frameshift), `07Ba` (premature stop, local), `07Bd` (dN/dS, local); `07Ca`/`07Cb`/`07Cc` (ESM2, SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
 | **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
 | **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
 | **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) via miniprot | Per-species CDS FASTAs (stress genes) + DEG study metadata; rice→OG mapping | `10A_DEG_IDconversion.sh` | Gene-ID mapping → 11 |
@@ -121,6 +121,52 @@ this repo entirely, in the sibling `p_evolBNI` project. Two real bugs fixed in t
 per-species dominant Köppen class, only derivable from the raw per-occurrence env data) doesn't
 need to re-read the 194MB raw env-data file itself — `S05` derives and persists it once,
 alongside `envData_707Poaceae_*`.
+
+**Note on 07:** stage 07 computes 4 independent per-OG/per-sequence stats, each merged into one
+master table in `08A_masterDataTableGeneration.ipynb`. Per author review:
+- **Premature stop** (`07Ba_PMS_run.sh`, replacing the SCINET-only `07Ba_PMS_SCINET.sh`, now
+  archived): `src/11_find_premature_stops.py` was already correct — this is now a plain local
+  GNU-parallel runner over `output/orthofinderProteinMSAs_fullset_20250710/` (the current, full
+  OG set, superseding the old main/`_additionalOGs` SCINET-batch split), writing
+  `output/combined_PMS_20250421.txt` (kept as the exact filename `08A` reads, even though the
+  file itself is regenerable — matches this project's convention of keeping historically-read
+  filenames stable). `07Bb_PMS_run.sh` was a byte-identical duplicate of
+  `notebook/slurm/PMS_run.sh` and was removed rather than archived.
+- **Frameshift** (`07Aa_frameShiftMutation.ipynb`): reads `output/seqIDmapping.txt` /
+  `_additionalOGs.txt` (migrated into `output/` from `p_phyloGWAS_archived`, never brought in
+  during the earlier data-consolidation pass) against `Frameshift`-flagged miniprot GFF
+  entries. MPID (miniprot's own per-assembly protein ID) is **not** globally unique — it's
+  assigned independently within each of the two separate miniprot batches, so the same
+  `MPID:assembly` key can mean different genes in the main vs. additionalOGs batch. Per author
+  review, the two batches are kept as two fully separate passes (their own GFF dir +
+  seqIDmapping-file pairing each), each writing its own output
+  (`output/frameShiftMutation.txt` / `_additionalOGs.txt`) — not merged — matching what `08A`
+  already does itself (`FS = rbind(fread(frameShiftMutation.txt), fread(frameShiftMutation_additionalOGs.txt))`).
+  Verified: the rewritten notebook reproduces both real historical output files byte-for-byte.
+- **dN/dS to reference** (new `07Bd_dNdS_run.sh`): `src/07B_getOmega2Ref.R` was already
+  correct/portable (CLI args) but had never been wired to a driver anywhere in the repo — this
+  new script loops it (via GNU parallel) over `output/CDSMSAPerOG_gs/*.gs.fa` (05A's
+  gap-stripped MSAs; the raw MAFFT output this step originally read no longer exists on disk,
+  consumed by 05A's own gap-stripping and not retained, but `07B_getOmega2Ref.R`'s
+  reference-based gap-stripping is a no-op on already-stripped input) with
+  `--ref ASM1935983v1` (the same outgroup rooting the species tree in 05/06), reproducing
+  `data/fullSetOGs_240903.txt` — verified byte-for-byte identical against the existing file
+  for two real OGs.
+- **LLM zero-shot scores**: `src/10_logit2zeroShot.R` (not `src/4_ESM_logits_to_zero_shot.py`,
+  archived — it has a real bug where every sequence's result overwrites the same dict key,
+  silently keeping only the last one) is the authoritative ESM2 zero-shot conversion script,
+  matching what `07Ca_ESM_SCINET.sh` already calls. `src/5_PlantCAD_logits.py` (new) adapts
+  `src/4_ESM_logits.py`'s structure for PlantCaduceus (`kuleshov-group/PlantCaduceus_l32`), a
+  DNA-sequence Caduceus/Mamba model, not a standard transformer: lowercase 4-letter nucleotide
+  vocab instead of the 20-amino-acid one, no leading special token (confirmed empirically,
+  unlike ESM's `<cls>`), and `trust_remote_code=True` for both tokenizer and model. Verified as
+  far as possible without a GPU (tokenizer + model loading + code path all confirmed correct up
+  to the point PlantCaduceus's `mamba_ssm` backend requires actual CUDA — it has no CPU
+  fallback, confirmed by a real forward-pass attempt failing inside its Triton kernel) — a full
+  run needs to happen on SCINET/GPU, matching this stage's existing convention for LLM scoring.
+- `07Ab_prematureStopCodon.ipynb` was actually a rhizome/life-history enrichment test on
+  stop-codon presence, unrelated to this stage's own premature-stop scoring — archived as
+  `archived/07Ab_prematureStopCodon_rhizomeLifeHistory.ipynb`.
 
 ---
 

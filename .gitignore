@@ -3,3 +3,4 @@ output/
 log/
 interproscan-5.76-107.0/
 .ipynb_checkpoints/
+__pycache__/
