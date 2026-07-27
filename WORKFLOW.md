@@ -22,7 +22,7 @@ you want to re-derive them from scratch.
 | **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
 | **05** `phylotreeConstruction` | Gap-strip CDS MSAs → extract angiosperm353 per-gene sequences + genetic distance → RAxML gene trees → ASTRAL-Pro species tree → filter/visualize/annotate species tree → phylogenetic K (relatedness) matrix | Gap-stripped CDS MSAs (from 04); angiosperm353 OG-name list; Poaceae metadata (for tree filtering) | `05A_treeConstruction` (gap-strip, RAxML, ASTRAL), `src/S04_angiosperm353_extractAndDist.R` (invoked from 05A), `05B_neutralPhylogenyVisualization.ipynb` (filter/visualize/phyloK) | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
 | **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 (PCA) → visualize distributions/tree overlay → ancestral state reconstruction | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06B_spCoordEnvData.sh` (coords → env data → envPC), `src/08_pulling_geo_data.R`/`src/09_pulling_envData.r` (invoked from 06B), `src/S05_envPC_analysis.R` (envPC computation, invoked from 06B), `06C_visualizationEnvAdapt.ipynb` (visualize + ASR) | envPC1–3 table (Fig. 1) → 08; ASR transition nodes → power simulation (08D) |
-| **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; seqIDmapping tables; OrthoFinder protein MSAs; gap-stripped CDS MSAs (from 05A); ESM2 weights; PlantCAD weights | `07Aa` (frameshift), `07Ba` (premature stop, local), `07Bd` (dN/dS, local); `07Ca`/`07Cb`/`07Cc` (ESM2, SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
+| **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; seqIDmapping tables; OrthoFinder protein MSAs; gap-stripped CDS MSAs (from 05A); ESM2 weights; PlantCAD weights | `07Aa` (frameshift), `07Ba` (premature stop, local), `07Bd` (dN/dS, local); `07Ca` (ESM2, SCINET GPU); `07Da`/`07Db`/`07Dc` (PlantCAD, SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
 | **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
 | **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
 | **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) via miniprot | Per-species CDS FASTAs (stress genes) + DEG study metadata; rice→OG mapping | `10A_DEG_IDconversion.sh` | Gene-ID mapping → 11 |
@@ -164,6 +164,19 @@ master table in `08A_masterDataTableGeneration.ipynb`. Per author review:
   to the point PlantCaduceus's `mamba_ssm` backend requires actual CUDA — it has no CPU
   fallback, confirmed by a real forward-pass attempt failing inside its Triton kernel) — a full
   run needs to happen on SCINET/GPU, matching this stage's existing convention for LLM scoring.
+  New `src/6_PlantCAD_logit2zeroShot.R` (DNA analog of `src/10_logit2zeroShot.R`: same
+  mean-log-ratio zero-shot approach, lowercase 4-letter vocab and `readDNAStringSet` instead
+  of `readAAStringSet`) is driven by a new `07Da_PlantCAD_SCINET.sh`/`07Db_PlantCAD_run.sh`/
+  `07Dc_PlantCADzeroshot_run.sh` series mirroring 07C's structure, with one difference: since
+  PlantCAD's input is a single combined nucleotide FASTA rather than one file per OG, these
+  run as 2 single SLURM jobs (chained via `--dependency=afterok`) instead of array jobs over
+  per-OG cmd files — `07Cb_ESM_run.sh`/`07Cc_zeroshot_run.sh` turned out to be byte-identical
+  duplicates of the generic `notebook/slurm/ESM_run.sh`/`zeroshot_run.sh` templates, so this
+  series doesn't recreate that duplication. Verified `src/6_PlantCAD_logit2zeroShot.R`'s logic
+  end-to-end against synthetic logits (real PlantCAD logits need a GPU) — correct scores and
+  per-OG z-scaling; the only failure hit while testing (`reticulate`/numpy 2.x incompatibility
+  under this machine's old `reticulate` build) is a pre-existing fragility already present in
+  the original `10_logit2zeroShot.R`'s hardcoded `RETICULATE_PYTHON` path, not something new.
 - `07Ab_prematureStopCodon.ipynb` was actually a rhizome/life-history enrichment test on
   stop-codon presence, unrelated to this stage's own premature-stop scoring — archived as
   `archived/07Ab_prematureStopCodon_rhizomeLifeHistory.ipynb`.
@@ -209,9 +222,11 @@ the author) — not guessed.
    if unset, so nothing changes if you're on this machine. **Notebooks (`.ipynb`) still
    hardcode `/workdir/sh2246/p_phyloGWAS/` directly** — that pass hasn't been done yet;
    edit those paths by hand if running a notebook from a different mount point.
-4. SCINET-only steps (07Ba/07Bb, 07Ca/07Cb/07Cc) require a SLURM allocation on USDA
-   SCINET Atlas (`buckler_lab_panand` account) and are not runnable on this machine
-   directly — their outputs are already present locally (see `DATA.md`).
+4. SCINET-only steps (`07Ca` ESM2, `07Da`/`07Db`/`07Dc` PlantCAD) require a SLURM allocation
+   on USDA SCINET Atlas (`buckler_lab_panand` account) and a GPU node, and are not runnable on
+   this machine directly — their outputs are already present locally (see `DATA.md`), except
+   PlantCAD's, which hasn't been run for real yet (no combined single-fasta CDS input exists
+   on disk — see the `TODO` in `07Da_PlantCAD_SCINET.sh`).
 5. Stage 01 (assembly) is not runnable from this repo at all — it's maintained in a
    separate repository ([bucklerlab/p_reelgene](https://bitbucket.org/bucklerlab/p_reelgene/src/master/short_read_assembly/));
    this repo picks up downstream of its output (`data/assemblies/`).
