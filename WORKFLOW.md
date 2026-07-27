@@ -21,8 +21,8 @@ you want to re-derive them from scratch.
 | **03** `orthogroup` | OrthoFinder (32 representative genomes) → OG filtering → ancestral AA sequence reconstruction (for the filtered OGs) → miniprot cross-mapping to Zm/Pv/At/Angiosperms353 → TableS5 summary; OG-name translation | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; Angiosperms353 Oryza reference; maize v5 mRNA reference; miniprot GFF annotations | `03A_buildHelixerOG.sh` (build+OrthoFinder), `03B_OGFilter.ipynb` (filter), `03C_ancestralSeqReconstruction.sh` (ancestral seq + miniprot ID matching), `03D_miniProtResult_eval.ipynb` (miniprot eval), `03E_TableS5Generation.ipynb` (TableS5), `03F_OGtranslation.R` (OG-name translation) | Filtered OG list + ancestral sequences + OG→maize/Pv/At/Angiosperms353 mapping → 04, 07, 08, 09, 11 |
 | **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
 | **05** `phylotreeConstruction` | Gap-strip CDS MSAs → extract angiosperm353 per-gene sequences + genetic distance → RAxML gene trees → ASTRAL-Pro species tree → filter/visualize/annotate species tree → phylogenetic K (relatedness) matrix | Gap-stripped CDS MSAs (from 04); angiosperm353 OG-name list; Poaceae metadata (for tree filtering) | `05A_treeConstruction` (gap-strip, RAxML, ASTRAL), `src/S04_angiosperm353_extractAndDist.R` (invoked from 05A), `05B_neutralPhylogenyVisualization.ipynb` (filter/visualize/phyloK) | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
-| **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 (PCA) → visualize distributions/tree overlay → ancestral state reconstruction | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06B_spCoordEnvData.sh` (coords → env data → envPC), `src/08_pulling_geo_data.R`/`src/09_pulling_envData.r` (invoked from 06B), `src/S05_envPC_analysis.R` (envPC computation, invoked from 06B), `06C_visualizationEnvAdapt.ipynb` (visualize + ASR) | envPC1–3 table (Fig. 1) → 08; ASR transition nodes → power simulation (08D) |
-| **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; seqIDmapping tables; OrthoFinder protein MSAs; gap-stripped CDS MSAs (from 05A); ESM2 weights; PlantCAD weights | `07Aa` (frameshift), `07Ba` (premature stop, local), `07Bd` (dN/dS, local); `07Ca` (ESM2, SCINET GPU); `07Da`/`07Db`/`07Dc` (PlantCAD, SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
+| **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 (PCA) → visualize distributions/tree overlay → ancestral state reconstruction | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06A_spCoordEnvData.sh` (coords → env data → envPC), `src/08_pulling_geo_data.R`/`src/09_pulling_envData.r` (invoked from 06A), `src/S05_envPC_analysis.R` (envPC computation, invoked from 06A), `06B_visualizationEnvAdapt.ipynb` (visualize + ASR) | envPC1–3 table (Fig. 1) → 08; ASR transition nodes → power simulation (08D) |
+| **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; seqIDmapping tables; OrthoFinder protein MSAs; gap-stripped CDS MSAs (from 05A); ESM2 weights; PlantCAD weights | `07Aa` (frameshift), `07Ba` (premature stop, local), `07Bb` (dN/dS, local); `07Ca` (ESM2, SCINET GPU); `07Da`/`07Db`/`07Dc` (PlantCAD, SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
 | **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
 | **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
 | **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) via miniprot | Per-species CDS FASTAs (stress genes) + DEG study metadata; rice→OG mapping | `10A_DEG_IDconversion.sh` | Gene-ID mapping → 11 |
@@ -83,26 +83,26 @@ input, but 05A's active `astral-pro` call only ever produces the unfiltered
 `keep.tip`, `write.tree`) was already correct, just reading the wrong file; and 05B's filtered/
 labeled tree outputs were writing "astral3"-suffixed filenames matching the *inactive*
 `astral-pro3` line in 05A (commented out) rather than the non-"3", `_20250407`-dated naming
-every real downstream consumer (`08C`/`src/12_runPermulation_perOGModel.R`, `06C`, `08B`, `11`)
+every real downstream consumer (`08C`/`src/12_runPermulation_perOGModel.R`, `06B`, `08B`, `11`)
 actually reads — corrected to `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk`
 and `..._astral_spLabeled_20250407.nwk`/`angiosperm353_astral_spLabeled_20250407.png` (dated,
 matching the same `20250407` batch as `phyloK_728Poaceae_astral_20250407.txt`).
 
-**Note on 06B/06C:** `06C_visualizationEnvAdapt.ipynb` originally mixed four things: (1) envPC
+**Note on 06A/06B:** `06B_visualizationEnvAdapt.ipynb` originally mixed four things: (1) envPC
 computation (PCA over per-species environmental-feature quantiles, writing
 `envData_707Poaceae_*`/HyPhy adaptation-list files); (2) the core KG3-climate/tree-overlay/
 ancestral-state-reconstruction visualization; (3) a large "life history paper" side-analysis
 (annual/perennial transitions, rhizome association) reusing the same envPC/tree objects; and
 (4) a few stray cells (OG dN/dS counts) unrelated to envirotyping entirely. Per author review:
-(1) moved to new `src/S05_envPC_analysis.R`, invoked from `06B_spCoordEnvData.sh` right after
+(1) moved to new `src/S05_envPC_analysis.R`, invoked from `06A_spCoordEnvData.sh` right after
 the (newly wired-up) `src/09_pulling_envData.r` call; (2) stays in a trimmed
-`06C_visualizationEnvAdapt.ipynb`; (3) moved to
-`notebook/06_envirotyping/archived/06C_supplementalLifeHistory.ipynb` (unparameterized,
+`06B_visualizationEnvAdapt.ipynb`; (3) moved to
+`notebook/06_envirotyping/archived/06B_supplementalLifeHistory.ipynb` (unparameterized,
 matching the archived-code convention — this archived code depends on objects computed in the
 original monolithic notebook and isn't runnable standalone); (4) deleted (not part of any
 figure). `06D_supplFig_envPCpipeline.R` — split out on the assumption that `library(raster)`/
 `library(terra)` would namespace-mask `dplyr`/`ggplot2` functions used elsewhere in the
-notebook — is merged back into `06C` and the file removed; tested empirically (real-data
+notebook — is merged back into `06B` and the file removed; tested empirically (real-data
 sandbox run) and no such conflict actually occurs with the packages currently used elsewhere
 in the notebook, so both are attached normally (fully-qualifying `raster::`/`terra::` calls
 alone isn't sufficient — `subset()`/`points()` need the packages attached to dispatch their
@@ -117,7 +117,7 @@ this repo entirely, in the sibling `p_evolBNI` project. Two real bugs fixed in t
 (`bien_data_clean[,3]`) that pointed at `scientificName` in its old frozen input file but at
 `decimalLatitude` (silently matching nothing) in the live `coordinates_clean.csv` it now reads
 — fixed to reference the column by name. A new small intermediate,
-`output/KG3_perSpecies_20250804.txt`, was introduced so `06C`'s KG3 analysis (which needs the
+`output/KG3_perSpecies_20250804.txt`, was introduced so `06B`'s KG3 analysis (which needs the
 per-species dominant Köppen class, only derivable from the raw per-occurrence env data) doesn't
 need to re-read the 194MB raw env-data file itself — `S05` derives and persists it once,
 alongside `envData_707Poaceae_*`.
@@ -143,7 +143,7 @@ master table in `08A_masterDataTableGeneration.ipynb`. Per author review:
   (`output/frameShiftMutation.txt` / `_additionalOGs.txt`) — not merged — matching what `08A`
   already does itself (`FS = rbind(fread(frameShiftMutation.txt), fread(frameShiftMutation_additionalOGs.txt))`).
   Verified: the rewritten notebook reproduces both real historical output files byte-for-byte.
-- **dN/dS to reference** (new `07Bd_dNdS_run.sh`): `src/07B_getOmega2Ref.R` was already
+- **dN/dS to reference** (new `07Bb_dNdS_run.sh`): `src/07B_getOmega2Ref.R` was already
   correct/portable (CLI args) but had never been wired to a driver anywhere in the repo — this
   new script loops it (via GNU parallel) over `output/CDSMSAPerOG_gs/*.gs.fa` (05A's
   gap-stripped MSAs; the raw MAFFT output this step originally read no longer exists on disk,

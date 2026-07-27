@@ -3,8 +3,8 @@
 # derived pipeline outputs consumed downstream (envData_707Poaceae*, HyPhy adaptation lists,
 # loading diagnostics).
 # author: Sheng-Kai Hsu
-# (ported from notebook/06_envirotyping/06C_visualizationEnvAdapt.ipynb, cells 0-43,
-#  as part of the 06B/06C restructuring; invoked from 06B_spCoordEnvData.sh)
+# (ported from notebook/06_envirotyping/06B_visualizationEnvAdapt.ipynb, cells 0-43,
+#  as part of the 06A/06B restructuring; invoked from 06A_spCoordEnvData.sh)
 
 library(ape)
 library(magrittr)
@@ -32,7 +32,7 @@ envTrait_range = read.delim(file.path(PHYLOGWAS_ROOT, "output/metadataFormalOut/
 
 envTrait_range_merged = merge(metadata[,c(1,3)],envTrait_range,by = "latest_name")
 
-# per-species dominant Koppen climate class (KG3), needed by 06C's KG3/tree-overlay sections -
+# per-species dominant Koppen climate class (KG3), needed by 06B's KG3/tree-overlay sections -
 # derived here since it's the only downstream consumer of the raw per-occurrence env data
 KG3_class = tapply(envTrait_range_merged$KG3,envTrait_range_merged$assemblyID,function(x) as.numeric(names(table(x))[which.max(table(x))]))
 write.table(data.frame(assemblyID = names(KG3_class), KG3_class = KG3_class),
