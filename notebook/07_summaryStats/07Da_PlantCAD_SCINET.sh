@@ -7,7 +7,7 @@
 SCINET_PROJECT_DIR=/project/90daydata/buckler_lab_panand/aimee.schulz/panand
 # TODO: fill in the real path once patch-scaffolds build-msa --single-fasta has been run for
 # the CDS/nucleotide case (see notebook/04_msaGeneration/README.md's step 0)
-COMBINED_FASTA=${SCINET_PROJECT_DIR}/output/orthofinderCDSMSAs_singleFasta/allOGs_combined.fa
+COMBINED_FASTA=${SCINET_PROJECT_DIR}/output/orthofinderCDSMSAs_singleFasta/combined_CDS.fa
 
 mkdir -p output/PlantCAD_logits output/PlantCAD_zeroShot
 
