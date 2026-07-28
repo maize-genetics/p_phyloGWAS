@@ -22,7 +22,8 @@ conda env create -f envs/environment-py.yml      # Python 3.11 + torch/transform
   `envs/environment-tools.yml`'s `aster` package (provides `astral-pro`).
 
 - Licensed software (not distributed via conda, not covered by any `environment*.yml`):
-  **ASReml-R**, used in stage 08 (`08C_perOGmodel.sh`, power simulation). The installer is
+  **ASReml-R**, used in stage 08 (`08C_genomicFeatureAssociation.ipynb`, `08D_perOGmodel.sh`,
+  power simulation). The installer is
   vendored at `src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz` (built for R 4.2.0, matching
   `envs/environment-r.yml`'s `r-base` pin) but requires your own VSN International license to
   activate — see https://vsni.co.uk/software/asreml-r for licensing. Install it into the

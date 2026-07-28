@@ -21,9 +21,9 @@ you want to re-derive them from scratch.
 | **03** `orthogroup` | OrthoFinder (32 representative genomes) → OG filtering → ancestral AA sequence reconstruction (for the filtered OGs) → miniprot cross-mapping to Zm/Pv/At/Angiosperms353 → TableS5 summary; OG-name translation | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; Angiosperms353 Oryza reference; maize v5 mRNA reference; miniprot GFF annotations | `03A_buildHelixerOG.sh` (build+OrthoFinder), `03B_OGFilter.ipynb` (filter), `03C_ancestralSeqReconstruction.sh` (ancestral seq + miniprot ID matching), `03D_miniProtResult_eval.ipynb` (miniprot eval), `03E_TableS5Generation.ipynb` (TableS5), `03F_OGtranslation.R` (OG-name translation) | Filtered OG list + ancestral sequences + OG→maize/Pv/At/Angiosperms353 mapping → 04, 07, 08, 09, 11 |
 | **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
 | **05** `phylotreeConstruction` | Gap-strip CDS MSAs → extract angiosperm353 per-gene sequences + genetic distance → RAxML gene trees → ASTRAL-Pro species tree → filter/visualize/annotate species tree → phylogenetic K (relatedness) matrix | Gap-stripped CDS MSAs (from 04); angiosperm353 OG-name list; Poaceae metadata (for tree filtering) | `05A_treeConstruction` (gap-strip, RAxML, ASTRAL), `src/S04_angiosperm353_extractAndDist.R` (invoked from 05A), `05B_neutralPhylogenyVisualization.ipynb` (filter/visualize/phyloK) | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
-| **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 (PCA) → visualize distributions/tree overlay → ancestral state reconstruction | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06A_spCoordEnvData.sh` (coords → env data → envPC), `src/08_pulling_geo_data.R`/`src/09_pulling_envData.r` (invoked from 06A), `src/S05_envPC_analysis.R` (envPC computation, invoked from 06A), `06B_visualizationEnvAdapt.ipynb` (visualize + ASR) | envPC1–3 table (Fig. 1) → 08; ASR transition nodes → power simulation (08D) |
+| **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 (PCA) → visualize distributions/tree overlay → ancestral state reconstruction | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06A_spCoordEnvData.sh` (coords → env data → envPC), `src/08_pulling_geo_data.R`/`src/09_pulling_envData.r` (invoked from 06A), `src/S05_envPC_analysis.R` (envPC computation, invoked from 06A), `06B_visualizationEnvAdapt.ipynb` (visualize + ASR) | envPC1–3 table (Fig. 1) → 08; ASR transition nodes → power simulation (08E) |
 | **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; seqIDmapping tables; OrthoFinder protein MSAs; gap-stripped CDS MSAs (from 05A); ESM2 weights; PlantCAD weights | `07Aa` (frameshift), `07Ba` (premature stop, local), `07Bb` (dN/dS, local); `07Ca` (ESM2, SCINET GPU); `07Da`/`07Db`/`07Dc` (PlantCAD, SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
-| **08** `linearModeling` | Master data table → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
+| **08** `linearModeling` | Master data table → proteome a.a./genome GC estimation → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureEstimation.ipynb`, `08C_genomicFeatureAssociation.ipynb`, `08D_perOGmodel.sh`, `08E_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
 | **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
 | **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) via miniprot | Per-species CDS FASTAs (stress genes) + DEG study metadata; rice→OG mapping | `10A_DEG_IDconversion.sh` | Gene-ID mapping → 11 |
 | **11** `candidateOGInvestigation` | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 6 Sankey) | DeepGO GO annotation; Maize v5 GO annotation | `notebook/11_candidateOGInvestigation/11_candidateOGInvestigation.ipynb` | 17 high-confidence candidate OGs (final) |
@@ -180,6 +180,51 @@ master table in `08A_masterDataTableGeneration.ipynb`. Per author review:
 - `07Ab_prematureStopCodon.ipynb` was actually a rhizome/life-history enrichment test on
   stop-codon presence, unrelated to this stage's own premature-stop scoring — archived as
   `archived/07Ab_prematureStopCodon_rhizomeLifeHistory.ipynb`.
+
+**Note on 08A–08E:** stage 08 was previously `08A_masterDataTableGeneration.ipynb`,
+`08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh`. Per
+author review, `08B` genuinely mixed two things: proteome amino-acid composition + genome GC
+**estimation and investigation** (per-taxa/per-OG a.a. composition, FPKM-abundance filtering,
+`canprot` physicochemical features, per-taxa/per-OG GC content — writing the 3 real feature
+tables `poaceae_aaComposition_20251008.txt`, `poaceae_dnaComposition_20251008.txt`,
+`genomicFeatureData_20251008.txt` + variants), versus the phylogenetic **modeling** built on
+top of those tables (variance partitioning, Fig4a/b, ASReml mixed model vs. envPCs,
+permulation, empirical p-values, Fig4c). Split into `08B_genomicFeatureEstimation.ipynb` and
+`08C_genomicFeatureAssociation.ipynb`, each self-contained (its own copy of the metadata/
+phyloK/envPC/tree loading header) rather than sharing in-memory state — `08C` re-reads the
+feature tables `08B` writes, exactly as it already did before the split. The two shell
+drivers were renumbered `08C_perOGmodel.sh` → `08D_perOGmodel.sh` and
+`08D_power_simulation.sh` → `08E_power_simulation.sh` to keep a single A–E letter sequence
+(the latter also gained the `PHYLOGWAS_ROOT`/`cd` header every other driver in this pass has —
+`src/powerSimulation_XY_revised.R` already resolved `PHYLOGWAS_ROOT` itself, just needed it
+exported first). A trailing "Supplemental analysis for binomial modeling (life history)"
+block, reusing the same feature tables to test lifeHistory/rhizome associations, was archived
+verbatim as `archived/08X_binomialLifeHistoryModel.ipynb` (unparameterized, matching the
+established archived-code convention — it also has a pre-existing bug, undefined
+`correctionFactor`/`correctionFactor2` variables, left as-is since archived code isn't fixed).
+
+Three real bugs fixed in the process (all in `08A`, all pre-existing — i.e. present before this
+pass, not introduced by it): (1) `08A`'s GO-enrichment block referenced `mappingFileMerged`
+without ever building it (an undefined variable) — reconstructed from `data/OGToZm_mapping_v2.txt`
+(the only mapping file both used downstream and actually present on disk; a second file, Pv
+mapping, that 10B/11 also reference doesn't exist anywhere in this repo — flagged, not fixed,
+since 10B/11 haven't been reached in this cleanup pass yet); (2) the same block then indexed the
+result positionally (`mappingFileMerged[...,3]`) — fixed to reference the `ZmID` column by name,
+the same class of fix already applied to 06's occurrence-filter column index; (3) a
+`conservedOG`-based GO-enrichment branch (cells computing `tgd2`/`GO_res_table2`/`topGOTab2`)
+referenced a `conservedOG` list that was only ever defined inside a commented-out block — dead,
+unreachable code (Fig2 only ever consumes `topGOTab`, built from the real `lostOG` list), so
+removed rather than fixed, along with an unrelated broken diagnostic print
+(`length(geneLosscountPerTaxaa)`, a typo'd variable name) and a stale `annual_assemblies_20250423.txt`
+write superseded by (and never read instead of) the newer `annual_assemblies_20260213.txt` `08A`
+already writes and `09A_HyPhyPipeline.sh` actually reads. A fourth bug, in what's now `08B`: the
+a.a.-physiochemical-properties cells referenced `aa.comp.busco`/`aa.feat.busco`, never assigned
+anywhere in the notebook (dead BUSCO-based investigation, abandoned before completion) — these
+lines were removed since nothing downstream consumes them either. One inconsistency flagged but
+deliberately *not* resolved: `08A` reads `phyloK_728Poaceae_astral_20250407.txt` as-is, while
+`08B`/`08C` apply an extra `phyloKMat = phyloKMat/2 # to correct the error` right after loading
+the same file — preserved faithfully in both places (matching prior, unmodified behavior) rather
+than silently unified, since it's unclear which of the two is the intended treatment.
 
 ---
 
