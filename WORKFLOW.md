@@ -216,8 +216,8 @@ referenced a `conservedOG` list that was only ever defined inside a commented-ou
 unreachable code (Fig2 only ever consumes `topGOTab`, built from the real `lostOG` list), so
 removed rather than fixed, along with an unrelated broken diagnostic print
 (`length(geneLosscountPerTaxaa)`, a typo'd variable name) and a stale `annual_assemblies_20250423.txt`
-write superseded by (and never read instead of) the newer `annual_assemblies_20260213.txt` `08A`
-already writes and `09A_HyPhyPipeline.sh` actually reads. A fourth bug, in what's now `08B`: the
+write superseded by (and never read instead of) the newer `annual_assemblies_20260213.txt`
+(see below — `08A` no longer writes this itself). A fourth bug, in what's now `08B`: the
 a.a.-physiochemical-properties cells referenced `aa.comp.busco`/`aa.feat.busco`, never assigned
 anywhere in the notebook (dead BUSCO-based investigation, abandoned before completion) — these
 lines were removed since nothing downstream consumes them either. One inconsistency flagged but
@@ -225,6 +225,18 @@ deliberately *not* resolved: `08A` reads `phyloK_728Poaceae_astral_20250407.txt`
 `08B`/`08C` apply an extra `phyloKMat = phyloKMat/2 # to correct the error` right after loading
 the same file — preserved faithfully in both places (matching prior, unmodified behavior) rather
 than silently unified, since it's unclear which of the two is the intended treatment.
+
+**Update:** the "writing out assembly ID for annual-perennial contrast" block (writing
+`data/annual_assemblies_20260213.txt`, `perennial_assemblies_20260213.txt`,
+`perennialRhizome_assemblies_20260303.txt`) was moved out of `08A` entirely, into
+`archived/08X_binomialLifeHistoryModel.ipynb`. These 3 files only ever fed life-history/
+rhizome-specific analyses — this same archived binomial model, and the life-history/rhizome
+sections of `09A_HyPhyPipeline.sh` — not 08A's core (trait-agnostic) master-table pipeline.
+Per author: the life-history/rhizome thread as a whole is intended to move to its own,
+separate repo once this repository's cleanup is finished, so `09A_HyPhyPipeline.sh`'s
+life-history/rhizome sections are now unproduced/stale by the same deliberate design, not an
+oversight — flagged here for whenever stage 09 is reached in this cleanup, or for the future
+life-history repo split.
 
 ---
 
