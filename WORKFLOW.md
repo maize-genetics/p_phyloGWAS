@@ -220,11 +220,12 @@ write superseded by (and never read instead of) the newer `annual_assemblies_202
 (see below — `08A` no longer writes this itself). A fourth bug, in what's now `08B`: the
 a.a.-physiochemical-properties cells referenced `aa.comp.busco`/`aa.feat.busco`, never assigned
 anywhere in the notebook (dead BUSCO-based investigation, abandoned before completion) — these
-lines were removed since nothing downstream consumes them either. One inconsistency flagged but
-deliberately *not* resolved: `08A` reads `phyloK_728Poaceae_astral_20250407.txt` as-is, while
-`08B`/`08C` apply an extra `phyloKMat = phyloKMat/2 # to correct the error` right after loading
-the same file — preserved faithfully in both places (matching prior, unmodified behavior) rather
-than silently unified, since it's unclear which of the two is the intended treatment.
+lines were removed since nothing downstream consumes them either. One inconsistency flagged when
+the split first landed — `08A` read `phyloK_728Poaceae_astral_20250407.txt` as-is, while `08B`/
+`08C` applied an extra `phyloKMat = phyloKMat/2 # to correct the error` right after loading the
+same file — has since been resolved by the author: the `/2` correction is no longer needed now
+that the phyloK-generating function itself has been fixed upstream, so it was removed from `08B`
+(matching `08A`'s and `08C`'s uncorrected treatment).
 
 **Update:** the "writing out assembly ID for annual-perennial contrast" block (writing
 `data/annual_assemblies_20260213.txt`, `perennial_assemblies_20260213.txt`,
