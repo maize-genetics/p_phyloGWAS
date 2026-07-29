@@ -88,6 +88,23 @@ actually reads — corrected to `output/PoaceaeTree_angiosperm353_astral_filtere
 and `..._astral_spLabeled_20250407.nwk`/`angiosperm353_astral_spLabeled_20250407.png` (dated,
 matching the same `20250407` batch as `phyloK_728Poaceae_astral_20250407.txt`).
 
+**Update:** two more real bugs found and fixed. (1) `src/S01_phyloK.R`'s `phyloK()` had a
+calculation error — `out = 2*out/max_brlen` doubled the shared-branch-length ratio (max value
+across the matrix was 2, when a proper ratio should max out at 1); corrected to
+`out = out/max_brlen`. This is exactly what the `phyloKMat = phyloKMat/2 # to correct the error`
+line downstream in `08B`/`08C` had been silently compensating for — now that the function
+itself is fixed, that line has been removed from both (see stage 08's note). (2) `05B`'s
+metadata read for tip-set filtering pointed at `data/Poaceae_metadata_highErrorFiltered_2025.10.08.tsv`
+— a **stage-08 output** (08A's PMS/frameshift QC filter), created after stage 05 in pipeline
+order. Rerunning `05B` as it stood would have silently pruned to a different, smaller tip set
+(687 instead of 727) than every historical downstream file — corrected to
+`data/Poaceae_metadata_filtered_2025.08.28.tsv`, verified to reproduce the exact historical
+727-tip set. `output/phyloK_728Poaceae_astral_20250407.txt` was regenerated with both fixes
+(correct tree/metadata reproducing the same 727 tips, corrected `phyloK()` formula) and the
+real file replaced — confirmed the new matrix is exactly half the old one, element-wise, to
+floating-point precision (max abs diff between old and `2 × new` is `4e-15` across all
+727×727 entries).
+
 **Note on 06A/06B:** `06B_visualizationEnvAdapt.ipynb` originally mixed four things: (1) envPC
 computation (PCA over per-species environmental-feature quantiles, writing
 `envData_707Poaceae_*`/HyPhy adaptation-list files); (2) the core KG3-climate/tree-overlay/
