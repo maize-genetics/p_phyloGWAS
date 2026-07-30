@@ -32,8 +32,12 @@ PHYLO = {
 }
 
 # Group totals at each downstream stage (no overlap data shown beyond phylo)
-SELECTION = {"envPC1": 30, "envPC2": 19, "envPC3": 5}
-EXPRESSION = {"envPC1": 10, "envPC2":  6, "envPC3": 1}
+# envPC2/envPC3 corrected 2026-07-30: the RELAX-significance layer (hyphyCandidate2/3 in
+# 11_candidateOGInvestigation.ipynb) referenced a nonexistent column on the wrong dataframe
+# (hyphy_drought$wet/hyphy_clay$wet instead of hyphy_wet$OG/hyphy_clay$OG), silently dropping
+# every wet/clay-significant OG. envPC1 (cold/warm) was unaffected and stays the same.
+SELECTION = {"envPC1": 30, "envPC2": 28, "envPC3": 13}
+EXPRESSION = {"envPC1": 10, "envPC2": 10, "envPC3": 7}
 
 # ════════════════════════════════════════════════════════════════════════
 # STYLE

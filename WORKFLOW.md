@@ -359,6 +359,20 @@ correct cold/warm pattern one cell above it. Verified against the real RELAX res
 is a real change to a reported scientific result, not a formatting fix; flagged prominently for
 the author to review against the manuscript.
 
+**Update:** the notebook had never actually written out the final candidate OGs with their
+per-candidate statistics (phylogenetic mixed model p-value, RELAX significance, a-priori DE
+conditions) — the "candidate gene identification" cells only ever printed comma-joined gene-ID
+strings inline, nothing was saved. Added new cells building `output/finalCandidateOGs_summary.txt`
+(one row per final candidate: `OG, envPC, ZmID, OsID, phylo_p, phylo_empP,
+RELAX_dir1_condition/_logp/_k, RELAX_dir2_condition/_logp/_k, aprioriDE_conditions` — the two
+RELAX "dir" columns hold whichever pair of opposite-direction tests apply to that OG's envPC
+axis, e.g. cold/warm for envPC1, so the table stays one unified schema across all three axes)
+and ran it for real — confirmed 27 rows, matching the corrected count above. Also updated
+`src/fig6a_sankey_v2.py`'s hardcoded `SELECTION`/`EXPRESSION` dicts (the "selection shift" and
+"differential expression" Sankey columns) from the pre-fix values (30/19/5 and 10/6/1) to the
+corrected ones (30/28/13 and 10/10/7, re-verified directly from real data) and re-ran the
+script to confirm it still renders correctly.
+
 ---
 
 ## Tools used across stages
