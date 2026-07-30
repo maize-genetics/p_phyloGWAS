@@ -59,3 +59,7 @@ mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>
 `<input>` is a per-OG FASTA from step 0 (CDS or protein, per the table above); `<output>`
 follows the `{OG}_mafft.fa` naming convention consumed downstream (e.g.
 `output/OrthofinderMAFFT/{OG}_mafft.fa`, read by `05A_treeConstruction` for the CDS case).
+
+**Note:** `output/OrthofinderMAFFT/` is no longer retained on disk — 05A's gap-stripping
+step consumes it and doesn't keep a copy (see `WORKFLOW.md`'s "Note on 05A/05B"). Regenerate
+it by rerunning this stage if you need the raw (non-gap-stripped) MSAs directly.

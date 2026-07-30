@@ -11,12 +11,14 @@ find output/OrthofinderMAFFT -type f|cut -d / -f 3|sed 's/_mafft.fa//g' |paralle
 Rscript src/S04_angiosperm353_extractAndDist.R
 
 ## gene tree
+mkdir -p output/geneTree_allOGs/
 cd output/geneTree_allOGs/
 find "${PHYLOGWAS_ROOT}/output/geneTree_allOGs/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/geneTree_allOGs/{}.fa -# 1 -n {}.tree'
 cd "${PHYLOGWAS_ROOT}/"
 
 
 # angiosperm 353 loci gene tree for astral
+mkdir -p output/geneTree_angiosperm353/
 cd output/geneTree_angiosperm353/
 find "${PHYLOGWAS_ROOT}/output/geneTree_angiosperm353/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/geneTree_angiosperm353/{}.fa -# 1 -n {}.tree'
 cd "${PHYLOGWAS_ROOT}/"
@@ -24,7 +26,7 @@ cd "${PHYLOGWAS_ROOT}/"
 
 # astral tree
 printf "%s\n" output/geneTree_angiosperm353/RAxML_bestTree* | xargs cat > output/angiospermGeneTreeForest.nwk
-astral-pro -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353.nwk
+astral-pro -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353_astral.nwk
 # src/ASTER/bin/astral-pro3 -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353_astral3_20250416.nwk
 
 # continues in 05B_neutralPhylogenyVisualization.ipynb (species tree filtering, visualization, phyloK)

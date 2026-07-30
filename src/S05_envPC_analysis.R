@@ -70,6 +70,8 @@ envTrait_range_merged %>%  # combined coordinates from BIEN and GBIF
   reshape2:::melt(variable.name='quantile',value.name = 'q_value') %>%
   reshape2::acast(assemblyID ~ variable+quantile,value.var = 'q_value')
 
+set.seed(123)  # process_synthetic() -> missMDA::estim_ncpPCA/imputePCA are stochastic; unseeded, envPC
+               # values for species needing imputation drift slightly between reruns
 ePCs <-
   computing_quantitave_features %>%
   process_synthetic(n.synthetic = 40)
