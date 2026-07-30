@@ -127,10 +127,12 @@ ancestral-state-reconstruction visualization; (3) a large "life history paper" s
 (1) moved to new `src/S05_envPC_analysis.R`, invoked from `06A_spCoordEnvData.sh` right after
 the (newly wired-up) `src/09_pulling_envData.r` call; (2) stays in a trimmed
 `06B_visualizationEnvAdapt.ipynb`; (3) moved to
-`notebook/06_envirotyping/archived/06B_supplementalLifeHistory.ipynb` (unparameterized,
-matching the archived-code convention — this archived code depends on objects computed in the
-original monolithic notebook and isn't runnable standalone); (4) deleted (not part of any
-figure). `06D_supplFig_envPCpipeline.R` — split out on the assumption that `library(raster)`/
+`archived/06B_supplementalLifeHistory.ipynb` (unparameterized, matching the archived-code
+convention — this archived code depends on objects computed in the original monolithic
+notebook and isn't runnable standalone); (4) deleted (not part of any figure). **Update:**
+`06B_supplementalLifeHistory.ipynb` has since moved again, out of this repo entirely, to
+`p_lifeHistoryPoaceae/notebook/06_envirotyping/supplementalLifeHistory.ipynb` — see "Note on
+the life-history/rhizome thread's extraction" near the end of this file. `06D_supplFig_envPCpipeline.R` — split out on the assumption that `library(raster)`/
 `library(terra)` would namespace-mask `dplyr`/`ggplot2` functions used elsewhere in the
 notebook — is merged back into `06B` and the file removed; tested empirically (real-data
 sandbox run) and no such conflict actually occurs with the packages currently used elsewhere
@@ -227,7 +229,9 @@ master table in `08A_masterDataTableGeneration.ipynb`. Per author review:
   the original `10_logit2zeroShot.R`'s hardcoded `RETICULATE_PYTHON` path, not something new.
 - `07Ab_prematureStopCodon.ipynb` was actually a rhizome/life-history enrichment test on
   stop-codon presence, unrelated to this stage's own premature-stop scoring — archived as
-  `archived/07Ab_prematureStopCodon_rhizomeLifeHistory.ipynb`.
+  `archived/07Ab_prematureStopCodon_rhizomeLifeHistory.ipynb`. **Update:** since moved out of
+  this repo entirely, to `p_lifeHistoryPoaceae/notebook/07_summaryStats/prematureStopCodon_rhizomeLifeHistory.ipynb`
+  — see "Note on the life-history/rhizome thread's extraction" near the end of this file.
 
 **Note on 08A–08E:** stage 08 was previously `08A_masterDataTableGeneration.ipynb`,
 `08B_genomicFeatureAssociation.ipynb`, `08C_perOGmodel.sh`, `08D_power_simulation.sh`. Per
@@ -250,6 +254,11 @@ block, reusing the same feature tables to test lifeHistory/rhizome associations,
 verbatim as `archived/08X_binomialLifeHistoryModel.ipynb` (unparameterized, matching the
 established archived-code convention — it also has a pre-existing bug, undefined
 `correctionFactor`/`correctionFactor2` variables, left as-is since archived code isn't fixed).
+**Update:** since moved out of this repo entirely, to
+`p_lifeHistoryPoaceae/notebook/08_linearModeling/binomialLifeHistoryModel.ipynb` — see "Note
+on the life-history/rhizome thread's extraction" near the end of this file. The archived
+`08B_GOenrichmentForAnnualism.ipynb` (a separate GO-enrichment side-analysis for the same
+annual/perennial contrast, not previously called out in this note) moved there too.
 
 Three real bugs fixed in the process (all in `08A`, all pre-existing — i.e. present before this
 pass, not introduced by it): (1) `08A`'s GO-enrichment block referenced `mappingFileMerged`
@@ -297,7 +306,12 @@ already created `output/CDSMSAPerOG_HyPhy_20250203/`, `output/geneTree_allOGs_20
 and the `output/HyPhyResult/` parent directory) — same rationale as the `08A`→`08X` move:
 this whole thread is slated to move to its own repo once cleanup here is finished. The
 trimmed `09A_HyPhyPipeline.sh` now runs only the envPC/cold/warm/drought/wet/sand/clay
-branch-test pipeline.
+branch-test pipeline. **Update:** `archived/09A_lifeHistoryRhizome_HyPhyPipeline.sh` has since
+moved out of this repo entirely, to
+`p_lifeHistoryPoaceae/notebook/09_molEvolution/lifeHistoryRhizome_HyPhyPipeline.sh` — but it
+still must be run from *inside a p_phyloGWAS checkout* (it still `cd`s into `PHYLOGWAS_ROOT`
+and reads this repo's un-vendored upstream intermediates); see "Note on the life-history/
+rhizome thread's extraction" near the end of this file.
 
 `09B_RELAX_resultSummary.ipynb`'s core job is reading HyPhy RELAX json output and writing
 per-trait result tables (`RELAX_resultTable_*.txt`). Per author review: dropped several
@@ -311,6 +325,15 @@ correlation plots, topGO enrichment on "Relax" vs. "Intensify" OG sets) was a di
 side-analysis, not part of the core json→txt conversion — moved to
 `archived/09B_GWASRelaxEnrichment.ipynb` (unparameterized, depends on `testRes`/`testRes2`
 built earlier in `09B`, isn't runnable standalone, matching the archived-code convention).
+
+**Update:** `09B`'s 3 remaining life-history/rhizome cells (`testRes7`/`testRes8`/`testRes9` +
+their `jsonFileList`s and `fwrite`s, reading `output/HyPhyResult/{lifeHistory,rhizome_20260515,
+lifeHistory_20260515}/` and writing `RELAX_resultTable_{lifeHistory_20250216,rhizome_20260524,
+lifeHistory_20260524}.txt`) have been extracted out of this still-active notebook into
+`p_lifeHistoryPoaceae/notebook/09_molEvolution/LH_RELAX_resultConversion.ipynb` — the one
+core-embedded piece of the life-history/rhizome thread's extraction (see "Note on the
+life-history/rhizome thread's extraction" near the end of this file). `09B` now only builds
+the core cold/warm/envPC2/envPC3 result tables.
 
 **Note on 10A/10B:** `10B_stressInducedGene_enrichment.ipynb`'s core job is converting
 manually-extracted DE gene lists (one per abiotic-stress study, tracked in
@@ -435,6 +458,35 @@ the current unversioned `Fig4b.png`), `Fig4c.png`/`Fig4c_v2–v5.png`/`Fig4c_S1.
 `FigS6.pdf`/`FigS6_check.pdf` (superseded by `FigS6_v2.pdf`), `fig6a_sankey.png`/`.svg`
 (pre-`_v2`, lowercase), `suppFig/suppFig_genomicPipeline.pptx` (stray, never code-generated),
 `suppFig/suppFig_envPCPipeline_d.png`/`_e.png` (bare, no `_v2` ever existed for these two).
+
+**Note on the life-history/rhizome thread's extraction:** the recurring annual/perennial
+life-history and rhizome (underground-stem presence/absence) side-thread — flagged throughout
+stages 06–10's notes above as "slated to move to its own repo" — has now moved, to a new
+sibling repo, `/local/workdir/sh2246/p_lifeHistoryPoaceae` (fresh `git init`, no history
+preserved). Moved: `archived/06B_supplementalLifeHistory.ipynb`,
+`archived/07Ab_prematureStopCodon_rhizomeLifeHistory.ipynb`,
+`archived/08X_binomialLifeHistoryModel.ipynb`, `archived/08B_GOenrichmentForAnnualism.ipynb`,
+`archived/09A_lifeHistoryRhizome_HyPhyPipeline.sh`,
+`archived/10E_candidateOGInvestigation_lifeHistory.ipynb`, `src/01_runGWAS.R` (removed from
+this repo's script library entirely), and 3 non-functional early prototypes
+(`XX_archived/example_GWAS_MVP_MixLog.R`, `XX_archived/06D_lifehistoryOnMap.R`,
+`XX_archived/18_pubTraitDB.ipynb`, kept there for lineage only). The one piece still embedded
+in active code — `09B`'s 3 life-history/rhizome cells — was extracted into a new notebook
+there (see "Note on 09A/09B" above).
+
+The new repo vendors ~1GB of small core data/output files as real copies (its own README.md
+lists every one); the 48GB `output/masterDataTable_PAVFill_20251001.txt` is symlinked rather
+than copied (both repos read the one real file in this repo's `output/`); ~74GB of upstream
+HyPhy intermediates (`output/CDSMSAPerOG_gs/`, `output/CDSMSAPerOG_HyPhy_20250203/`,
+`output/geneTree_allOGs_20250203/`, and their life-history-specific derived siblings) were
+**not** vendored — only the ~360MB of already-computed `output/HyPhyResult/{lifeHistory*,
+rhizome*}/` results moved. `08A_masterDataTableGeneration.ipynb`'s `rhizomeDat`/`lifeHistory`
+merge (cells 2/17) stays in this repo, since it feeds the shared master table both the core
+analysis and the moved thread read from — left as harmless passenger columns, confirmed
+unused by `08B`/`08C` themselves. Every known gap the new repo's own inventory surfaced
+(several files missing entirely, including a whole third sibling repo `p_panAndOGASR`; a
+handful of orphan data files with no producer script found anywhere; one 0-byte HyPhy RELAX
+json) is documented in that repo's README.md rather than fixed or silently worked around here.
 
 ---
 
