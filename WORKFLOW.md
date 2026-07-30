@@ -317,6 +317,13 @@ categories, same gene-set membership, same counts — 2212/2874/1292/2524 for
 cold/heat/drought/waterlogging) — confirms the metadata-path fix doesn't change any
 actual result, just where it's correctly read from.
 
+**Update:** `10A_DEG_IDconversion.sh`'s already-disabled "pot-in-pot dataset" block (a
+Helixer-annotation-based variant of the same miniprot ID-conversion step, for a different
+assembly set under `output/candidateGenes_remob/assemblies_pp/`) — commented out by the
+author rather than actively run — moved to
+`archived/10A_potInPot_DEG_IDconversion.sh`, kept commented out exactly as found, matching
+the archived-code convention rather than left disabled in place.
+
 ---
 
 ## Tools used across stages
