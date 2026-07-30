@@ -470,8 +470,8 @@ for grp, (top, bot) in col4_y.items():
 
 plt.tight_layout(pad=0.5)
 os.makedirs(OUT_DIR, exist_ok=True)
-png_path = os.path.join(OUT_DIR, "fig6a_sankey_v2.png")
-svg_path = os.path.join(OUT_DIR, "fig6a_sankey_v2.svg")
+png_path = os.path.join(OUT_DIR, "Fig6a_sankey_v2.png")
+svg_path = os.path.join(OUT_DIR, "Fig6a_sankey_v2.svg")
 plt.savefig(png_path, dpi=300, bbox_inches="tight", facecolor="white")
 plt.savefig(svg_path, bbox_inches="tight", facecolor="white")
 plt.show()

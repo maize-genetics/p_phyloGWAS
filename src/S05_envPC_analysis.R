@@ -40,7 +40,7 @@ write.table(data.frame(assemblyID = names(KG3_class), KG3_class = KG3_class),
             quote = F, row.names = F, sep = "\t")
 
 exampleDat = envTrait_range_merged$bio01_Annual_Mean_Temperature[envTrait_range_merged$latest_name%in%"Andropogon gerardii"]
-png(file.path(PHYLOGWAS_ROOT, "output/figure/suppFig/suppFig_envPCPipeline_a2.png"),
+png(file.path(PHYLOGWAS_ROOT, "output/figure/suppFig/FigS1_envPCPipeline_a2.png"),
     width = 4,height = 4,units = "cm",res = 600, pointsize = 6)
 par(mar = c(3,3,2,2))
 plot(density(exampleDat,na.rm = T),main = expression(italic("Andropogon gerardi")),
@@ -76,7 +76,7 @@ ePCs <-
 
 saveRDS(ePCs,file.path(PHYLOGWAS_ROOT, 'output/ePC_20250804.rds'))
 
-png(file.path(PHYLOGWAS_ROOT, "output/figure/suppFig/suppFig_envPCPipeline_a3.png"),
+png(file.path(PHYLOGWAS_ROOT, "output/figure/suppFig/FigS1_envPCPipeline_a3.png"),
     width = 4,height = 4,unit = "cm",pointsize = 6,res = 600)
 par(mar = c(3,3,1,1),mgp = c(2,.7,0))
 plot(ePCs$variance.explained.by.eigen[1:10,2],xlab = 'envPCs',ylab = 'Variance explained (%)')
@@ -130,7 +130,7 @@ dev.off()
 
 write.table(ePCs$variable.correlation,file.path(PHYLOGWAS_ROOT, "output/envPC_load.txt"),sep = "\t")
 
-png(file.path(PHYLOGWAS_ROOT, "output/figure/suppFig/suppFig_envPCPipeline_c.png"),width = 15.85,height = 8.7*.5,
+png(file.path(PHYLOGWAS_ROOT, "output/figure/suppFig/FigS1_envPCPipeline_c.png"),width = 15.85,height = 8.7*.5,
     unit = "cm",res = 600, pointsize = 8)
 par(mar = c(3,10,1,.5),mfrow = c(1,5))
 for (i in 1:5){

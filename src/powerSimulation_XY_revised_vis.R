@@ -288,7 +288,7 @@ p_curve <- ggplot(power_df_merged,
 
 print(p_curve)
 
-ggsave(file.path(OUTPUT_DIR, "Fig8_revised.png"), p_curve,
+ggsave(file.path(OUTPUT_DIR, "Fig2_revised.png"), p_curve,
        device = "png", width = 10, height = 6, dpi = 300)
 
 # =============================================================================
