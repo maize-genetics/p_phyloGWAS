@@ -25,7 +25,7 @@ you want to re-derive them from scratch.
 | **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; seqIDmapping tables; OrthoFinder protein MSAs; gap-stripped CDS MSAs (from 05A); ESM2 weights; PlantCAD weights | `07Aa` (frameshift), `07Ba` (premature stop, local), `07Bb` (dN/dS, local); `07Ca` (ESM2, SCINET GPU); `07Da`/`07Db`/`07Dc` (PlantCAD, SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
 | **08** `linearModeling` | Master data table → proteome a.a./genome GC estimation → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureEstimation.ipynb`, `08C_genomicFeatureAssociation.ipynb`, `08D_perOGmodel.sh`, `08E_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
 | **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
-| **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) via miniprot | Per-species CDS FASTAs (stress genes) + DEG study metadata; rice→OG mapping | `10A_DEG_IDconversion.sh` | Gene-ID mapping → 11 |
+| **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) via miniprot → convert manually-extracted DE gene lists per abiotic-stress study to OG IDs → consistent (multi-study) per-stress candidate gene sets | Per-species CDS FASTAs (stress genes) + DEG study metadata; rice→OG mapping | `10A_DEG_IDconversion.sh` (ID mapping), `10B_consistentStressResponsiveGenes.ipynb` (DE-gene ID conversion + consistency filtering) | Gene-ID mapping + consistent per-stress DEG sets → 11 |
 | **11** `candidateOGInvestigation` | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 6 Sankey) | DeepGO GO annotation; Maize v5 GO annotation | `notebook/11_candidateOGInvestigation/11_candidateOGInvestigation.ipynb` | 17 high-confidence candidate OGs (final) |
 
 `slurm/`, `XX_archived/`, and `*/archived/` subfolders hold SLURM job templates and
@@ -280,6 +280,42 @@ correlation plots, topGO enrichment on "Relax" vs. "Intensify" OG sets) was a di
 side-analysis, not part of the core json→txt conversion — moved to
 `archived/09B_GWASRelaxEnrichment.ipynb` (unparameterized, depends on `testRes`/`testRes2`
 built earlier in `09B`, isn't runnable standalone, matching the archived-code convention).
+
+**Note on 10A/10B:** `10B_stressInducedGene_enrichment.ipynb`'s core job is converting
+manually-extracted DE gene lists (one per abiotic-stress study, tracked in
+`data/DEG_study_metadata.csv`) to OG IDs via 10A's miniprot-based mapping files, then
+keeping only the genes flagged consistently (in >2 study-species pairs) per stress
+category, writing `output/candidateGenes/consistentEnvResponsiveGenes.json` for stage 11.
+Renamed to `10B_consistentStressResponsiveGenes.ipynb` to reflect this — the old name
+described what's now the archived half. Per author, kept the diagnostic plots (raw-vs-
+translated list-length scatter, species×stress coverage heatmap, per-stress UpSet plots,
+observed-vs-random-background consistency barplots, final UpSet of the 4 consistent
+gene sets) and archived a large trailing envPC-GWAS/RAO/developmental-gene-overlap
+enrichment analysis to `archived/10B_stressGeneEnrichmentAnalysis.ipynb` (unparameterized,
+depends on objects built earlier in the active notebook, matching the archived-code
+convention).
+
+Three real bugs fixed in the kept half: (1) the metadata load pointed at
+`p_phyloGWAS_archived/data/DEG_study_metadata.csv`, which doesn't exist there at all —
+`data/DEG_study_metadata.csv` (and every DE-gene-list file it references) lives in this
+repo, matching `DATA.md`'s own documented location; (2) the observed-vs-random-background
+consistency check (kept per above) sampled from a `background` variable that was only
+ever assigned much later, inside the now-archived enrichment section — would have left
+`background` undefined once that section moved out; per author, now loads the stage-03
+filtered-OG universe (`output/poaceaeHelixerOG_filtered_20250331.txt`) as the null-sampling
+background instead; (3) immediately after writing the real output, a follow-up cell
+re-read a stale copy of the same file from the sibling `p_phyloGWAS_archived` project
+instead of just reusing the object already in memory — removed the unnecessary,
+wrong-source re-read, keeping only the UpSet visualization. A separate, now-broken
+worked-example block (cells validating the ID-conversion heuristic against one
+hardcoded study row) was dropped rather than patched: that row's CDS.fa column is empty
+in the current metadata file, and nothing downstream used its output anyway — the real,
+generalized conversion (with a proper empty-CDS.fa guard) was already correct. Verified:
+real-data run of the fully-fixed active notebook reproduces the existing
+`output/candidateGenes/consistentEnvResponsiveGenes.json` exactly (same 4 stress
+categories, same gene-set membership, same counts — 2212/2874/1292/2524 for
+cold/heat/drought/waterlogging) — confirms the metadata-path fix doesn't change any
+actual result, just where it's correctly read from.
 
 ---
 
