@@ -251,10 +251,35 @@ that the phyloK-generating function itself has been fixed upstream, so it was re
 rhizome-specific analyses — this same archived binomial model, and the life-history/rhizome
 sections of `09A_HyPhyPipeline.sh` — not 08A's core (trait-agnostic) master-table pipeline.
 Per author: the life-history/rhizome thread as a whole is intended to move to its own,
-separate repo once this repository's cleanup is finished, so `09A_HyPhyPipeline.sh`'s
-life-history/rhizome sections are now unproduced/stale by the same deliberate design, not an
-oversight — flagged here for whenever stage 09 is reached in this cleanup, or for the future
-life-history repo split.
+separate repo once this repository's cleanup is finished. **Update:** now extracted from
+`09A_HyPhyPipeline.sh` into `archived/09A_lifeHistoryRhizome_HyPhyPipeline.sh` — see the
+"Note on 09A/09B" below.
+
+**Note on 09A/09B:** `09A_HyPhyPipeline.sh` mixed the real envPC-based HyPhy RELAX pipeline
+(cold/warm, drought/wet, sand/clay branch tests on candidate OGs from `08D`) with a
+life-history/rhizome-specific thread (separate MSA/tree rebuilds restricted to perennial or
+nonrhizomatous assemblies, target-tip extraction, tree labeling, and RELAX tests for 5
+annual-perennial/rhizome model variants). Per author, the life-history/rhizome portion is
+extracted verbatim into `archived/09A_lifeHistoryRhizome_HyPhyPipeline.sh` (unparameterized,
+matching the archived-code convention; depends on the trimmed `09A`'s steps 1/2/5 having
+already created `output/CDSMSAPerOG_HyPhy_20250203/`, `output/geneTree_allOGs_20250203/`,
+and the `output/HyPhyResult/` parent directory) — same rationale as the `08A`→`08X` move:
+this whole thread is slated to move to its own repo once cleanup here is finished. The
+trimmed `09A_HyPhyPipeline.sh` now runs only the envPC/cold/warm/drought/wet/sand/clay
+branch-test pipeline.
+
+`09B_RELAX_resultSummary.ipynb`'s core job is reading HyPhy RELAX json output and writing
+per-trait result tables (`RELAX_resultTable_*.txt`). Per author review: dropped several
+diagnostic-only cells with no saved output (an `install.packages("rjson")` call — package
+availability belongs in environment setup, not an inline notebook call; two ad hoc QQ-style
+plots; bare `OG`/`table()` prints; a single-JSON deep-dive with a histogram + t-test; a
+log2(k)-statistic histogram) — none of these feed the result-table writes. A trailing
+"GWAS (08D) vs. HyPhy RELAX overlap/enrichment" block (Fisher's-exact overlap tests between
+envPC1 GWAS hits and RELAX candidates across top-N cutoffs, bubble plots, GWAS/RELAX
+correlation plots, topGO enrichment on "Relax" vs. "Intensify" OG sets) was a distinct
+side-analysis, not part of the core json→txt conversion — moved to
+`archived/09B_GWASRelaxEnrichment.ipynb` (unparameterized, depends on `testRes`/`testRes2`
+built earlier in `09B`, isn't runnable standalone, matching the archived-code convention).
 
 ---
 
