@@ -19,7 +19,7 @@ you want to re-derive them from scratch.
 | **01** `genomeAssembly` | Short-read genome assembly (megahit) | Raw sequencing reads (external; not tracked in this repo) | `notebook/01_genomeAssembly/README.md` — external pipeline: [bucklerlab/p_reelgene](https://bitbucket.org/bucklerlab/p_reelgene/src/master/short_read_assembly/) | Raw assembly FASTAs → `data/assemblies/` → 02 |
 | **02** `metadataCuration` | Merge PanAnd/LIMS QC metadata + manual species-ID curation into a filtered genome list | Poaceae accession metadata; per-assembly QC statistics | `02A_metadataProcessing.ipynb`, `02B_furtherFilter.ipynb` | Filtered metadata table → 03, 05, 08 |
 | **03** `orthogroup` | OrthoFinder (32 representative genomes) → OG filtering → ancestral AA sequence reconstruction (for the filtered OGs) → miniprot cross-mapping to Zm/Pv/At/Angiosperms353 → TableS5 summary; OG-name translation | 32 representative genome assemblies + Helixer annotations; rice→OG mapping; Angiosperms353 Oryza reference; maize v5 mRNA reference; miniprot GFF annotations | `03A_buildHelixerOG.sh` (build+OrthoFinder), `03B_OGFilter.ipynb` (filter), `03C_ancestralSeqReconstruction.sh` (ancestral seq + miniprot ID matching), `03D_miniProtResult_eval.ipynb` (miniprot eval), `03E_TableS5Generation.ipynb` (TableS5), `03F_OGtranslation.R` (OG-name translation) | Filtered OG list + ancestral sequences + OG→maize/Pv/At/Angiosperms353 mapping → 04, 07, 08, 09, 11 |
-| **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa`) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
+| **04** `msaGeneration` | Per-OG CDS multiple sequence alignment (mafft) | Filtered OG list + CDS sequences (from 03) | `notebook/04_msaGeneration/README.md` — `mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>` | Per-OG MSAs (`output/OrthofinderMAFFT/*_mafft.fa` — **no longer retained on disk**, consumed by 05A's gap-stripping step; regenerate by rerunning this stage) → 05 (gap-stripping/gene trees), 07 (dN/dS calculation needs the MSA directly), 09 (HyPhy RELAX needs the MSA directly) |
 | **05** `phylotreeConstruction` | Gap-strip CDS MSAs → extract angiosperm353 per-gene sequences + genetic distance → RAxML gene trees → ASTRAL-Pro species tree → filter/visualize/annotate species tree → phylogenetic K (relatedness) matrix | Gap-stripped CDS MSAs (from 04); angiosperm353 OG-name list; Poaceae metadata (for tree filtering) | `05A_treeConstruction` (gap-strip, RAxML, ASTRAL), `src/S04_angiosperm353_extractAndDist.R` (invoked from 05A), `05B_neutralPhylogenyVisualization.ipynb` (filter/visualize/phyloK) | Species tree + phyloK matrix → 08 (predictor); per-OG gene trees → 09 (HyPhy RELAX runs on the gene tree from 05) |
 | **06** `envirotyping` | Species occurrence coordinates → WorldClim/soil rasters → habitat summary → envPC1–3 (PCA) → visualize distributions/tree overlay → ancestral state reconstruction | Species-name list; GBIF/BIEN occurrence records; WorldClim + soil rasters; environmental metadata; derived occurrence dataset (Zenodo) | `06A_spCoordEnvData.sh` (coords → env data → envPC), `src/08_pulling_geo_data.R`/`src/09_pulling_envData.r` (invoked from 06A), `src/S05_envPC_analysis.R` (envPC computation, invoked from 06A), `06B_visualizationEnvAdapt.ipynb` (visualize + ASR) | envPC1–3 table (Fig. 1) → 08; ASR transition nodes → power simulation (08E) |
 | **07** `summaryStats` | Per-OG premature-stop/frameshift calling, tip-to-outgroup dN/dS calculation, ESM2 & PlantCAD zero-shot scores | miniprot GFF annotations; seqIDmapping tables; OrthoFinder protein MSAs; gap-stripped CDS MSAs (from 05A); ESM2 weights; PlantCAD weights | `07Aa` (frameshift), `07Ba` (premature stop, local), `07Bb` (dN/dS, local); `07Ca` (ESM2, SCINET GPU); `07Da`/`07Db`/`07Dc` (PlantCAD, SCINET GPU) | Per-OG activity scores + dN/dS table (Fig. 4) → 08 |
@@ -62,9 +62,12 @@ that stage's actual tree-building work. Per author review, it's been moved into 
 (right after the ancestral-sequence fasta it depends on is generated) along with dropping
 several superseded pre-"_v2" mapping lines that referenced an older, no-longer-produced
 ancestral-seq file. `data/OGToZm_mapping_v2.txt`'s write target was also corrected from
-`output/` to `data/` in the move, matching where every active consumer (03E, 08B, 09B, 11,
-`src/12_runPermulation_perOGModel.R`) actually reads it from and where the current
-(2024-09-16) file lives.
+`output/` to `data/` in the move, matching where every active consumer (03E, 08B, 11)
+actually reads it from and where the current (2024-09-16) file lives. (The archived
+`09B_GWASRelaxEnrichment.ipynb` also reads it, but that's a superseded side-analysis, not
+the active `09B_RELAX_resultSummary.ipynb`; and `src/12_runPermulation_perOGModel.R`'s own
+read of this file is entirely commented-out dead code, not an active consumer — both
+excluded from the "Used by" list above and in `DATA.md`.)
 
 **Note on 05A/05B:** `05B_neutralPhylogenyVisualization.ipynb` originally mixed three
 unrelated things: (1) extraction of angiosperm353 per-gene sequences from the gap-stripped
@@ -78,10 +81,20 @@ Per author review: (1) moved to new `src/S04_angiosperm353_extractAndDist.R`, in
 (3) moved to `notebook/05_phylotreeConstruction/archived/05B_supplementalTreeComparisons.ipynb`
 (unparameterized, matching the archived-code convention). Two real bugs fixed in the process:
 `05B` read `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk` as its species-tree
-input, but 05A's active `astral-pro` call only ever produces the unfiltered
-`output/PoaceaeTree_angiosperm353.nwk` — 05B's own filter/write logic (intersect with metadata,
-`keep.tip`, `write.tree`) was already correct, just reading the wrong file; and 05B's filtered/
-labeled tree outputs were writing "astral3"-suffixed filenames matching the *inactive*
+input, but 05A's active `astral-pro` call was writing to `output/PoaceaeTree_angiosperm353.nwk`
+— a filename with no real historical output and no downstream reader anywhere in the repo, while
+the actual, always-real output every consumer reads is `_astral.nwk`-suffixed. Corrected 05A's
+`astral-pro` target to `output/PoaceaeTree_angiosperm353_astral.nwk`, and verified via a real
+rerun of the now-fixed 05B (800 tips reproduced) that this is genuinely what 05B expects to read
+downstream of that step. Also added the missing `mkdir -p` calls 05A needed before `cd`-ing into
+`output/geneTree_allOGs/`/`output/geneTree_angiosperm353/` (neither directory was ever created
+by the script itself — a real crash-on-fresh-run bug, not just a naming issue). **Separately
+flagged, not fixed in this pass:** `output/geneTree_allOGs/` has no producer anywhere in this
+repo for its actual per-OG gene-tree `.fa` inputs (unlike `output/geneTree_angiosperm353/`, whose
+`.fa` inputs are written by the new `src/S04_angiosperm353_extractAndDist.R`) — the `mkdir` fix
+only prevents an outright crash on a fresh run, it doesn't close this gap. Needs its own
+investigation before 05A's "all-OGs" gene-tree branch can be considered reproducible end-to-end.
+05B's filtered/labeled tree outputs were writing "astral3"-suffixed filenames matching the *inactive*
 `astral-pro3` line in 05A (commented out) rather than the non-"3", `_20250407`-dated naming
 every real downstream consumer (`08C`/`src/12_runPermulation_perOGModel.R`, `06B`, `08B`, `11`)
 actually reads — corrected to `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk`
@@ -138,6 +151,24 @@ this repo entirely, in the sibling `p_evolBNI` project. Two real bugs fixed in t
 per-species dominant Köppen class, only derivable from the raw per-occurrence env data) doesn't
 need to re-read the 194MB raw env-data file itself — `S05` derives and persists it once,
 alongside `envData_707Poaceae_*`.
+
+**Update:** confirmed `output/KG3_perSpecies_20250804.txt` and
+`output/PoaceaeTree_angiosperm353_astral_filtered_withEnvData_20250804.nwk` were genuinely
+missing on disk (only older `_20250414`/`_20250416`-dated versions of the latter existed,
+i.e. `S05_envPC_analysis.R` had only been partially rerun since the stage-06 split) — reran
+the script for real (all T1 inputs already present; ~30s) and confirmed both now exist and
+`06B` can read them. **A real non-determinism bug surfaced during verification:**
+`process_synthetic()` (`src/process_synthetic_fun.R`) calls `missMDA::estim_ncpPCA`/
+`imputePCA` to impute missing environmental-feature values before PCA — both are stochastic
+(k-fold CV / random imputation) and the script never called `set.seed()`, unlike every other
+stochastic step in this repo (`08C`, `src/05_4dMSA_sampling.R`, etc., all seeded with `123`).
+Rerunning produced a `envData_707Poaceae_20250804.txt` that matched the previous version's
+707-species membership exactly but differed by small floating-point deltas in the 16 species
+that needed imputation, which then propagated into the cold/warm-adapted-assemblies
+percentile-cutoff lists (1-2 species shifted across the 30th/70th-percentile threshold).
+Fixed by adding `set.seed(123)` immediately before the `process_synthetic()` call — verified
+across 3 consecutive reruns that every output (`envData_707Poaceae_*`, KG3, the withEnvData
+tree, and all 6 percentile-based adaptation lists) is now byte-identical run to run.
 
 **Note on 07:** stage 07 computes 4 independent per-OG/per-sequence stats, each merged into one
 master table in `08A_masterDataTableGeneration.ipynb`. Per author review:
@@ -372,6 +403,38 @@ and ran it for real — confirmed 27 rows, matching the corrected count above. A
 "differential expression" Sankey columns) from the pre-fix values (30/19/5 and 10/6/1) to the
 corrected ones (30/28/13 and 10/10/7, re-verified directly from real data) and re-ran the
 script to confirm it still renders correctly.
+
+**Note on figure numbering:** the manuscript's figure order (Fig1–6 + FigS1–S6) had shifted
+independently of the code since much of it was last run, leaving several `output/figure/*.png`
+filenames stale relative to their actual manuscript identity. Per author review, reconciled
+across 7 notebooks and 3 scripts, keeping every existing `_v2`/`_v3`/etc. version suffix intact
+(only the figure *number*, and one capitalization, changed — an older, unversioned filename may
+have no producing code left at all, so the version marker itself was never in question): 08A's
+`Fig3c_v2.png`/`Fig3d.png` (LLM score validation) → `Fig4a_v2.png`/`Fig4b.png`; 08C's
+`Fig4a_v3.png`/`Fig4b_v4.png`/`Fig4c_v6.png` (physicochemical panels) → `Fig3a_v3.png`/
+`Fig3b_v4.png`/`Fig3c_v6.png`; 08A's `Fig2.png` (supplemental QC histogram) → `FigS3.png`;
+`suppFig_genomicPipeline_*` (03B/03D/08A) → `FigS5_genomicPipeline_*`; `suppFig_envPCPipeline_*`
+(06B / `src/S05_envPC_analysis.R`) → `FigS1_envPCPipeline_*`; `powerSimulation_XY_revised.R`/
+`_vis.R`'s `Fig8_revised.png` → `Fig2_revised.png`; `src/fig6a_sankey_v2.py`'s
+`fig6a_sankey_v2.png`/`.svg` → `Fig6a_sankey_v2.png`/`.svg` (capitalization only). 06B's
+`FigSX_transition.png` (ancestral-state transition-node plot) was confirmed **not in the
+paper at all** — renamed to the non-numbered `envPC_ASR_transitionNodes.png` rather than
+given a stale placeholder number. Also re-enabled a disabled save call for `Fig1a_v2.png`
+(06B cell 35 — the plot was still being built/shown, just never written to disk, apparently
+by accident) and dropped one stale dead-code cell (an unsaved duplicate plot under a leftover
+"Figure 5B" comment in 11). Every existing real output file was physically renamed to match
+(backing up any pre-existing file that already sat at the target name).
+
+`output/figure/` also carries a number of known-orphaned files — superseded reruns/versions
+with no producing code anywhere in the active pipeline, left in place (gitignored, low risk,
+not worth deleting without being asked): `Fig1a.png`, `Fig1a_map.png`, `Fig1c.png`,
+`Fig1c_tree.png` (superseded by their `_v2` versions), `Fig3b.png`, `Fig3c.png` (superseded by
+`_v4`/`_v6`), `Fig4a.png` (superseded by `_v2`), `Fig4b_v2.png`, `Fig4b_v3.png` (superseded by
+the current unversioned `Fig4b.png`), `Fig4c.png`/`Fig4c_v2–v5.png`/`Fig4c_S1.png`/
+`Fig4_S1.png` (all superseded by 08C's `Fig3c_v6.png`), `Fig5d.png` (superseded by `_v2`),
+`FigS6.pdf`/`FigS6_check.pdf` (superseded by `FigS6_v2.pdf`), `fig6a_sankey.png`/`.svg`
+(pre-`_v2`, lowercase), `suppFig/suppFig_genomicPipeline.pptx` (stray, never code-generated),
+`suppFig/suppFig_envPCPipeline_d.png`/`_e.png` (bare, no `_v2` ever existed for these two).
 
 ---
 
