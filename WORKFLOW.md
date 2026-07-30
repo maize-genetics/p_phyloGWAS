@@ -26,7 +26,7 @@ you want to re-derive them from scratch.
 | **08** `linearModeling` | Master data table → proteome a.a./genome GC estimation → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureEstimation.ipynb`, `08C_genomicFeatureAssociation.ipynb`, `08D_perOGmodel.sh`, `08E_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
 | **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
 | **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) via miniprot → convert manually-extracted DE gene lists per abiotic-stress study to OG IDs → consistent (multi-study) per-stress candidate gene sets | Per-species CDS FASTAs (stress genes) + DEG study metadata; rice→OG mapping | `10A_DEG_IDconversion.sh` (ID mapping), `10B_consistentStressResponsiveGenes.ipynb` (DE-gene ID conversion + consistency filtering) | Gene-ID mapping + consistent per-stress DEG sets → 11 |
-| **11** `candidateOGInvestigation` | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 6 Sankey) | DeepGO GO annotation; Maize v5 GO annotation | `notebook/11_candidateOGInvestigation/11_candidateOGInvestigation.ipynb` | 17 high-confidence candidate OGs (final) |
+| **11** `candidateOGInvestigation` | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 5) | DeepGO GO annotation; Maize v5 GO annotation | `11_candidateOGInvestigation.ipynb` (core: p-value distributions, DE/GO enrichment, 3-layer overlap), `11B_candidateGeneResidueModeling.ipynb` (per-residue modeling for 2 validated candidates) | 27 high-confidence candidate OGs (final — see "Note on 11", corrected from a previously-reported 17) |
 
 `slurm/`, `XX_archived/`, and `*/archived/` subfolders hold SLURM job templates and
 superseded/exploratory notebooks — not part of the active sequence above.
@@ -323,6 +323,41 @@ assembly set under `output/candidateGenes_remob/assemblies_pp/`) — commented o
 author rather than actively run — moved to
 `archived/10A_potInPot_DEG_IDconversion.sh`, kept commented out exactly as found, matching
 the archived-code convention rather than left disabled in place.
+
+**Note on 11:** `11_candidateOGInvestigation.ipynb` (120 cells) integrated the paper's core
+candidate-identification story — phylogenetic-mixed-model p-value distributions (Fig 5a/5b),
+enrichment of mixed-model hits against a-priori DE genes and GO terms (BP/CC, Fig 5c/5d), and
+the 3-layer overlap (empirical p < 0.001 AND a-priori DE AND HyPhy RELAX significant) yielding
+the final candidate OGs — with two side analyses: per-residue association modeling for two
+already-validated candidates (PGAM/OG0018915, EXP5A/OG0001399), and an untracked, ad hoc lookup
+checking where a collaborator-supplied aminotransferase gene list falls relative to the
+analysis. Per author, the two side analyses don't belong in the core notebook. The per-residue
+modeling — real, substantial supplementary analysis on named candidates, not throwaway — moved
+to a new **active** sibling notebook, `11B_candidateGeneResidueModeling.ipynb` (confirmed via
+full-notebook grep to have zero in-memory dependency on the core notebook — self-contained
+aside from the `phyloKMat` load carried over from the old shared header). The aminotransferase
+lookup — a closed, one-off collaborator request — moved to
+`archived/11X_aminotransferaseLookup.ipynb` (unparameterized, depends on objects built earlier
+in the core notebook, matching the archived-code convention). Also dropped the old notebook's
+setup cell entirely: it loaded `metadata`/`envData`/the species tree/`commonID`, none of which
+were referenced anywhere else in the notebook — only the `phyloKMat` load it also contained was
+actually used, and only by the per-residue modeling now split out.
+
+**A real, consequential bug was found and fixed** in the core notebook's 3-layer overlap: the
+HyPhy-significance layer for envPC2 (drought/wet) and envPC3 (sand/clay) was built as
+`union(hyphy_drought$OG[...], hyphy_drought$wet[hyphy_wet$logp>sigCutOff])` and the sand/clay
+equivalent — but `RELAX_resultTable_drought`/`_clay` have no `wet` column (real columns are
+just `LRT, p-value, k, logp, OG`), so `hyphy_drought$wet`/`hyphy_clay$wet` silently evaluated to
+`NULL` in R. This meant the wet- and clay-significant OGs were **entirely missing** from the
+envPC2/envPC3 HyPhy layer — confirmed `hyphy_wet$OG`/`hyphy_clay$OG` were never referenced
+anywhere else in the notebook. Fixed to `union(hyphy_drought$OG[hyphy_drought$logp>sigCutOff],
+hyphy_wet$OG[hyphy_wet$logp>sigCutOff])` and the sand/clay equivalent, mirroring the already-
+correct cold/warm pattern one cell above it. Verified against the real RELAX result tables:
+`hyphyCandidate2` (envPC2) grows from 19 to 28 OGs, `hyphyCandidate3` (envPC3) from 5 to 13 OGs.
+**This changes the final candidate-OG count from the previously-reported 17 to 27**
+(envPC1 layer unaffected at 10; envPC2's 3-layer overlap goes 6→10; envPC3's goes 1→7) — this
+is a real change to a reported scientific result, not a formatting fix; flagged prominently for
+the author to review against the manuscript.
 
 ---
 
