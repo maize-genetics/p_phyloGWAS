@@ -8,10 +8,14 @@ between them. Selection shift and differential expression further filter
 each group independently.
 """
 
+import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.path import Path
 import numpy as np
+
+PHYLOGWAS_ROOT = os.environ.get("PHYLOGWAS_ROOT", "/workdir/sh2246/p_phyloGWAS")
+OUT_DIR = os.path.join(PHYLOGWAS_ROOT, "output/figure")
 
 # ════════════════════════════════════════════════════════════════════════
 # DATA
@@ -465,7 +469,10 @@ for grp, (top, bot) in col4_y.items():
 # ════════════════════════════════════════════════════════════════════════
 
 plt.tight_layout(pad=0.5)
-plt.savefig("fig6a_sankey.png", dpi=300, bbox_inches="tight", facecolor="white")
-plt.savefig("fig6a_sankey.svg", bbox_inches="tight", facecolor="white")
+os.makedirs(OUT_DIR, exist_ok=True)
+png_path = os.path.join(OUT_DIR, "fig6a_sankey_v2.png")
+svg_path = os.path.join(OUT_DIR, "fig6a_sankey_v2.svg")
+plt.savefig(png_path, dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(svg_path, bbox_inches="tight", facecolor="white")
 plt.show()
-print("Saved fig6a_sankey.png and fig6a_sankey.svg")
+print(f"Saved {png_path} and {svg_path}")
