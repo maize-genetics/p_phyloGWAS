@@ -26,7 +26,7 @@ you want to re-derive them from scratch.
 | **08** `linearModeling` | Master data table → proteome a.a./genome GC estimation → genome-wide feature association (Fig. 3) → per-OG phylogenetic mixed model + permulation (Fig. 5) → power simulation (Fig. 2) | dN/dS table (from 07, used as a predictor); OG→maize mapping; maize v5 expression (FPKM) | `08A_masterDataTableGeneration.ipynb`, `08B_genomicFeatureEstimation.ipynb`, `08C_genomicFeatureAssociation.ipynb`, `08D_perOGmodel.sh`, `08E_power_simulation.sh` | Candidate-OG lists + model results → 09, 11 |
 | **09** `molEvolution` | MSA cleaning (from 04) → RAxML gene trees (from 05) → foreground/background branch labeling → HyPhy RELAX selection-intensity tests per trait | OG→maize mapping | `09A_HyPhyPipeline.sh`, `09B_RELAX_resultSummary.ipynb` | RELAX result tables → 11 |
 | **10** `aprioriCandidate` | OG→gene-ID mapping (Helixer) via miniprot → convert manually-extracted DE gene lists per abiotic-stress study to OG IDs → consistent (multi-study) per-stress candidate gene sets | Per-species CDS FASTAs (stress genes) + DEG study metadata; rice→OG mapping | `10A_DEG_IDconversion.sh` (ID mapping), `10B_consistentStressResponsiveGenes.ipynb` (DE-gene ID conversion + consistency filtering) | Gene-ID mapping + consistent per-stress DEG sets → 11 |
-| **11** `candidateOGInvestigation` | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 5) | DeepGO GO annotation; Maize v5 GO annotation | `11_candidateOGInvestigation.ipynb` (core: p-value distributions, DE/GO enrichment, 3-layer overlap), `11B_candidateGeneResidueModeling.ipynb` (per-residue modeling for 2 validated candidates) | 27 high-confidence candidate OGs (final — see "Note on 11", corrected from a previously-reported 17) |
+| **11** `candidateOGInvestigation` | Integrate ASReml (08) + RELAX (09) + gene-ID mapping (10) + expression/GO evidence → final candidate OG list (Fig. 5) | DeepGO GO annotation; Maize v5 GO annotation | `11A_candidateOGInvestigation.ipynb` (core: p-value distributions, DE/GO enrichment, 3-layer overlap), `11B_candidateGeneResidueModeling.ipynb` (per-residue modeling for 2 validated candidates) | 27 high-confidence candidate OGs (final — see "Note on 11", corrected from a previously-reported 17) |
 
 `slurm/`, `XX_archived/`, and `*/archived/` subfolders hold SLURM job templates and
 superseded/exploratory notebooks — not part of the active sequence above.
@@ -36,7 +36,8 @@ superseded/exploratory notebooks — not part of the active sequence above.
 enough in purpose (ID mapping vs. final candidate-list integration) to warrant separate
 numbers and separate folders — the notebook has been moved and renamed to
 `notebook/11_candidateOGInvestigation/11_candidateOGInvestigation.ipynb` (its in-progress
-edits carried over with the move, untouched otherwise).
+edits carried over with the move, untouched otherwise). **Update:** since renamed again, to
+`11A_candidateOGInvestigation.ipynb`, to make room alongside `11B_candidateGeneResidueModeling.ipynb`.
 
 **Note on notebook archiving:** `10B_stressInducedGene_enrichment.ipynb` had been
 mistakenly filed under `notebook/10_aprioriCandidate/archived/` despite being active
@@ -426,6 +427,10 @@ and ran it for real — confirmed 27 rows, matching the corrected count above. A
 "differential expression" Sankey columns) from the pre-fix values (30/19/5 and 10/6/1) to the
 corrected ones (30/28/13 and 10/10/7, re-verified directly from real data) and re-ran the
 script to confirm it still renders correctly.
+
+**Update:** the core notebook has since been renamed `11_candidateOGInvestigation.ipynb` →
+`11A_candidateOGInvestigation.ipynb`, matching the `A`/`B` lettering already used by its
+sibling `11B_candidateGeneResidueModeling.ipynb`.
 
 **Note on figure numbering:** the manuscript's figure order (Fig1–6 + FigS1–S6) had shifted
 independently of the code since much of it was last run, leaving several `output/figure/*.png`
