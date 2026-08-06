@@ -17,8 +17,7 @@ conda env create -f envs/environment-py.yml      # Python 3.11 + torch/transform
 ```
   RAxML (8.2.12) is **not** in any environment file — it's vendored as source in
   `src/standard-RAxML` and needs to be compiled once (see that directory's own build
-  instructions). `src/ASTER` is also vendored source (a newer `astral-pro3` build), but only
-  used for a secondary exploratory tree (05B) — the main species tree comes from
+  instructions). The main species tree comes from
   `envs/environment-tools.yml`'s `aster` package (provides `astral-pro`).
 
 - Licensed software (not distributed via conda, not covered by any `environment*.yml`):
