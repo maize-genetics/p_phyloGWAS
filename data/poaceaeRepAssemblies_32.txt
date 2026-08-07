@@ -20,7 +20,7 @@ KIB_Rgui_2
 lpBroSter1.1
 lpPhrAust1.1
 mabamboo_1.0
-Pp-Kellogg1297-DRAFT-PanAnd-1.0
+Poa_pratensis_v1
 Puccinellia_tenuiflora_refer_1.0
 P.vaginatum_v3.1
 P.virgatum_v5
