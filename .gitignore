@@ -20,4 +20,5 @@ __pycache__/
 !data/spNameMetadata_20240819.txt
 !data/env_metadata.txt
 !data/DEG_study_metadata.csv
+!data/poaceaeRepAssemblies_32.txt
 !output/poaceaeHelixerOG_filtered_20250331.txt
