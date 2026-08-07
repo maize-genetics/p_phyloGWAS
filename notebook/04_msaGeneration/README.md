@@ -60,6 +60,26 @@ mafft --ep 0 --genafpair --maxiterate 1000 <input> > <output>
 follows the `{OG}_mafft.fa` naming convention consumed downstream (e.g.
 `output/OrthofinderMAFFT/{OG}_mafft.fa`, read by `05A_treeConstruction` for the CDS case).
 
-**Note:** `output/OrthofinderMAFFT/` is no longer retained on disk — 05A's gap-stripping
-step consumes it and doesn't keep a copy (see `WORKFLOW.md`'s "Note on 05A/05B"). Regenerate
-it by rerunning this stage if you need the raw (non-gap-stripped) MSAs directly.
+**Note:** on this machine, this step's output currently exists on disk under a different name
+than what's coded/documented here and in `05A_treeConstruction`: `output/CDSMSAPerOG/` (same
+`{OG}_mafft.fa` content as documented above, just renamed at some point) rather than
+`output/OrthofinderMAFFT/`. If resuming from this existing intermediate rather than rerunning
+this stage, rename it back to `output/OrthofinderMAFFT/` (or repoint `05A_treeConstruction`)
+before continuing to stage 05. T2 either way — regenerate via this stage if starting fresh.
+
+## Step 2: per-taxon whole-genome extraction (amino-acid/GC composition input, not alignment)
+
+Separately from the per-OG extraction/alignment above, `output/aminoAcidPerTaxa/` and
+`output/CDSperTaxa/` hold whole-genome (not per-OG) protein and CDS FASTAs, one file per
+assembly — used by `08B_genomicFeatureEstimation.ipynb` for genome-wide amino-acid/GC
+composition estimates, not for OG-level alignment. Extracted directly from each assembly's
+own miniprot GFF (stage 03C's cross-mapping) via `gffread`, one call per assembly:
+
+```
+gffread -y output/aminoAcidPerTaxa/{assembly}.fa -g <assembly fasta> <assembly's miniprot GFF>
+gffread -x output/CDSperTaxa/{assembly}.fa -g <assembly fasta> <assembly's miniprot GFF>
+```
+
+`-y` extracts translated protein sequences, `-x` extracts CDS nucleotide sequences — the same
+two flags `03A_buildHelixerOG.sh` uses for the 32 representative assemblies, applied here to
+the full assembly set instead. T2, regenerable from stage 03's miniprot output.
