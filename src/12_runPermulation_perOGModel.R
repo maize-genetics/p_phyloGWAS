@@ -181,6 +181,7 @@ fit_model_v4_GLM <- function(OG_id, data, Kmat,traitVec) {
 }
 
 PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
+MC_CORES <- as.integer(Sys.getenv("MC_CORES", unset = "35"))
 
 args = commandArgs(trailingOnly=TRUE)
 # arg 1: path to trait table; arg 2: path to master table; arg 3: path to phyloK; arg 4: path to tree;
@@ -265,7 +266,7 @@ if(!file.exists(outDirRes)){
   print("perOG modeling start")
   asreml.options(maxit = 40,verbose = F)
   testRes = mclapply(OG_list,function(x) try(fit_model_v4(x,testData_merged,phyloKMat,trait_test),
-                                             silent = T),mc.cores = 35)
+                                             silent = T),mc.cores = MC_CORES)
   testRes = t(simplify2array(testRes[sapply(testRes,length)==length(test)]))
   testRes = as.data.frame(testRes)
   # testRes = merge(testRes,mappingFileMerged,by = "OG",all.x = T)
@@ -277,7 +278,7 @@ if(!file.exists(outDirResGLM)&GLM){
   print("perOG GLM modeling start")
   asreml.options(maxit = 40,verbose = F)
   testRes = mclapply(OG_list,function(x) try(fit_model_v4_GLM(x,testData_merged,phyloKMat,trait_test),
-                                             silent = T),mc.cores = 35)
+                                             silent = T),mc.cores = MC_CORES)
   testRes = t(simplify2array(testRes[sapply(testRes,length)==length(test)]))
   testRes = as.data.frame(testRes)
   # testRes = merge(testRes,mappingFileMerged,by = "OG",all.x = T)
@@ -308,7 +309,7 @@ if(permulation&length(topOG_list)>1){
   
   testRes_permList = list()
   for(i in 1:1000){
-    testRes_permList[[i]] = mclapply(topOG_list,function(x) try(fit_model_v4(x,testData_merged,phyloKMat,envPC_perm[[i]]),silent = T),mc.cores = 35)
+    testRes_permList[[i]] = mclapply(topOG_list,function(x) try(fit_model_v4(x,testData_merged,phyloKMat,envPC_perm[[i]]),silent = T),mc.cores = MC_CORES)
     testRes_permList[[i]] = t(simplify2array(testRes_permList[[i]][sapply(testRes_permList[[i]],length)==length(test)]))
     testRes_permList[[i]] = as.data.frame(testRes_permList[[i]])
     # testRes_envPC1_permList[[i]] = merge(testRes_envPC1_permList[[i]],mappingFileMerged,by = "OG",all.x = T)

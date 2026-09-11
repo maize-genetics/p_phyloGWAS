@@ -28,10 +28,15 @@ library(parallel)
 
 PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
 
-TREE_PATH   <- file.path(PHYLOGWAS_ROOT, "output/powerSimulation/tree.nwk")
-KMAT_PATH   <- file.path(PHYLOGWAS_ROOT, "output/phyloK_728Poaceae_astral_20250407.txt")
-TRANS_PATH  <- file.path(PHYLOGWAS_ROOT, "output/powerSimulation/realTransition.json")
-OUTPUT_DIR  <- file.path(PHYLOGWAS_ROOT, "output/figure")
+# Paths and core count are overridable via env vars (default = original hardcoded
+# values, so this script's normal invocation from 08E_power_simulation.sh is
+# unaffected) -- lets a revision-analysis rerun (e.g. on an Andropogoneae-only
+# tree) point at different inputs/outputs and a different core budget without
+# touching this file again.
+TREE_PATH   <- Sys.getenv("POWERSIM_TREE_PATH", unset = file.path(PHYLOGWAS_ROOT, "output/powerSimulation/tree.nwk"))
+KMAT_PATH   <- Sys.getenv("POWERSIM_KMAT_PATH", unset = file.path(PHYLOGWAS_ROOT, "output/phyloK_728Poaceae_astral_20250407.txt"))
+TRANS_PATH  <- Sys.getenv("POWERSIM_TRANS_PATH", unset = file.path(PHYLOGWAS_ROOT, "output/powerSimulation/realTransition.json"))
+OUTPUT_DIR  <- Sys.getenv("POWERSIM_OUTPUT_DIR", unset = file.path(PHYLOGWAS_ROOT, "output/figure"))
 
 # Simulation parameters
 sigma2_Y      <- 0.5
@@ -44,7 +49,7 @@ beta_range    <- seq(0, 0.5, by = 0.05)
 n_X           <- 1   # X traits per replicate
 n_sims        <- 500    # simulation replicates per (beta, scenario, prop)
 alpha         <- 0.05
-n_cores       <- 10
+n_cores       <- as.integer(Sys.getenv("N_CORES", unset = "10"))
 MASTER_SEED   <- 42
 
 # =============================================================================
