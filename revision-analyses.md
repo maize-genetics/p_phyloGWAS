@@ -15,7 +15,7 @@ count below is restricted to the 707 that actually matter.
 | Quantity | Value | Source |
 |---|---|---|
 | "330 top candidates" (full-set analysis) | 330 unique OGs | Union of `output/candidateOG_envPC{1,2,3}.txt` (160+109+68), filtered on empirical permutation `emp_p ≤ 0.001` in `notebook/11_candidateOGInvestigation/11A_candidateOGInvestigation.ipynb` |
-| Andropogoneae taxa | 483 of 707 | `tribe` column, taxonomy CSV, restricted to the 707 |
+| Andropogoneae taxa | 483 of 707 (484 as actually run, see below) | `tribe` column, taxonomy CSV, restricted to the 707 |
 | Subtribes with ≥5 taxa | 24 (of 51 total) | `subtribe` column, restricted to the 707 |
 | Unique species | 569 of 707 | `Species` column, restricted to the 707; 87 species have >1 assembly (224 assemblies total) |
 
@@ -24,6 +24,17 @@ at all — it's excluded by default from every taxonomy-driven subset below (And
 jackknife, one-tip-per-species), which is exactly what produces the 569 figure above. It can be
 added back with a one-row taxonomy-CSV fix later if desired (would make it 570 for the
 one-tip-per-species analysis, and +1 Andropogoneae/Sorghinae tip for #1/#2).
+
+**Rooting constraint (found via a real failed run, not assumed):**
+`12_runPermulation_perOGModel.R` prunes the tree to the trait table's taxa *before* rooting
+(`keep.tip()` then `root(spTre, "ASM1935983v1")`) — so `ASM1935983v1` (*Pharus latifolius*, the
+actual designated outgroup, `clade="outgroup"`) must be present in every subset trait table, or the
+script errors out at rooting before fitting a single OG. It's `subtribe`-NA and the sole assembly
+for its species, so one-tip-per-species (569) and all 24 subtribe-drops already keep it naturally
+— only the **Andropogoneae-only subset needs it force-included, making that population 484 taxa,
+not 483** (mirrors the original full-707 analysis, which already includes this same outgroup taxon
+as part of its own population — a negligible 1/484 addition, not a real contamination of the
+intended comparison).
 
 ## Why this is mostly a data-subsetting exercise, not new modeling code
 
@@ -41,8 +52,9 @@ genuinely new data.
 ## 1. Andropogoneae-only association model
 
 Build a trait table = `envData_707Poaceae_20250804.txt` filtered to the 483 Andropogoneae
-`assemblyID`s. Rerun `12_runPermulation_perOGModel.R` unchanged (new `dir.trait`, new `dir.out`)
-for envPC_1/2/3, permulation on.
+`assemblyID`s, plus the forced rooting outgroup (484 total, see above). Rerun
+`12_runPermulation_perOGModel.R` unchanged (new `dir.trait`, new `dir.out`) for envPC_1/2/3,
+permulation on.
 
 **Comparison to the full-set run:**
 - Spearman rank correlation of `-log10(raw p)` across all OGs tested in both runs (join on `OG`;
@@ -51,9 +63,9 @@ for envPC_1/2/3, permulation on.
 
 ## 2. Power simulation on the Andropogoneae tree
 
-Prune `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk` to the 483 Andropogoneae
-tips; rerun the ASR step on that pruned tree/trait subset to get an Andropogoneae-specific
-transition-node set (the equivalent of `output/powerSimulation/realTransition.json`).
+Prune `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk` to the 484-taxon Andropogoneae
+subset (483 + rooting outgroup); rerun the ASR step on that pruned tree/trait subset to get an
+Andropogoneae-specific transition-node set (the equivalent of `output/powerSimulation/realTransition.json`).
 
 Small code change to `src/powerSimulation_XY_revised.R`: make `TREE_PATH`/`KMAT_PATH`/`TRANS_PATH`
 overridable via `Sys.getenv()`, defaulting to the current hardcoded values (same pattern already
