@@ -1,0 +1,46 @@
+study,species,stress,tissue,sequence,who's in charge,path to candidate genes,CDS.fa
+Oren et al,Andropogon gerardii,cold,rhizome,Protein,Elad,output/candidateGenes/Ag_rhizome_DAPs.list,Ag.cds.fa.gz
+Medina-Chávez et al. 2023,Brachypodium distachyon,waterlogging,shoots,RNA,Sheng-Kai,output/candidateGenes/Bdi_submergence_MedinaChávez_2023,Bdistachyon_314_v3.1.cds_primaryTranscriptOnly.fa.gz
+Fang et al. 2022,Cynodon dactylon,drought,leaf,RNA,Sheng-Kai,output/candidateGenes/Cda_drought_Fang_2022,osa1_r7.gene_models.repr.cds.fa.gz
+Liu et al. 2022,Cynodon dactylon,heat,leaf,RNA,Sheng-Kai,output/candidateGenes/Cda_heat_Liu_2022,Araport11_seq_20220914_representative_gene_model.fa.gz
+Fang et al. 2022,Cynodon dactylon,waterlogging,leaf,RNA,Sheng-Kai,output/candidateGenes/Cda_submergence_Fang_2022,osa1_r7.gene_models.repr.cds.fa.gz
+Miricescu et al. 2023,Hordeum vulgare,waterlogging,root,RNA,Sheng-Kai,output/candidateGenes/Hvu_waterlogging_Miricescu_2023,Hordeum_vulgare.MorexV3_pseudomolecules_assembly.cds.all.fa.gz
+Alam et al. 2018,Lolium arundinaceum,heat,shoots,RNA,Sheng-Kai,output/candidateGenes/Lar_heat_Alam_2018,Araport11_seq_20220914_representative_gene_model.fa.gz
+Pashapu et al. 2024,Lolium perenne,cold,crown,RNA,Lara,output/candidateGenes/Lpe_cold_Pashapu_2024,Lolium_perenne.MPB_Lper_Kyuss_1697.cds.all.fa.gz
+Sun et al2020,Lolium perenne,drought,leaf,RNA,Sheng-Kai,output/candidateGenes/Lpe_drought_Sun_2020,osa1_r7.gene_models.repr.cds.fa.gz
+Sun et al. 2020,Lolium perenne,heat,leaf,RNA,Sheng-Kai,output/candidateGenes/Lpe_heat_Sun_2020,osa1_r7.gene_models.repr.cds.fa.gz
+Oren et al,Miscanthus giganteus,cold,rhizome,Protein,Elad,output/candidateGenes/Mg_rhizome_DAPs.list,Msinensis_497_v7.1.cds_primaryTranscriptOnly.fa.gz
+Liao et al. 2023,Oryza sativa,drought,seeding,RNA,Yun Luo,output/candidateGenes/Osa_drought_Liao_2023,Oryza_sativa.IRGSP-1.0.cds.all.fa.gz
+Reynoso et al. 2022,Oryza sativa,drought,root,RNA,Sheng-Kai,output/candidateGenes/Osa_drought_Reynoso_2022,Oryza_sativa.IRGSP-1.0.cds.all.fa.gz
+Wilkins et al. 2016,Oryza sativa,drought,leaf,RNA,Sheng-Kai,output/candidateGenes/Osa_drought_Wilkins_2016,osa1_r7.gene_models.repr.cds.fa.gz
+Wilkins et al. 2016,Oryza sativa,heat,leaf,RNA,Sheng-Kai,output/candidateGenes/Osa_heat_Wilkins_2016,osa1_r7.gene_models.repr.cds.fa.gz
+Su et al. 2018,Oryza sativa,heat,shoots,RNA,Sheng-Kai,output/candidateGenes/Osa_heat_Su_2018,Oryza_sativa.IRGSP-1.0.cds.all.fa.gz
+Minami et al. 2018,Oryza sativa,waterlogging,shoot base,RNA,Sheng-Kai,output/candidateGenes/Osa_submergence_Minami_2018,Oryza_sativa.IRGSP-1.0.cds.all.fa.gz
+Reynoso et al. 2022,Oryza sativa,waterlogging,root,RNA,Sheng-Kai,output/candidateGenes/Osa_submergence_Reynoso_2022,Oryza_sativa.IRGSP-1.0.cds.all.fa.gz
+Reynoso et al. 2022,Oryza sativa,waterlogging,root,RNA,Sheng-Kai,output/candidateGenes/Osa_waterlogging_Reynoso_2022,Oryza_sativa.IRGSP-1.0.cds.all.fa.gz
+Meng et al. 2021,Pennisetum glaucum,cold,shoots,RNA,Charlie,output/candidateGenes/pearl_millet_coldDEGs.txt,Pgl.cds.fa.gz
+Meng et al. 2021,Panicum miliaceum,cold,shoots,RNA,Charlie,output/candidateGenes/pmiliaceum_coldDEGs.txt,Pmi.cds.fa.gz
+Oren et al,Panicum virgatum,cold,rhizome,Protein,Elad,output/candidateGenes/Pv-dd_rhizome_DAPs.list,Pvirgatumvar_WBCHAP1_778_v1.1.cds_primaryTranscriptOnly.fa.gz
+Meng et al. 2021,Panicum virgatum,cold,shoots,RNA,Charlie,output/candidateGenes/Pvirgatum_coldDEGs.txt,Pvirgatum_450_v4.1.cds_primaryTranscriptOnly.fa.gz
+Bonnot et al. 2023,Sorghum bicolor,cold,shoots,RNA,Sheng-Kai,output/candidateGenes/Sbi_cold_Bonnot_2023,Sbicolor_454_v3.1.1.cds_primaryTranscriptOnly.fa.gz
+Raju et al. 2024,Sorghum bicolor,cold,shoots,RNA,Lara,output/candidateGenes/Sbi_cold_Raju_2024,Sbicolor_454_v3.1.1.cds_primaryTranscriptOnly.fa.gz
+Drobnitch et al. 2021,Sorghum bicolor,drought,fine root,RNA,Sheng-Kai,output/candidateGenes/Sbi_drought_Drobnitch_2021,Sbicolor_454_v3.1.1.cds_primaryTranscriptOnly.fa.gz
+Bonnot et al. 2023,Sorghum bicolor,heat,shoots,RNA,Sheng-Kai,output/candidateGenes/Sbi_heat_Bonnot_2023,Sbicolor_454_v3.1.1.cds_primaryTranscriptOnly.fa.gz
+Meng et al. 2021,Sorghum bicolor,cold,shoots,RNA,Charlie,output/candidateGenes/Sbicolor_454_v3_coldDEGs.txt,Sbicolor_454_v3.1.1.cds_primaryTranscriptOnly.fa.gz
+Meng et al. 2021,Setaria italica,cold,shoots,RNA,Charlie,output/candidateGenes/Sitalica_312_v2_coldDEGs.txt,Sitalica_312_v2.2.cds_primaryTranscriptOnly.fa.gz
+Oren et al,Sorghastrum nutans,cold,rhizome,Protein,Elad,output/candidateGenes/Sn_rhizome_DAPs.list,Sn.cds.fa.gz
+Xu et al. 2022,Triticum aestivum,cold,crowns,Protein,Lara,output/candidateGenes/Tae_cold_Xu_2022,
+Da Ros et al. 2023,Triticum aestivum,drought,leaf,RNA,Sheng-Kai,output/candidateGenes/Tae_drought_DaRos_2023,Triticum_aestivum.IWGSC.cds.all.fa.gz
+Barratt et al. 2023,Triticum aestivum,heat,leaf,RNA,Sheng-Kai,output/candidateGenes/Tae_heat_Barratt_2023,Triticum_aestivum.IWGSC.cds.all.fa.gz
+Da Ros et al. 2023,Triticum aestivum,heat,leaf,RNA,Sheng-Kai,output/candidateGenes/Tae_heat_DaRos_2023,Triticum_aestivum.IWGSC.cds.all.fa.gz
+Li et al. 2021,Triticum aestivum,waterlogging,root tips,RNA,Sheng-Kai,output/candidateGenes/Tae_waterlogging_Li_2021,Triticum_aestivum.IWGSC.cds.all.fa.gz
+Shen et al. 2020,Triticum aestivum,waterlogging,coleoptile,RNA,Sheng-Kai,output/candidateGenes/Tae_waterlogging_Shen_2020,Triticum_aestivum.IWGSC.cds.all.fa.gz
+Wei et al. 2021,Triticum aestivum,waterlogging,flag leaf,RNA,Sheng-Kai,output/candidateGenes/Tae_waterlogging_Wei_2021,
+Oren et al,Tripsacum dactyloides,cold,rhizome,Protein,Elad,output/candidateGenes/Td-FL_v1.0_rhizome_DAPs.list,Td.cds.fa.gz
+Yang et al. 2024,Triticum turgidum L.,drought,roots,RNA,Yun Luo,output/candidateGenes/Ttu_drought_Yang_2024,Triticum_dicoccoides.WEWSeq_v.1.0.cds.all.fa.gz
+Zeng et al. 2009,Zea mays,drought,leaf,Microarray,Sheng-Kai,output/candidateGenes/Zma_drought_Zeng_2009,Zea_mays_v5_mrna.fa.gz
+Frey et al. 2015,Zea mays,heat,leaf,RNA,Sheng-Kai,output/candidateGenes/Zma_heat_Frey_2015,Zea_mays.AGPv3.22.cdna.all.fa.gz
+Xue et al. 2024,Zea mays,heat,leaf,RNA,Sheng-Kai,output/candidateGenes/Zma_heat_Xue_2024,Zm-B73-REFERENCE-GRAMENE-4.0_Zm00001d.2.cds.fa.gz
+Campbell et al. 2015,Zea mays,waterlogging,shoots,RNA,Sheng-Kai,output/candidateGenes/Zma_submergence_Campbell_2015,ZmB73_5a.59_working.cds.fa.gz
+Yao 2021,Zea mays,waterlogging,leaf,RNA,Sheng-Kai,output/candidateGenes/Zma_waterlogging_Yao_2021,Zm-B73-REFERENCE-GRAMENE-4.0_Zm00001d.2.cds.fa.gz
+Meng et al. 2021,Zea mays,cold,shoots,RNA,Charlie,output/candidateGenes/Zmays_493_V4_coldDEGs.txt,Zm-B73-REFERENCE-GRAMENE-4.0_Zm00001d.2.cds.fa.gz

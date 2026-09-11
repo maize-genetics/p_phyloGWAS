@@ -1,51 +1,32 @@
 #!/bin/bash
+export PHYLOGWAS_ROOT="${PHYLOGWAS_ROOT:-/workdir/sh2246/p_phyloGWAS}"
+cd "${PHYLOGWAS_ROOT}"
 
-# step 4: tree construction 
 ## gap strip
 mkdir output/CDSMSAPerOG_gs
 mkdir output/ref
 find output/OrthofinderMAFFT -type f|cut -d / -f 3|sed 's/_mafft.fa//g' |parallel -j 30 "Rscript src/03_Ungap_MSA_SKH_v4.R output/OrthofinderMAFFT/{}_mafft.fa ASM1935983v1 output/CDSMSAPerOG_gs/{}.gs.fa output/ref/{}.ref"
 
+## extract angiosperm353 per-gene sequences + genetic distance (feeds the RAxML step below)
+Rscript src/S04_angiosperm353_extractAndDist.R
+
 ## gene tree
+mkdir -p output/geneTree_allOGs/
 cd output/geneTree_allOGs/
-find /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 '/workdir/sh2246/p_phyloGWAS/src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/geneTree_allOGs/{}.fa -# 1 -n {}.tree'
-cd /workdir/sh2246/p_phyloGWAS/
+find "${PHYLOGWAS_ROOT}/output/geneTree_allOGs/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/geneTree_allOGs/{}.fa -# 1 -n {}.tree'
+cd "${PHYLOGWAS_ROOT}/"
 
 
 # angiosperm 353 loci gene tree for astral
+mkdir -p output/geneTree_angiosperm353/
 cd output/geneTree_angiosperm353/
-find /workdir/sh2246/p_phyloGWAS/output/geneTree_angiosperm353/ -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 '/workdir/sh2246/p_phyloGWAS/src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s /workdir/sh2246/p_phyloGWAS/output/geneTree_angiosperm353/{}.fa -# 1 -n {}.tree'
-cd /workdir/sh2246/p_phyloGWAS/
+find "${PHYLOGWAS_ROOT}/output/geneTree_angiosperm353/" -name '*.fa' -type f| cut -d / -f 7|sed 's/.fa//g' | parallel -j 35 'src/standard-RAxML/raxmlHPC -m GTRGAMMA -p 12345 -s ${PHYLOGWAS_ROOT}/output/geneTree_angiosperm353/{}.fa -# 1 -n {}.tree'
+cd "${PHYLOGWAS_ROOT}/"
 
 
-# astral tree 
+# astral tree
 printf "%s\n" output/geneTree_angiosperm353/RAxML_bestTree* | xargs cat > output/angiospermGeneTreeForest.nwk
-astral-pro -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353.nwk
+astral-pro -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353_astral.nwk
 # src/ASTER/bin/astral-pro3 -t 20 -i output/angiospermGeneTreeForest.nwk -o output/PoaceaeTree_angiosperm353_astral3_20250416.nwk
 
-
-
-# miniprot ID matching
-miniprot --gff-only -t 30 data/Angiosperms353_orysaSequences.fasta output/poaceaeHelixerOG_ancSeq_gapRemoved_filtered.fa > output/angiosperm353ToOG.gff
-grep "Rank=1" output/angiosperm353ToOG.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/angiosperm353ToOG_mapping.txt
-
-
-miniprot --gff-only -t 30 output/Pv-672_v3.0_cds.fa output/poaceaeHelixerOG_ancSeq_gapRemoved_filtered.fa > output/OGToPv.gff
-grep "Rank=1" output/OGToPv.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToPv_mapping.txt
-
-
-miniprot --gff-only -t 30 data/Zea_mays_v5_mrna.fa output/poaceaeHelixerOG_ancSeq_gapRemoved_filtered.fa > output/OGToZm.gff
-grep "Rank=1" output/OGToZm.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToZm_mapping.txt
-
-
-miniprot --gff-only -t 30 data/Zea_mays_v5_mrna.fa output/poaceaeHelixerOG_ancSeq_gapRemoved_v2_20240909.fa > output/OGToZm_v2.gff
-grep "Rank=1;" output/OGToZm_v2.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToZm_mapping_v2.txt
-
-miniprot --gff-only -t 30 output/Pv-672_v3.0_cds.fa output/poaceaeHelixerOG_ancSeq_gapRemoved_v2_20240909.fa > output/OGToPv_v2.gff
-grep "Rank=1;" output/OGToPv_v2.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToPv_mapping_v2.txt
-
-
-miniprot --gff-only -t 30 data/Araport11_seq_20220914_representative_gene_model.fa.gz output/poaceaeHelixerOG_ancSeq_gapRemoved_v2_20240909.fa > output/OGToAt_v2.gff
-grep "Rank=1" output/OGToAt_v2.gff|grep "mRNA" |awk '{print $1"\t"$9}'|sed 's/;Frameshift=*//g'|sed 's/;StopCodon=*//g'|sed 's/\t/;/g'|cut -d ";" -f 1,6|sed 's/;Target=/\t/g' > output/OGToAt_mapping_v2.txt
-grep -f data/Yeaman2024_RAO_AtID.txt output/OGToAt_mapping_v2.txt > output/Yeaman2024RAO_OGID.txt
-
+# continues in 05B_neutralPhylogenyVisualization.ipynb (species tree filtering, visualization, phyloK)

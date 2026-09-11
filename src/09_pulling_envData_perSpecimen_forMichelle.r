@@ -12,11 +12,12 @@ require(tidyverse)
 require(plyr)
 require(reshape2)
 
+PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
 
 #'------------------------------------------------------------------------------------------------------------
-# (1) load geo data 
+# (1) load geo data
 #'------------------------------------------------------------------------------------------------------------
-specimenCoordinate = read.table("/workdir/sh2246/p_phyloGWAS/data/combined_latlong_for_shengkai.txt",header =T)
+specimenCoordinate = read.table(file.path(PHYLOGWAS_ROOT, "data/combined_latlong_for_shengkai.txt"),header =T)
 colnames(specimenCoordinate)[1] = c("sample")
 head(specimenCoordinate)
 dim(specimenCoordinate)
@@ -35,9 +36,9 @@ specimenCoordinateNoNA <- specimenCoordinate %>% na.omit()
 
 ########### Bioclimatic variables
 # check src_generating_FAO_GAEZ.R to see how to generate enviromeDB::WC_Bioclimate since the package is broken
-source('https://raw.githubusercontent.com/gcostaneto/envirotypeR/main/R/get_spatial_fun.R')
+source(file.path(PHYLOGWAS_ROOT, "src/get_spatial_fun.R"))
 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/WC_Bioclim.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/WC_Bioclim.rds')
 tmp = readRDS(url)
 geographic_ranges  = 
   get_spatial( env.dataframe =specimenCoordinateNoNA,
@@ -70,7 +71,7 @@ geographic_ranges =
 
 
 ########### FAO-GAEZ 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/GAEZ_AEZ.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/GAEZ_AEZ.rds')
 geographic_ranges = 
   get_spatial( env.dataframe = geographic_ranges,
                lat = 'approxlat',
@@ -79,7 +80,7 @@ geographic_ranges =
                digital.raster = readRDS(url))#
 
 ########### Soil Temperature 
-url = '/workdir/sh2246/p_phyloGWAS/output/envData/GIS_raster/TEMP_soil.rds'
+url = file.path(PHYLOGWAS_ROOT, 'output/envData/GIS_raster/TEMP_soil.rds')
 geographic_ranges = 
   get_spatial( env.dataframe = geographic_ranges,
                lat = 'approxlat',
@@ -125,5 +126,5 @@ geographic_ranges_filtered[,noNAIdx][geographic_ranges_filtered[,noNAIdx]==156] 
 
 
 write.table(geographic_ranges_filtered,
-            "/workdir/sh2246/p_phyloGWAS/output/panand_specimen_envDataToMichelle_20251001.txt",quote = F,sep = "\t")
+            file.path(PHYLOGWAS_ROOT, "output/panand_specimen_envDataToMichelle_20251001.txt"),quote = F,sep = "\t")
 

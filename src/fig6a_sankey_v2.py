@@ -8,10 +8,14 @@ between them. Selection shift and differential expression further filter
 each group independently.
 """
 
+import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.path import Path
 import numpy as np
+
+PHYLOGWAS_ROOT = os.environ.get("PHYLOGWAS_ROOT", "/workdir/sh2246/p_phyloGWAS")
+OUT_DIR = os.path.join(PHYLOGWAS_ROOT, "output/figure")
 
 # ════════════════════════════════════════════════════════════════════════
 # DATA
@@ -32,8 +36,12 @@ PHYLO = {
 }
 
 # Group totals at each downstream stage (no overlap data shown beyond phylo)
-SELECTION = {"envPC1": 30, "envPC2": 19, "envPC3": 5}
-EXPRESSION = {"envPC1": 10, "envPC2":  6, "envPC3": 1}
+# envPC2/envPC3 corrected 2026-07-30: the RELAX-significance layer (hyphyCandidate2/3 in
+# 11_candidateOGInvestigation.ipynb) referenced a nonexistent column on the wrong dataframe
+# (hyphy_drought$wet/hyphy_clay$wet instead of hyphy_wet$OG/hyphy_clay$OG), silently dropping
+# every wet/clay-significant OG. envPC1 (cold/warm) was unaffected and stays the same.
+SELECTION = {"envPC1": 30, "envPC2": 28, "envPC3": 13}
+EXPRESSION = {"envPC1": 10, "envPC2": 10, "envPC3": 7}
 
 # ════════════════════════════════════════════════════════════════════════
 # STYLE
@@ -461,7 +469,10 @@ for grp, (top, bot) in col4_y.items():
 # ════════════════════════════════════════════════════════════════════════
 
 plt.tight_layout(pad=0.5)
-plt.savefig("fig6a_sankey.png", dpi=300, bbox_inches="tight", facecolor="white")
-plt.savefig("fig6a_sankey.svg", bbox_inches="tight", facecolor="white")
+os.makedirs(OUT_DIR, exist_ok=True)
+png_path = os.path.join(OUT_DIR, "Fig6a_sankey_v2.png")
+svg_path = os.path.join(OUT_DIR, "Fig6a_sankey_v2.svg")
+plt.savefig(png_path, dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(svg_path, bbox_inches="tight", facecolor="white")
 plt.show()
-print("Saved fig6a_sankey.png and fig6a_sankey.svg")
+print(f"Saved {png_path} and {svg_path}")

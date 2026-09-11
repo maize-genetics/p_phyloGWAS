@@ -26,10 +26,12 @@ library(parallel)
 # 0. CONFIG  (edit these paths / parameters)
 # =============================================================================
 
-TREE_PATH   <- "/workdir/sh2246/p_phyloGWAS/output/powerSimulation/tree.nwk"
-KMAT_PATH   <- "/workdir/sh2246/p_phyloGWAS/output/phyloK_728Poaceae_astral_20250407.txt"
-TRANS_PATH  <- "/workdir/sh2246/p_phyloGWAS/output/powerSimulation/realTransition.json"
-OUTPUT_DIR  <- "/workdir/sh2246/p_phyloGWAS/output/figure"
+PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
+
+TREE_PATH   <- file.path(PHYLOGWAS_ROOT, "output/powerSimulation/tree.nwk")
+KMAT_PATH   <- file.path(PHYLOGWAS_ROOT, "output/phyloK_728Poaceae_astral_20250407.txt")
+TRANS_PATH  <- file.path(PHYLOGWAS_ROOT, "output/powerSimulation/realTransition.json")
+OUTPUT_DIR  <- file.path(PHYLOGWAS_ROOT, "output/figure")
 
 # Simulation parameters
 sigma2_Y      <- 0.5
@@ -377,7 +379,7 @@ p_curve <- ggplot(power_df_merged,
 
 print(p_curve)
 
-ggsave(file.path(OUTPUT_DIR, "Fig8_revised.png"), p_curve,
+ggsave(file.path(OUTPUT_DIR, "Fig2_revised.png"), p_curve,
        device = "png", width = 10, height = 6, dpi = 300)
 
 # =============================================================================

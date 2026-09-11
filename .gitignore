@@ -1,4 +1,24 @@
-data/
-output/
+data/*
+output/*
 log/
 interproscan-5.76-107.0/
+.ipynb_checkpoints/
+__pycache__/
+
+# Small T1/T2 files tracked directly in the repo (see DATA.md's "What stays on GitHub" note)
+!data/poaceaeHelixerOG_ancSeq_gapRemoved_v2_uppercase_output_CC_f.gmt
+!data/OGToZm_mapping_v2.txt
+!data/fullQCData_20240819.txt
+!data/Poaceae_metadata_2025.04.07.csv
+!data/Poaceae_metadata_filtered_2025.04.07.csv
+!data/Poaceae_metadata_highErrorFiltered_2025.10.08.tsv
+!data/Poaceae_metadata_filtered_2025.08.28.tsv
+!data/Poaceae_metadata_2025.04.03_CH.csv
+!data/Poaceae_metadata_2024.08.21.csv
+!data/maize_busco.tsv
+!data/busco_gene_OG_20250828.txt
+!data/spNameMetadata_20240819.txt
+!data/env_metadata.txt
+!data/DEG_study_metadata.csv
+!data/poaceaeRepAssemblies_32.txt
+!output/poaceaeHelixerOG_filtered_20250331.txt

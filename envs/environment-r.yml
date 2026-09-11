@@ -1,0 +1,109 @@
+name: phyloGWAS-r
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.2            # confirmed with author: matches the R build the licensed ASReml-R
+                          # tarball (src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz) targets
+
+  # CRAN packages (r-* on conda-forge/bioconda)
+  - r-ape
+  - r-data.table
+  - r-doparallel
+  - r-dplyr
+  - r-geiger
+  - r-ggplot2
+  - r-phangorn
+  - r-phytools
+  - r-qqman
+  - r-reticulate
+  - r-rphast
+  - r-taxize
+  - r-testthat
+  - r-tidyr
+  - r-tidyverse
+  - r-bglr
+  - r-canprot
+  - r-cowplot
+  - r-desctools
+  - r-ggnewscale
+  - r-ggridges
+  - r-glmnet
+  - r-gridextra
+  - r-jsonlite
+  - r-lsd
+  - r-patchwork
+  - r-pheatmap
+  - r-phylolm
+  - r-plyr
+  - r-prroc
+  - r-raster
+  - r-reshape2
+  - r-rjson
+  - r-scales
+  - r-stringr
+  - r-terra
+  - r-upsetr
+  - r-viridis
+  - r-xgboost
+  - r-rgbif
+  - r-bien
+
+  # Bioconductor packages (bioconductor-* on bioconda)
+  - bioconductor-biostrings
+  - bioconductor-limma
+  - bioconductor-msa2dist  # needed by src/07B_getOmega2Ref.R (stage 07 dN/dS). If your conda
+                           # config has an "r" channel active (not listed here, but easy to
+                           # pick up from a global .condarc), its r-stringi build can get
+                           # pulled in ahead of conda-forge's and links against an ICU version
+                           # older than what the rest of this env resolves to, breaking
+                           # anything depending on stringr (including MSA2dist) with
+                           # "unable to load ... libicui18nXX.so". Fix: force a conda-forge
+                           # build explicitly, e.g. `conda install "conda-forge::r-stringi=1.8.4"`
+                           # (confirmed via real-data testing of src/07B_getOmega2Ref.R)
+  - bioconductor-rtracklayer
+  - bioconductor-treeio
+  - bioconductor-ggtree
+  - bioconductor-topgo
+  # bioconductor-ggtree pins to 3.6.0 for r-base=4.2, but conda-forge's r-tidytree for r42
+  # only goes back to 0.4.5-0.4.6 - both renamed an internal helper (offspring.tbl_tree_item
+  # -> .offspring.tbl_tree_item) that ggtree 3.6.0's geom_cladelab() still calls under the
+  # old name, so tree-overlay figures (06C) fail with "could not find function
+  # offspring.tbl_tree_item" until tidytree is downgraded post-install:
+  #   R -e 'install.packages("https://cran.r-project.org/src/contrib/Archive/tidytree/tidytree_0.4.2.tar.gz", repos=NULL, type="source")'
+  # (confirmed via real-data testing of 06C_visualizationEnvAdapt.ipynb)
+
+# NOT included (licensed, per author instruction — install manually, see README.md
+# "Licensed software" section):
+#   - asreml       (src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz)
+#   - asremlPlus   4.4.40  <- PIN THIS VERSION. Do not take whatever CRAN offers.
+#
+# asremlPlus VERSION PIN (added 2026-08-24, after this cost a day of debugging):
+#   asremlPlus 4.3.50 — the version a 2023-06-01 CRAN snapshot resolves to for R 4.2 — calls
+#   `asreml:::vpc.char`, which asreml 4.2.0.302 does not export. Every call to
+#   infoCriteria(..., IClikelihood = "full") therefore dies with
+#       Error : 'vpc.char' is not an exported object from 'namespace:asreml'
+#   That single failure takes out the whole full-vs-reduced LRT path, which is what
+#   src/12_runPermulation_perOGModel.R::fit_model_v4() is built on — so the per-orthogroup
+#   engine cannot run at all in this env.
+#
+#   Working combination, verified 2026-08-24 by reproducing the historical envPC_1 results
+#   (median LR 4.62 vs 4.55, phyloVAE 0.944 vs 0.965, cor(LR) = 0.75):
+#       asreml 4.2.0.355  +  asremlPlus 4.4.40      (the `daily` env on cbsumm26)
+#   Known broken:
+#       asreml 4.2.0.302  +  asremlPlus 4.3.50      (this env, before the pin)
+#
+#   asremlPlus is not on conda; install it into the env explicitly, from source, by version:
+#     R -e 'install.packages(
+#            "https://cran.r-project.org/src/contrib/Archive/asremlPlus/asremlPlus_4.4.40.tar.gz",
+#            repos = NULL, type = "source")'
+#   then confirm the pairing actually works rather than assuming it:
+#     R -e 'library(asremlPlus); packageVersion("asremlPlus")'
+#   and check `vpc.char` resolves against whatever asreml build is installed:
+#     R -e '"vpc.char" %in% ls(getNamespace("asreml"))'
+#   See DECISIONS.md #45 in p_lifeHistoryPoaceae.
+#
+# A few of the r-* names above (r-canprot, r-rphast, r-bien) are lower-traffic CRAN
+# packages that may not resolve on every conda channel snapshot; if `conda env create`
+# fails on one of them, install it from CRAN inside the env instead:
+#   R -e 'install.packages(c("canprot","rphast","BIEN"), repos="https://cloud.r-project.org")'

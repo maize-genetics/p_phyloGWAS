@@ -180,18 +180,20 @@ fit_model_v4_GLM <- function(OG_id, data, Kmat,traitVec) {
   else return(NULL)
 }
 
+PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
+
 args = commandArgs(trailingOnly=TRUE)
 # arg 1: path to trait table; arg 2: path to master table; arg 3: path to phyloK; arg 4: path to tree;
 # arg 5: name of response variable (e.g. envPC_1);
 # arg 6: output directory; arg 7: permulation or not (TRUE or FALSE)
 # arg 8: GLM or not (TRUE or FALSE)
 
-# dir.trait = "/workdir/sh2246/p_phyloGWAS/output/envData_707Poaceae_20250804.txt"
-# dir.masterTab = "/workdir/sh2246/p_phyloGWAS/output/masterDataTable_PAVFill_20250901_test.txt"
-# dir.phyloK = '/workdir/sh2246/p_phyloGWAS/output/phyloK_728Poaceae_astral_20250407.txt'
-# dir.tree = "/workdir/sh2246/p_phyloGWAS/output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk"
+# dir.trait = file.path(PHYLOGWAS_ROOT, "output/envData_707Poaceae_20250804.txt")
+# dir.masterTab = file.path(PHYLOGWAS_ROOT, "output/masterDataTable_PAVFill_20250901_test.txt")
+# dir.phyloK = file.path(PHYLOGWAS_ROOT, 'output/phyloK_728Poaceae_astral_20250407.txt')
+# dir.tree = file.path(PHYLOGWAS_ROOT, "output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk")
 # responseVar = "envPC_1"
-# dir.out = "/workdir/sh2246/p_phyloGWAS/output/finalModels/"
+# dir.out = file.path(PHYLOGWAS_ROOT, "output/finalModels/")
 # permulation = TRUE
 
 dir.trait = args[1]
@@ -247,7 +249,7 @@ OG_list = unique(testData_merged$OG)
 # set.seed(123)
 # OG_list = sample(testRes_envPC1_v2$OG,1000)
 # mappingFile = read.table("/workdir/sh2246/p_phyloGWAS_archived/output/OGToPv_mapping_v2.txt")
-# mappingFile2 = read.table("/workdir/sh2246/p_phyloGWAS_archived/output/OGToZm_mapping_v2.txt")
+# mappingFile2 = read.table(file.path(PHYLOGWAS_ROOT, "data/OGToZm_mapping_v2.txt"))
 # colnames(mappingFile) = c("PvID","OG")
 # colnames(mappingFile2) = c("ZmID","OG")
 # mappingFileMerged = merge(mappingFile,mappingFile2,by = "OG",all = T)
