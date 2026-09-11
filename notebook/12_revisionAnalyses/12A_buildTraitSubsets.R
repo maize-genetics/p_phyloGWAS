@@ -39,7 +39,22 @@ classified <- setdiff(allTaxa, unclassified)
 outDir <- file.path(PHYLOGWAS_ROOT, "output/revisionAnalyses/traitTables")
 dir.create(outDir, recursive = TRUE, showWarnings = FALSE)
 
+# 12_runPermulation_perOGModel.R prunes the tree to the trait table's taxa
+# *before* rooting (keep.tip() then root(spTre, "ASM1935983v1")) -- so this one
+# taxon (Pharus latifolius, the actual designated outgroup, clade="outgroup")
+# must be present in every subset trait table or the script errors out at
+# rooting, before any model ever fits. Confirmed via a real failed run, not
+# assumed. It's `subtribe`-NA and (as far as this taxonomy table goes) the sole
+# assembly for its species, so one-tip-per-species and all 24 subtribe-drops
+# already keep it naturally -- only the Andropogoneae-only subset needs it
+# force-included, adding a single non-Andropogoneae row (1/484) to that
+# analysis's population. This mirrors the original full-707 analysis, which
+# already includes this same outgroup taxon as part of its own population.
+ROOT_OUTGROUP <- "ASM1935983v1"
+stopifnot(ROOT_OUTGROUP %in% allTaxa)
+
 writeSubset <- function(taxa, filename) {
+  taxa <- union(taxa, ROOT_OUTGROUP)  # safety net: force-include on every subset, not just #1
   sub <- envData[taxa, , drop = FALSE]
   write.table(sub, file.path(outDir, filename), quote = FALSE)
   cat(sprintf("  %-45s %d taxa\n", filename, nrow(sub)))
@@ -49,9 +64,9 @@ manifest <- list()
 
 ## 1. Andropogoneae-only ------------------------------------------------------
 andro <- classified[tax[classified, "tribe"] == "Andropogoneae"]
-cat("\nAndropogoneae-only subset:\n")
+cat("\nAndropogoneae-only subset (+1 forced outgroup taxon for tree rooting):\n")
 writeSubset(andro, "envData_andropogoneae.txt")
-manifest[["andropogoneae"]] <- data.frame(subset = "andropogoneae", nTaxa = length(andro), droppedGroup = "non-Andropogoneae")
+manifest[["andropogoneae"]] <- data.frame(subset = "andropogoneae", nTaxa = length(union(andro, ROOT_OUTGROUP)), droppedGroup = "non-Andropogoneae")
 
 ## 2. One-tip-per-species ------------------------------------------------------
 # Best QC per duplicated species: highest BUSCO `complete`, then lowest `duplicated`.
@@ -80,3 +95,11 @@ for (st in dropSubtribes) {
 manifestDf <- do.call(rbind, manifest)
 write.csv(manifestDf, file.path(outDir, "manifest.csv"), row.names = FALSE)
 cat(sprintf("\nWrote %d trait-table subsets + manifest.csv to %s\n", nrow(manifestDf), outDir))
+
+# Safety net: every output file must contain ROOT_OUTGROUP or the model script
+# will fail at tree-rooting before fitting a single OG.
+for (f in list.files(outDir, pattern = "^envData_.*\\.txt$", full.names = TRUE)) {
+  taxaInFile <- read.table(f, header = TRUE)
+  stopifnot(ROOT_OUTGROUP %in% rownames(taxaInFile))
+}
+cat(sprintf("Verified: %s present in every output file.\n", ROOT_OUTGROUP))
