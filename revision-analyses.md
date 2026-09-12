@@ -98,28 +98,38 @@ through unchanged; `AN21TNTL0178` excluded per the default above. **Result: 569 
 
 ## 5. Leave-one-subtribe-out jackknife
 
-Loop over the 24 subtribes with ≥5 taxa within the 707:
+**Scope reduced after real timing data** (see below): loop over the **top 8 of the 24** subtribes
+with ≥5 taxa within the 707, ranked by taxon count:
 
 Andropogoninae (150), Anthistiriinae (79), Oryzinae (35), Tripsacinae (33), Saccharinae (33),
-Triticinae (28), Aveninae (24), Ischaeminae (23), Sorghinae (23), Apludinae (22), Rottboelliinae
-(19), Ratzeburgiinae (17), Chrysopogoninae (16), Hordeinae (14), Rhytachninae (14), Eleusininae
-(12), Cenchrinae (12), Arundinariinae (10), Arthraxoninae (10), Boivinellinae (8), Panicinae (8),
-Brachypodiinae (7), Loliinae (5), Germainiinae (5).
+Triticinae (28), Aveninae (24), Ischaeminae (23).
+
+This naturally covers Andropogoneae's own largest subtribes (Andropogoninae, Anthistiriinae,
+Tripsacinae, Saccharinae, Ischaeminae) plus the largest non-Andropogoneae lineages (Oryzinae,
+Triticinae, Aveninae) — the drops with the most statistical leverage; the remaining 16 smaller
+subtribes (Sorghinae down to Germainiinae, 5-23 taxa each) are deferred, not abandoned — can be
+run later if more compute becomes available. The other 16:  Sorghinae (23), Apludinae (22),
+Rottboelliinae (19), Ratzeburgiinae (17), Chrysopogoninae (16), Hordeinae (14), Rhytachninae (14),
+Eleusininae (12), Cenchrinae (12), Arundinariinae (10), Arthraxoninae (10), Boivinellinae (8),
+Panicinae (8), Brachypodiinae (7), Loliinae (5), Germainiinae (5).
 
 For each, build a trait table excluding that subtribe's assemblies (everyone else — including the
 39 NA-subtribe taxa and `AN21TNTL0178` — stays in), rerun `12_runPermulation_perOGModel.R`
 unchanged for envPC_1/2/3.
 
 **Per dropped subtribe**, report the same two stability metrics as #1 (rank correlation of
-`-log10(p)`, and 330-candidate concordance), summarized across all 24 drops (table or plot of
+`-log10(p)`, and 330-candidate concordance), summarized across the 8 drops (table or plot of
 concordance vs. subtribe size). This shows whether stability degrades for any particular lineage's
-removal, and — since Andropogoneae's own subtribes are among the 24 — directly complements analysis
+removal, and — since Andropogoneae's own subtribes are among the 8 — directly complements analysis
 #1 from the opposite direction (drop-Andropogoneae's-subtribes vs. keep-only-Andropogoneae).
 
-**Compute cost**: this is the heaviest analysis — 24 subtribes × 3 envPCs = 72 full model reruns
-(each fitting ASReml models across ~18k OGs). Plan to parallelize/background these similarly to how
-`08D_perOGmodel.sh` already backgrounds its 3 envPC runs, and budget real wall-clock time for it —
-not a quick rerun.
+**Compute cost (verified, not estimated)**: a single envPC's *base model only* (no permutation) on
+the 484-taxon Andropogoneae subset took **~12.5 hours at an 8-core budget** (20,634 OGs fit;
+timestamps Sep 11 17:25 → Sep 12 06:00). The full 24-subtribe × 3-envPC = 72-run version of this
+analysis would be ~900+ hours (5+ weeks) sequential at 8 cores — not feasible on a machine shared
+with other running jobs. Reduced to top-8 × 3 = 24 runs (~same order as #1+#4 combined) as a result.
+8-core budget chosen because a concurrent unrelated job (`p_lifeHistoryPoaceae`'s HyPhy RELAX run)
+was already using 30 of this machine's 40 cores; revisit the core budget once that frees up.
 
 ---
 
