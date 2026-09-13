@@ -257,18 +257,50 @@ OG_list = unique(testData_merged$OG)
 
 asreml.options(maxit = 40,verbose = F,trace=F)
 test = try(fit_model_v4("OG0000327",data = testData_merged,Kmat = phyloKMat,traitVec = trait_test),silent = T)
-test = try(fit_model_v4("OG0000327",data = testData_merged,Kmat = phyloKMat,traitVec = trait_test),silent = T)
 print(test)
 test = try(fit_model_v4_GLM("OG0000327",data = testData_merged,Kmat = phyloKMat,traitVec = trait_test),silent = T)
 print(test)
+
+# Fixed set of column names fit_model_v4()/fit_model_v4_GLM() always produce on a
+# successful fit (see their names(out) <- ... assignments above). Used to validate and
+# combine per-OG results below.
+#
+# This used to be inferred at runtime from a single hardcoded reference OG
+# ("OG0000327")'s fit outcome (length(test), from the smoke test above) -- fragile,
+# and confirmed to silently corrupt the whole output table when that one OG doesn't
+# behave the way the full-707-taxon run happened to: on an Andropogoneae-only subset
+# (483 taxa), OG0000327 fit differently and the length-based filter kept the FAILED
+# fits instead of the successful ones, producing a garbled table of error-message text
+# under auto-generated V1..V19613 column names (see revision-analyses.md).
+#
+# Every OG now gets a row in the output regardless of fit outcome: a failed fit (an R
+# error caught by try(), or fit_model_v4's own internal non-convergence check
+# returning NULL) gets NA for every result column and converged=FALSE, rather than
+# being silently dropped (previous intended behavior) or corrupting the whole table
+# (the actual bug). Failed fits are kept, not filtered out, per author's request --
+# convergence failure is itself an informative outcome, not something to hide.
+RESULT_COLS = c("OG","BIC_full","BIC_reduced","LR","p","phyloVAE","totalVar",
+               paste("partialCoeff",c("PAV","dNdS","ESM2","plantCad","PMS"),sep = "_"),
+               paste("partialP",c("PAV","dNdS","ESM2","plantCad","PMS"),sep = "_"))
+
+combineResults = function(rawList, ogList) {
+  converged = sapply(rawList, function(x) !is.null(x) && !inherits(x, "try-error") && length(x) == length(RESULT_COLS))
+  out = matrix(NA_character_, nrow = length(ogList), ncol = length(RESULT_COLS), dimnames = list(NULL, RESULT_COLS))
+  if (any(converged)) out[converged, ] = t(simplify2array(rawList[converged]))
+  out[, "OG"] = ogList
+  out = as.data.frame(out, stringsAsFactors = FALSE)
+  for (col in setdiff(RESULT_COLS, "OG")) out[[col]] = as.numeric(out[[col]])
+  out$converged = converged
+  cat(sprintf("  %d / %d OGs converged (%.1f%%)\n", sum(converged), length(ogList), 100 * mean(converged)))
+  out
+}
 
 if(!file.exists(outDirRes)){
   print("perOG modeling start")
   asreml.options(maxit = 40,verbose = F)
   testRes = mclapply(OG_list,function(x) try(fit_model_v4(x,testData_merged,phyloKMat,trait_test),
                                              silent = T),mc.cores = MC_CORES)
-  testRes = t(simplify2array(testRes[sapply(testRes,length)==length(test)]))
-  testRes = as.data.frame(testRes)
+  testRes = combineResults(testRes, OG_list)
   # testRes = merge(testRes,mappingFileMerged,by = "OG",all.x = T)
   write.table(testRes,outDirRes,quote = F,sep = "\t",row.names = F)
   print("perOG modeling done and saved")
@@ -277,18 +309,17 @@ if(!file.exists(outDirRes)){
 if(!file.exists(outDirResGLM)&GLM){
   print("perOG GLM modeling start")
   asreml.options(maxit = 40,verbose = F)
-  testRes = mclapply(OG_list,function(x) try(fit_model_v4_GLM(x,testData_merged,phyloKMat,trait_test),
+  testResGLM = mclapply(OG_list,function(x) try(fit_model_v4_GLM(x,testData_merged,phyloKMat,trait_test),
                                              silent = T),mc.cores = MC_CORES)
-  testRes = t(simplify2array(testRes[sapply(testRes,length)==length(test)]))
-  testRes = as.data.frame(testRes)
-  # testRes = merge(testRes,mappingFileMerged,by = "OG",all.x = T)
-  write.table(testRes,outDirResGLM,quote = F,sep = "\t",row.names = F)
+  testResGLM = combineResults(testResGLM, OG_list)
+  # testResGLM = merge(testResGLM,mappingFileMerged,by = "OG",all.x = T)
+  write.table(testResGLM,outDirResGLM,quote = F,sep = "\t",row.names = F)
   print("perOG GLM modeling done and saved")
 }
 
 if(permulation){
   testRes = read.table(outDirRes,header =T)
-  topOG_list = unique(testRes$OG[testRes$p<0.001])
+  topOG_list = unique(testRes$OG[!is.na(testRes$p) & testRes$p<0.001])
 } else stop
 
 # print(topOG_list)
@@ -310,8 +341,7 @@ if(permulation&length(topOG_list)>1){
   testRes_permList = list()
   for(i in 1:1000){
     testRes_permList[[i]] = mclapply(topOG_list,function(x) try(fit_model_v4(x,testData_merged,phyloKMat,envPC_perm[[i]]),silent = T),mc.cores = MC_CORES)
-    testRes_permList[[i]] = t(simplify2array(testRes_permList[[i]][sapply(testRes_permList[[i]],length)==length(test)]))
-    testRes_permList[[i]] = as.data.frame(testRes_permList[[i]])
+    testRes_permList[[i]] = combineResults(testRes_permList[[i]], topOG_list)
     # testRes_envPC1_permList[[i]] = merge(testRes_envPC1_permList[[i]],mappingFileMerged,by = "OG",all.x = T)
     write.table(testRes_permList[[i]],paste0(outDirPerm,"/ASREML_res_perm_",i,".txt"),
                 quote = F,sep = "\t",row.names = F)
@@ -323,11 +353,12 @@ if(permulation&length(topOG_list)>1){
     return(tmp[,5])
   })
   rownames(testRes_permMat) = topOG_list
-  testRes_permMat = cbind(testRes$p[testRes$p < 0.001],
+  isTopOG = !is.na(testRes$p) & testRes$p < 0.001  # NA-safe version of testRes$p < 0.001 -- see topOG_list above
+  testRes_permMat = cbind(testRes$p[isTopOG],
                                      testRes_permMat[topOG_list,])
   emp_p = apply(testRes_permMat,1,function(x) sum(x[-1]<x[1],na.rm = T))/ncol(testRes_permMat[,-1])
   testRes$emp_p = NA
-  testRes$emp_p[testRes$p < 0.001] = emp_p
+  testRes$emp_p[isTopOG] = emp_p
   write.table(testRes,paste0(dir.out,"/","ASREML_res_empPadded.txt"),quote = F,sep = "\t",row.names = F)
 }
 
