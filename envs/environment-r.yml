@@ -4,7 +4,7 @@ channels:
   - bioconda
 dependencies:
   - r-base=4.2            # confirmed with author: matches the R build the licensed ASReml-R
-                          # tarball (src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz) targets
+                          # tarball (src/asreml_4.2.0.355_linux-intel64_R4.2.0.tar.gz) targets
 
   # CRAN packages (r-* on conda-forge/bioconda)
   - r-ape
@@ -75,11 +75,11 @@ dependencies:
 
 # NOT included (licensed, per author instruction — install manually, see README.md
 # "Licensed software" section):
-#   - asreml       4.2.0.355 installed in this env (2026-09-14, from a real VSNi installer at
-#                    /home/sh2246/asreml_4.2.0.355_linux-intel64_R4.2.0.tar.gz, replacing the
-#                    older vendored src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz -- author's
-#                    call, since 302 was flagged as the outdated installer). See the corrected
-#                    root-cause note below: the asreml *build* was never actually the blocker.
+#   - asreml       4.2.0.355 installed in this env (2026-09-14), now vendored at
+#                    src/asreml_4.2.0.355_linux-intel64_R4.2.0.tar.gz, replacing the older
+#                    src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz -- author's call, since 302
+#                    was flagged as the outdated installer. See the corrected root-cause note
+#                    below: the asreml *build* was never actually the blocker.
 #   - asremlPlus   4.4.40  <- PIN THIS VERSION. Do not take whatever CRAN offers.
 #
 # vpc.char DEAD END, ROOT CAUSE FOUND (added 2026-08-24, corrected 2026-09-14 -- the two prior
