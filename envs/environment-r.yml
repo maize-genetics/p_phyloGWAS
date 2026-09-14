@@ -75,42 +75,53 @@ dependencies:
 
 # NOT included (licensed, per author instruction — install manually, see README.md
 # "Licensed software" section):
-#   - asreml       >= 4.2.0.355  <- MUST be this build or newer. The vendored installer at
-#                    src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz is TOO OLD and does not
-#                    work with the required asremlPlus below — see next paragraph. Sourcing a
-#                    4.2.0.355+ installer (replacing/supplementing the vendored one) is an open
-#                    item; in the meantime the `daily` conda env on this machine already has a
-#                    verified-working 4.2.0.355 install if you need one without waiting on that.
+#   - asreml       4.2.0.355 installed in this env (2026-09-14, from a real VSNi installer at
+#                    /home/sh2246/asreml_4.2.0.355_linux-intel64_R4.2.0.tar.gz, replacing the
+#                    older vendored src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz -- author's
+#                    call, since 302 was flagged as the outdated installer). See the corrected
+#                    root-cause note below: the asreml *build* was never actually the blocker.
 #   - asremlPlus   4.4.40  <- PIN THIS VERSION. Do not take whatever CRAN offers.
 #
-# asreml/asremlPlus VERSION PIN (added 2026-08-24, revised 2026-09-14 — this has now cost two
-# separate rounds of debugging, so the full compatibility picture is spelled out below rather
-# than just the one working combination):
-#   asremlPlus >= 4.3.50 calls `asreml:::vpc.char`, an internal function first added to asreml
-#   in build 4.2.0.355. Every call to infoCriteria(..., IClikelihood = "full") on an OLDER
-#   asreml build dies with
+# vpc.char DEAD END, ROOT CAUSE FOUND (added 2026-08-24, corrected 2026-09-14 -- the two prior
+# rounds of debugging chased the wrong culprit; read this version, not the version-pin story
+# below which is now known to be a red herring):
+#   Real per-OG fits intermittently died with
 #       Error : 'vpc.char' is not an exported object from 'namespace:asreml'
-#   That single failure takes out the whole full-vs-reduced LRT path, which is what
-#   src/12_runPermulation_perOGModel.R::fit_model_v4() is built on — so the per-orthogroup
-#   engine cannot run at all, and does so silently: it doesn't error out, it corrupts the whole
-#   result table (recovered via a real corrupted run, see 12_runPermulation_perOGModel.R's
-#   "Fix silent result-table corruption" commit) instead of failing loudly, so this is easy to
-#   miss until someone actually inspects the numbers.
+#   (or, depending on the exact model formula, a scoping error like "object 'fullFM' not found").
+#   This looked like an asreml/asremlPlus version incompatibility (vpc.char is an asreml-internal
+#   helper that a couple of asremlPlus's own code paths call) and two earlier debugging rounds
+#   chased it that way -- pinning asremlPlus to 4.4.40, then concluding the asreml *build* itself
+#   needed to be >= 4.2.0.355. Both of those were necessary-looking but insufficient, and on
+#   2026-09-14 direct reproduction showed the asreml build was never the actual blocker: a real
+#   asreml 4.2.0.355 installer (see above) hits the exact same failure, and even asreml 4.2.0.302
+#   (the old vendored tarball) works fine once the real fix is applied.
 #
-#   Working combination, verified twice independently — 2026-08-24 by reproducing the historical
-#   envPC_1 results (median LR 4.62 vs 4.55, phyloVAE 0.944 vs 0.965, cor(LR) = 0.75), and again
-#   2026-09-14 via real per-OG fits on a taxon subset (vpc.char resolves, real convergence/
-#   non-convergence outcomes instead of a blanket namespace error):
-#       asreml 4.2.0.355  +  asremlPlus 4.4.40      (the `daily` env on this machine)
-#   Known broken (both confirmed directly, not assumed from one another):
-#       asreml 4.2.0.302  +  asremlPlus 4.3.50      (this env, before the 2026-08-24 pin)
-#       asreml 4.2.0.302  +  asremlPlus 4.4.40      (this env, after the 2026-08-24 pin —
-#                                                     pinning asremlPlus alone is NOT sufficient,
-#                                                     confirmed 2026-09-14: vpc.char still
-#                                                     unresolved, since the vendored asreml build
-#                                                     itself is the actual blocker)
-#   i.e. the asremlPlus version pin below is necessary but not sufficient on its own — the
-#   asreml build matters just as much and is the part still unresolved in this env.
+#   The real mechanism: src/12_runPermulation_perOGModel.R calls
+#   infoCriteria(model, IClikelihood = "full"), and asremlPlus::infoCriteria.asreml() only needs
+#   vpc.char on an old-style (pre-4.2) asreml session -- on a real 4.2.x build it's supposed to
+#   take a different branch entirely (using the model object's own $vparameters.con field). But
+#   that branch is only reached once `Cfixed` is already present on the fitted model; if it's
+#   NULL, infoCriteria() first calls asreml::update.asreml(model, maxit = 1) to compute it, and
+#   THAT lazy refit re-evaluates the model's original asreml() call in a different R environment
+#   than the one it was built in. In this pipeline's mclapply-forked, formula-built-via-paste0()
+#   setup, that re-evaluation doesn't reliably see the right local variables/session state, and
+#   depending on the exact model shape, it either can't find a formula variable, or falls through
+#   into the vpc.char code path even on a modern asreml build. This is a real per-OG fit failure
+#   (empirically confirmed on 3 different real OGs across 3 different asreml/env combinations,
+#   see 12_runPermulation_perOGModel.R's fix commit), not something specific to one asreml build.
+#
+#   Fix (already applied in 12_runPermulation_perOGModel.R): set
+#   `asreml.options(Cfixed = TRUE, gammaPar = FALSE)` BEFORE fitting each model, so Cfixed is
+#   already populated when infoCriteria() runs and the lazy refit never happens. Verified
+#   identical, clean per-OG results (same BIC to 4 decimal places) across all three of:
+#     asreml 4.2.0.302 + asremlPlus 4.4.40   (this env, before the 2026-09-14 asreml upgrade)
+#     asreml 4.2.0.355 + asremlPlus 4.4.40   (this env, after the 2026-09-14 asreml upgrade)
+#     asreml 4.2.0.355 + asremlPlus 4.4.40   (the `daily` env on this machine)
+#   -- i.e. the fix is what matters, not which of these particular asreml builds you're on. Two
+#   OGs failed identically in all three combinations too (real non-convergence: "The estimation
+#   was aborted; too many exceptions"), confirming the fix doesn't paper over genuine failures.
+#   Note this also means the `daily` env was never actually a safe stopgap on its own -- without
+#   the code fix it produces the exact same silent 0%-converged corruption as this env did.
 #
 #   asremlPlus is not on conda; install it into the env explicitly, from source, by version:
 #     R -e 'install.packages(
@@ -120,12 +131,13 @@ dependencies:
 #   system gcc/g++/gfortran/binutils symlinked under their expected x86_64-conda-linux-gnu-*
 #   names, since conda's own compiler toolchain isn't installed in this env — see git history
 #   around 2026-09-14 if that's still not resolved some other way by the time you read this)
-#   then confirm the pairing actually works rather than assuming it:
+#   then confirm the pairing actually works rather than assuming it -- NOT by checking whether
+#   vpc.char resolves (that was the wrong test, see above; it can be FALSE on a perfectly working
+#   modern asreml build and the pipeline still runs fine as long as the Cfixed fix is in place):
 #     R -e 'library(asremlPlus); packageVersion("asremlPlus")'
-#   and check `vpc.char` resolves against whatever asreml build is installed — this is the real
-#   test, since asremlPlus installing cleanly does NOT mean the pairing works:
-#     R -e '"vpc.char" %in% ls(getNamespace("asreml"))'
-#   See DECISIONS.md #45 in p_lifeHistoryPoaceae.
+#   instead, do a real per-OG smoke test with Cfixed set up front (see fit_model_v4() in
+#   12_runPermulation_perOGModel.R) and confirm it returns a real BIC instead of erroring.
+#   See DECISIONS.md #45 in p_lifeHistoryPoaceae for the original (now superseded) diagnosis.
 #
 # A few of the r-* names above (r-canprot, r-rphast, r-bien) are lower-traffic CRAN
 # packages that may not resolve on every conda channel snapshot; if `conda env create`

@@ -12,7 +12,16 @@ library(asremlPlus)
 fit_model_v4 <- function(OG_id, data, Kmat,traitVec) {
   #   library(asreml)
   # gc()
-  asreml.options(verbose = FALSE)
+  # Cfixed/gammaPar must be set before fitting, not left to infoCriteria()'s lazy
+  # refit: when Cfixed is NULL, infoCriteria(IClikelihood="full") triggers
+  # asreml::update.asreml() to recompute it, and that refit's call re-evaluation
+  # breaks in this pipeline's forked-worker context (surfaces as either
+  # "'vpc.char' is not an exported object from 'namespace:asreml'" or, depending on
+  # the model formula, an "object not found" scoping error) -- confirmed via direct
+  # reproduction across asreml 4.2.0.302, 4.2.0.355, and two separate conda envs, so
+  # this is not a version-pin issue. Setting Cfixed up front avoids the refit
+  # entirely. See revision-analyses.md / environment-r.yml for the full story.
+  asreml.options(verbose = FALSE, Cfixed = TRUE, gammaPar = FALSE)
   # print(OG_id)
   filtered_data <- subset(data, OG == OG_id)
   filtered_data <- filtered_data[,c("assemblyID","PAV","scaled.dn.ds","scaledESM", "scaledPlantCAD", "PMS",
@@ -99,7 +108,16 @@ fit_model_v4 <- function(OG_id, data, Kmat,traitVec) {
 fit_model_v4_GLM <- function(OG_id, data, Kmat,traitVec) {
   #   library(asreml)
   # gc()
-  asreml.options(verbose = FALSE)
+  # Cfixed/gammaPar must be set before fitting, not left to infoCriteria()'s lazy
+  # refit: when Cfixed is NULL, infoCriteria(IClikelihood="full") triggers
+  # asreml::update.asreml() to recompute it, and that refit's call re-evaluation
+  # breaks in this pipeline's forked-worker context (surfaces as either
+  # "'vpc.char' is not an exported object from 'namespace:asreml'" or, depending on
+  # the model formula, an "object not found" scoping error) -- confirmed via direct
+  # reproduction across asreml 4.2.0.302, 4.2.0.355, and two separate conda envs, so
+  # this is not a version-pin issue. Setting Cfixed up front avoids the refit
+  # entirely. See revision-analyses.md / environment-r.yml for the full story.
+  asreml.options(verbose = FALSE, Cfixed = TRUE, gammaPar = FALSE)
   # print(OG_id)
   filtered_data <- subset(data, OG == OG_id)
   filtered_data <- filtered_data[,c("assemblyID","PAV","scaled.dn.ds","scaledESM", "scaledPlantCAD", "PMS",
@@ -255,7 +273,7 @@ OG_list = unique(testData_merged$OG)
 # colnames(mappingFile2) = c("ZmID","OG")
 # mappingFileMerged = merge(mappingFile,mappingFile2,by = "OG",all = T)
 
-asreml.options(maxit = 40,verbose = F,trace=F)
+asreml.options(maxit = 40,verbose = F,trace=F, Cfixed = TRUE, gammaPar = FALSE)
 test = try(fit_model_v4("OG0000327",data = testData_merged,Kmat = phyloKMat,traitVec = trait_test),silent = T)
 print(test)
 test = try(fit_model_v4_GLM("OG0000327",data = testData_merged,Kmat = phyloKMat,traitVec = trait_test),silent = T)
@@ -297,7 +315,7 @@ combineResults = function(rawList, ogList) {
 
 if(!file.exists(outDirRes)){
   print("perOG modeling start")
-  asreml.options(maxit = 40,verbose = F)
+  asreml.options(maxit = 40,verbose = F, Cfixed = TRUE, gammaPar = FALSE)
   testRes = mclapply(OG_list,function(x) try(fit_model_v4(x,testData_merged,phyloKMat,trait_test),
                                              silent = T),mc.cores = MC_CORES)
   testRes = combineResults(testRes, OG_list)
@@ -308,7 +326,7 @@ if(!file.exists(outDirRes)){
 
 if(!file.exists(outDirResGLM)&GLM){
   print("perOG GLM modeling start")
-  asreml.options(maxit = 40,verbose = F)
+  asreml.options(maxit = 40,verbose = F, Cfixed = TRUE, gammaPar = FALSE)
   testResGLM = mclapply(OG_list,function(x) try(fit_model_v4_GLM(x,testData_merged,phyloKMat,trait_test),
                                              silent = T),mc.cores = MC_CORES)
   testResGLM = combineResults(testResGLM, OG_list)
