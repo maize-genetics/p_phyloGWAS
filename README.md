@@ -22,16 +22,21 @@ conda env create -f envs/environment-py.yml      # Python 3.11 + torch/transform
 
 - Licensed software (not distributed via conda, not covered by any `environment*.yml`):
   **ASReml-R**, used in stage 08 (`08C_genomicFeatureAssociation.ipynb`, `08D_perOGmodel.sh`,
-  power simulation). The installer is
-  vendored at `src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz` (built for R 4.2.0, matching
-  `envs/environment-r.yml`'s `r-base` pin) but requires your own VSN International license to
-  activate — see https://vsni.co.uk/software/asreml-r for licensing. Install it into the
-  `phyloGWAS-r` conda env after creating it:
+  power simulation), requires your own VSN International license to activate — see
+  https://vsni.co.uk/software/asreml-r for licensing. **Do not follow the two commands below
+  blindly** — see `envs/environment-r.yml`'s "asreml/asremlPlus VERSION PIN" comment for the
+  full, hard-won version-compatibility picture before installing anything:
   ```
   conda activate phyloGWAS-r
-  R CMD INSTALL src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz
-  R -e 'install.packages("asremlPlus", repos="https://cloud.r-project.org")'
+  R CMD INSTALL <your asreml installer>.tar.gz   # must be build >= 4.2.0.355 -- the tarball
+                                                  # vendored at src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz
+                                                  # is confirmed TOO OLD, see environment-r.yml
+  R -e 'install.packages(
+         "https://cran.r-project.org/src/contrib/Archive/asremlPlus/asremlPlus_4.4.40.tar.gz",
+         repos = NULL, type = "source")'         # this exact version, not plain install.packages("asremlPlus", ...)
   ```
+  Then verify the pairing actually works before trusting anything it produces:
+  `R -e '"vpc.char" %in% ls(getNamespace("asreml"))'` should print `TRUE`.
 
 - Repo root: scripts (`.sh`/`.R`/`.r`) read a `PHYLOGWAS_ROOT` env var for the repo's absolute
   path, falling back to `/workdir/sh2246/p_phyloGWAS` if unset (this machine's layout) — so an

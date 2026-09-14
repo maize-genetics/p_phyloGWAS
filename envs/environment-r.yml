@@ -75,31 +75,55 @@ dependencies:
 
 # NOT included (licensed, per author instruction — install manually, see README.md
 # "Licensed software" section):
-#   - asreml       (src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz)
+#   - asreml       >= 4.2.0.355  <- MUST be this build or newer. The vendored installer at
+#                    src/asreml_4.2.0.302_linux-intel64_R4.2.0.tar.gz is TOO OLD and does not
+#                    work with the required asremlPlus below — see next paragraph. Sourcing a
+#                    4.2.0.355+ installer (replacing/supplementing the vendored one) is an open
+#                    item; in the meantime the `daily` conda env on this machine already has a
+#                    verified-working 4.2.0.355 install if you need one without waiting on that.
 #   - asremlPlus   4.4.40  <- PIN THIS VERSION. Do not take whatever CRAN offers.
 #
-# asremlPlus VERSION PIN (added 2026-08-24, after this cost a day of debugging):
-#   asremlPlus 4.3.50 — the version a 2023-06-01 CRAN snapshot resolves to for R 4.2 — calls
-#   `asreml:::vpc.char`, which asreml 4.2.0.302 does not export. Every call to
-#   infoCriteria(..., IClikelihood = "full") therefore dies with
+# asreml/asremlPlus VERSION PIN (added 2026-08-24, revised 2026-09-14 — this has now cost two
+# separate rounds of debugging, so the full compatibility picture is spelled out below rather
+# than just the one working combination):
+#   asremlPlus >= 4.3.50 calls `asreml:::vpc.char`, an internal function first added to asreml
+#   in build 4.2.0.355. Every call to infoCriteria(..., IClikelihood = "full") on an OLDER
+#   asreml build dies with
 #       Error : 'vpc.char' is not an exported object from 'namespace:asreml'
 #   That single failure takes out the whole full-vs-reduced LRT path, which is what
 #   src/12_runPermulation_perOGModel.R::fit_model_v4() is built on — so the per-orthogroup
-#   engine cannot run at all in this env.
+#   engine cannot run at all, and does so silently: it doesn't error out, it corrupts the whole
+#   result table (recovered via a real corrupted run, see 12_runPermulation_perOGModel.R's
+#   "Fix silent result-table corruption" commit) instead of failing loudly, so this is easy to
+#   miss until someone actually inspects the numbers.
 #
-#   Working combination, verified 2026-08-24 by reproducing the historical envPC_1 results
-#   (median LR 4.62 vs 4.55, phyloVAE 0.944 vs 0.965, cor(LR) = 0.75):
-#       asreml 4.2.0.355  +  asremlPlus 4.4.40      (the `daily` env on cbsumm26)
-#   Known broken:
-#       asreml 4.2.0.302  +  asremlPlus 4.3.50      (this env, before the pin)
+#   Working combination, verified twice independently — 2026-08-24 by reproducing the historical
+#   envPC_1 results (median LR 4.62 vs 4.55, phyloVAE 0.944 vs 0.965, cor(LR) = 0.75), and again
+#   2026-09-14 via real per-OG fits on a taxon subset (vpc.char resolves, real convergence/
+#   non-convergence outcomes instead of a blanket namespace error):
+#       asreml 4.2.0.355  +  asremlPlus 4.4.40      (the `daily` env on this machine)
+#   Known broken (both confirmed directly, not assumed from one another):
+#       asreml 4.2.0.302  +  asremlPlus 4.3.50      (this env, before the 2026-08-24 pin)
+#       asreml 4.2.0.302  +  asremlPlus 4.4.40      (this env, after the 2026-08-24 pin —
+#                                                     pinning asremlPlus alone is NOT sufficient,
+#                                                     confirmed 2026-09-14: vpc.char still
+#                                                     unresolved, since the vendored asreml build
+#                                                     itself is the actual blocker)
+#   i.e. the asremlPlus version pin below is necessary but not sufficient on its own — the
+#   asreml build matters just as much and is the part still unresolved in this env.
 #
 #   asremlPlus is not on conda; install it into the env explicitly, from source, by version:
 #     R -e 'install.packages(
 #            "https://cran.r-project.org/src/contrib/Archive/asremlPlus/asremlPlus_4.4.40.tar.gz",
 #            repos = NULL, type = "source")'
+#   (pulls in devtools/qqplotr/tryCatchLog as hard Imports, which on this machine needed the
+#   system gcc/g++/gfortran/binutils symlinked under their expected x86_64-conda-linux-gnu-*
+#   names, since conda's own compiler toolchain isn't installed in this env — see git history
+#   around 2026-09-14 if that's still not resolved some other way by the time you read this)
 #   then confirm the pairing actually works rather than assuming it:
 #     R -e 'library(asremlPlus); packageVersion("asremlPlus")'
-#   and check `vpc.char` resolves against whatever asreml build is installed:
+#   and check `vpc.char` resolves against whatever asreml build is installed — this is the real
+#   test, since asremlPlus installing cleanly does NOT mean the pairing works:
 #     R -e '"vpc.char" %in% ls(getNamespace("asreml"))'
 #   See DECISIONS.md #45 in p_lifeHistoryPoaceae.
 #
