@@ -340,6 +340,11 @@ if(permulation){
   topOG_list = unique(testRes$OG[!is.na(testRes$p) & testRes$p<0.001])
 } else stop
 
+# emp_p is only trustworthy when enough of the 1000 permutation reps actually converged for
+# that OG -- see the emp_p computation below. Overridable since 100 is a judgment call, not a
+# hard statistical requirement.
+MIN_PERM_CONVERGED <- as.integer(Sys.getenv("MIN_PERM_CONVERGED", unset = "100"))
+
 # print(topOG_list)
 if(permulation&length(topOG_list)>1){
   if(!dir.exists(outDirPerm)) dir.create(outDirPerm)
@@ -374,9 +379,30 @@ if(permulation&length(topOG_list)>1){
   isTopOG = !is.na(testRes$p) & testRes$p < 0.001  # NA-safe version of testRes$p < 0.001 -- see topOG_list above
   testRes_permMat = cbind(testRes$p[isTopOG],
                                      testRes_permMat[topOG_list,])
-  emp_p = apply(testRes_permMat,1,function(x) sum(x[-1]<x[1],na.rm = T))/ncol(testRes_permMat[,-1])
+  # emp_p = proportion of permutation reps more extreme than the real fit, among permutation
+  # reps that actually converged for that OG -- NOT divided by the fixed 1000 permutation
+  # count. Dividing by 1000 regardless of how many permutations converged (the previous
+  # behavior) silently deflates emp_p -- i.e. makes OGs look more significant than warranted
+  # -- whenever permulation convergence is low. That rarely mattered on the original full-
+  # 707-taxon runs (~100% permulation convergence there), but on reduced-taxon-count subsets
+  # (see revision-analyses.md) permulation convergence for topOG_list OGs can drop to single
+  # digits out of 1000, since these OGs were specifically selected for having a strong signal
+  # under the REAL trait -- permuting destroys that signal, and the remaining fit is harder to
+  # converge with fewer taxa. n_perm_converged is recorded so low-reliability emp_p values are
+  # visible, and emp_p is set to NA outright when fewer than MIN_PERM_CONVERGED permutations
+  # converged: an emp_p computed from a handful of samples isn't trustworthy at the emp_p <=
+  # 0.001 candidate-calling threshold this pipeline uses elsewhere.
+  n_perm_converged = apply(testRes_permMat[,-1,drop = FALSE],1,function(x) sum(!is.na(x)))
+  emp_p = apply(testRes_permMat,1,function(x) {
+    n_conv = sum(!is.na(x[-1]))
+    if (n_conv == 0) return(NA_real_)
+    sum(x[-1] < x[1], na.rm = TRUE) / n_conv
+  })
+  emp_p[n_perm_converged < MIN_PERM_CONVERGED] = NA
   testRes$emp_p = NA
   testRes$emp_p[isTopOG] = emp_p
+  testRes$n_perm_converged = NA_integer_
+  testRes$n_perm_converged[isTopOG] = n_perm_converged
   write.table(testRes,paste0(dir.out,"/","ASREML_res_empPadded.txt"),quote = F,sep = "\t",row.names = F)
 }
 
