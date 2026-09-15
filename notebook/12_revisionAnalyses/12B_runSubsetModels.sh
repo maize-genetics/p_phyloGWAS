@@ -12,6 +12,9 @@
 #     check) -- permulation convergence can be too low/slow to be worth running on a taxon-
 #     reduced subset (observed as low as ~3% per iteration on the Andropogoneae subset,
 #     implying ~35+ hours per envPC and still mostly NA emp_p afterward; see revision-analyses.md).
+#   ENVPCS="1" MC_CORES=8 notebook/12_revisionAnalyses/12B_runSubsetModels.sh <subsetName>
+#     -- restrict to a subset of envPCs (default "1 2 3"), e.g. for a cheaper envPC1-only
+#     jackknife pass.
 #
 # subsetName must match a "subset" value in output/revisionAnalyses/traitTables/manifest.csv
 # (e.g. andropogoneae, oneTipPerSpecies, drop_Andropogoninae, ...). Each subset x envPC
@@ -26,6 +29,7 @@ set -euo pipefail
 export PHYLOGWAS_ROOT="${PHYLOGWAS_ROOT:-/workdir/sh2246/p_phyloGWAS}"
 export MC_CORES="${MC_CORES:-8}"
 PERMULATION="${PERMULATION:-TRUE}"
+ENVPCS="${ENVPCS:-1 2 3}"
 RSCRIPT="${RSCRIPT:-/home/sh2246/miniconda3/envs/phyloGWAS-r/bin/Rscript}"
 
 TRAIT_DIR="${PHYLOGWAS_ROOT}/output/revisionAnalyses/traitTables"
@@ -62,7 +66,7 @@ for subset in $subsets; do
   outDir="${OUT_ROOT}/${subset}"
   mkdir -p "$outDir"
 
-  for i in 1 2 3; do
+  for i in $ENVPCS; do
     pcOut="${outDir}/envPC_${i}"
     if [ "$PERMULATION" = "TRUE" ] && [ -f "${pcOut}/ASREML_res_empPadded.txt" ]; then
       echo "[skip] ${subset} envPC_${i} -- already has ASREML_res_empPadded.txt"
