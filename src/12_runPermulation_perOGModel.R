@@ -338,7 +338,16 @@ if(!file.exists(outDirResGLM)&GLM){
 if(permulation){
   testRes = read.table(outDirRes,header =T)
   topOG_list = unique(testRes$OG[!is.na(testRes$p) & testRes$p<0.001])
-} else stop
+} else {
+  # `} else stop` (bare reference to the stop function, not a call -- it never actually halts)
+  # used to be here; harmless on its own, but the guard below used to read `permulation &
+  # length(topOG_list)>1` with `&` (not `&&`), which evaluates both sides eagerly regardless
+  # of permulation's value, so with permulation=FALSE and topOG_list never assigned this died
+  # with "object 'topOG_list' not found" -- confirmed via a real run (revision-analyses.md's
+  # no-permulation reruns). topOG_list is now defined either way, and the guard below uses
+  # `&&` so it short-circuits and skips permulation cleanly when permulation is FALSE.
+  topOG_list = character(0)
+}
 
 # emp_p is only trustworthy when enough of the 1000 permutation reps actually converged for
 # that OG -- see the emp_p computation below. Overridable since 100 is a judgment call, not a
@@ -346,7 +355,7 @@ if(permulation){
 MIN_PERM_CONVERGED <- as.integer(Sys.getenv("MIN_PERM_CONVERGED", unset = "100"))
 
 # print(topOG_list)
-if(permulation&length(topOG_list)>1){
+if(permulation && length(topOG_list)>1){
   if(!dir.exists(outDirPerm)) dir.create(outDirPerm)
   
   print("permulation start")
