@@ -61,6 +61,31 @@ permulation on.
   raw `p`, not `emp_p`, since `emp_p` isn't computed for most OGs).
 - Concordance of the 330: what fraction are also `emp_p ≤ 0.001` candidates in the Andropogoneae-only run.
 
+**Deviation from plan:** permulation was run for envPC_1 initially, but convergence on the
+183-taxon-smaller subset turned out to be far too low to be useful — the `topOG_list` OGs (already
+selected for having a strong signal under the *real* trait) converge on the order of 3-6% of the
+time per permuted-trait iteration (vs ~100% on the original full-707 runs), so completing even one
+envPC's 1000-iteration permulation loop would take 35+ hours and still leave most OGs `NA` under a
+sane minimum-converged-permutations threshold. Per author's direction, replaced the emp_p-based
+330-concordance check with a raw-`p<0.001` threshold comparison (a looser, uncorrected proxy) —
+still informative, just not the same statistic. This also exposed and fixed a real, generic bug:
+`emp_p`'s old denominator was the fixed permutation count (1000) rather than the number that
+actually converged, which would have silently deflated `emp_p` (false significance) whenever
+permulation convergence was low — see `12_runPermulation_perOGModel.R`'s fix commit. All 3 envPCs'
+base-model fits (permulation off) ran cleanly: 94.3% / 97.4% / 96.5% converged.
+
+**Results (raw `p`, no permulation):**
+
+| envPC | OGs compared (both converged) | Spearman ρ(-log10 p) | full p<0.001 → subset p<0.001 (recall / precision) | full p<0.001 → subset p<0.05 (recall) |
+|---|---|---|---|---|
+| envPC_1 | 18,075 | 0.759 | 92/275 (33.5%) / 92/151 (60.9%) | 252/275 (91.6%) |
+| envPC_2 | 19,044 | 0.792 | 82/204 (40.2%) / 82/146 (56.2%) | 196/204 (96.1%) |
+| envPC_3 | 18,846 | 0.790 | 88/209 (42.1%) / 88/163 (54.0%) | 205/209 (98.1%) |
+
+The low p<0.001→p<0.001 recall is mostly a **power** effect, not signal disagreement: 92-98% of the
+full-set's significant OGs are still at least nominally significant (p<0.05) in the Andropogoneae
+subset. Moderately strong, consistent rank correlation (ρ≈0.76-0.79) across all three envPCs.
+
 ## 2. Power simulation on the Andropogoneae tree
 
 Prune `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk` to the 484-taxon Andropogoneae
@@ -95,6 +120,44 @@ through unchanged; `AN21TNTL0178` excluded per the default above. **Result: 569 
   full taxon sampling.
 - Rerun `12_runPermulation_perOGModel.R` unchanged on this taxon subset for envPC_1/2/3 — same
   rank-correlation + 330-concordance comparison as analysis #1.
+
+**Results — ASR transition-node stability** (`12E_oneTipPerSpeciesTransitionNodes.R`; permulation
+dropped here too, for the same reason as analysis #1 above):
+
+Transition-clade counts (toH / toL), full-707 vs one-tip-per-species (569):
+
+| envPC | Full (707) | One-tip (569) |
+|---|---|---|
+| envPC_1 | 27 / 19 | 22 / 20 |
+| envPC_2 | 21 / 22 | 18 / 22 |
+| envPC_3 | 27 / 30 | 24 / 31 |
+
+Tip-membership stability (each one-tip clade matched to its best-overlapping full-set clade by
+Jaccard similarity, restricted to the shared 569-taxon overlap):
+
+| envPC | toH mean Jaccard (≥0.5 match rate) | toL mean Jaccard (≥0.5 match rate) |
+|---|---|---|
+| envPC_1 | 0.955 (21/22) | 0.750 (15/20) |
+| envPC_2 | 0.944 (17/18) | 0.864 (19/22) |
+| envPC_3 | 0.878 (21/24) | 0.871 (27/31) |
+
+Transition-node calls are stable under this downsampling: counts are close across the board, and
+75-95.5% of one-tip-per-species clades substantially overlap (Jaccard ≥ 0.5) a full-set clade in
+every envPC × direction combination — expected, since dropping only redundant duplicate-species
+assemblies doesn't change the underlying species-level tree topology ASR depends on.
+
+**Results — association model** (raw `p`, no permulation, same deviation as analysis #1):
+
+| envPC | OGs compared (both converged) | Spearman ρ(-log10 p) | full p<0.001 → subset p<0.001 (recall / precision) | full p<0.001 → subset p<0.05 (recall) |
+|---|---|---|---|---|
+| envPC_1 | 18,099 | 0.793 | 100/275 (36.4%) / 100/172 (58.1%) | 266/275 (96.7%) |
+| envPC_2 | 19,095 | 0.914 | 78/204 (38.2%) / 78/92 (84.8%) | 203/204 (99.5%) |
+| envPC_3 | 18,981 | 0.861 | 78/211 (37.0%) / 78/107 (72.9%) | 210/211 (99.5%) |
+
+Noticeably stronger than the Andropogoneae comparison (ρ 0.79-0.91 vs 0.76-0.79) — expected, since
+one-tip-per-species keeps 569 taxa spanning the whole tree rather than restricting to one clade,
+preserving far more phylogenetic breadth. 97-99.5% of the full-set's p<0.001 hits remain at least
+nominally significant (p<0.05) here. Base-model fits: 96.6% / 98.5% / 98.4% converged.
 
 ## 5. Leave-one-subtribe-out jackknife
 
