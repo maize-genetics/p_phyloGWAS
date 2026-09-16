@@ -32,7 +32,7 @@ for(j in 1:length(prob)) { # loop through sequences
   for(i in 1:length(tmp)){ # loop through sites (max of 999) fixed by Jingjing
     if(!tmp[i]%in%limma::strsplit2("LAGVSERTIDPKQNFYMHWC","")) next
     refProb = c(refProb,prob[[j]][i,tmp[i]]) # P(obs)
-    secProb = c(secProb,prob[[j]][i,which.max(prob[[j]][i,colnames(prob[[j]])!=tmp[i]])]) # P.max(others)
+    secProb = c(secProb,max(prob[[j]][i,colnames(prob[[j]])!=tmp[i]])) # P.max(others)
   }
   zeroshot = c(zeroshot,mean(log(refProb/secProb))) # take the mean log ratio of the ps
 }
