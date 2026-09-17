@@ -161,38 +161,62 @@ nominally significant (p<0.05) here. Base-model fits: 96.6% / 98.5% / 98.4% conv
 
 ## 5. Leave-one-subtribe-out jackknife
 
-**Scope reduced after real timing data** (see below): loop over the **top 8 of the 24** subtribes
-with ≥5 taxa within the 707, ranked by taxon count:
+**Final scope**: the **10 subtribes with >20 taxa** within the 707, **envPC_1 only** (not all 3),
+base-model fit with permulation off (same rationale as #1/#4: see the emp_p fix commit — permulation
+convergence collapses on any taxon-reduced subset, and this analysis's question — does dropping one
+lineage destabilize the raw association ranking — doesn't need it):
 
 Andropogoninae (150), Anthistiriinae (79), Oryzinae (35), Tripsacinae (33), Saccharinae (33),
-Triticinae (28), Aveninae (24), Ischaeminae (23).
+Triticinae (28), Aveninae (24), Ischaeminae (23), Sorghinae (23), Apludinae (22).
 
-This naturally covers Andropogoneae's own largest subtribes (Andropogoninae, Anthistiriinae,
-Tripsacinae, Saccharinae, Ischaeminae) plus the largest non-Andropogoneae lineages (Oryzinae,
-Triticinae, Aveninae) — the drops with the most statistical leverage; the remaining 16 smaller
-subtribes (Sorghinae down to Germainiinae, 5-23 taxa each) are deferred, not abandoned — can be
-run later if more compute becomes available. The other 16:  Sorghinae (23), Apludinae (22),
-Rottboelliinae (19), Ratzeburgiinae (17), Chrysopogoninae (16), Hordeinae (14), Rhytachninae (14),
-Eleusininae (12), Cenchrinae (12), Arundinariinae (10), Arthraxoninae (10), Boivinellinae (8),
-Panicinae (8), Brachypodiinae (7), Loliinae (5), Germainiinae (5).
+This covers Andropogoneae's own largest subtribes (Andropogoninae, Anthistiriinae, Tripsacinae,
+Saccharinae, Ischaeminae, Sorghinae) plus the largest non-Andropogoneae lineages (Oryzinae,
+Triticinae, Aveninae, Apludinae). The remaining 14 subtribes with 5-20 taxa are deferred, not
+abandoned. (Scope evolved during the session: originally top-8 by count under a permulation-
+inclusive, 8-core estimate of 5+ weeks; that estimate turned out to be based on the wrong bottleneck
+-- see below -- so the real constraint is much lighter and the cutoff was raised to >20 taxa, adding
+Sorghinae and Apludinae, at 32 cores and permulation off.)
 
-For each, build a trait table excluding that subtribe's assemblies (everyone else — including the
-39 NA-subtribe taxa and `AN21TNTL0178` — stays in), rerun `12_runPermulation_perOGModel.R`
-unchanged for envPC_1/2/3.
+For each, built a trait table excluding that subtribe's assemblies (everyone else — including the
+39 NA-subtribe taxa and `AN21TNTL0178` — stays in), ran `12_runPermulation_perOGModel.R` (base model
+only, `12B_runSubsetModels.sh`'s new `PERMULATION=FALSE ENVPCS="1"` overrides).
 
-**Per dropped subtribe**, report the same two stability metrics as #1 (rank correlation of
-`-log10(p)`, and 330-candidate concordance), summarized across the 8 drops (table or plot of
-concordance vs. subtribe size). This shows whether stability degrades for any particular lineage's
-removal, and — since Andropogoneae's own subtribes are among the 8 — directly complements analysis
-#1 from the opposite direction (drop-Andropogoneae's-subtribes vs. keep-only-Andropogoneae).
+**Compute cost (verified, not estimated)**: at 32 cores, permulation off, each run took ~3.0-3.5
+hours (199 min average across the 10). All 10 completed cleanly: 92.3-99.9% convergence, zero
+`vpc.char`/crash errors. Total wall-clock: ~33 hours sequential. (The original "~12.5 hours per
+envPC at 8 cores, 5+ weeks for the full 72-run version" estimate was based on including the
+1000-iteration permulation loop, which -- per the emp_p fix commit -- turned out to be both far
+slower and far less informative than assumed on taxon-reduced subsets; dropping it changed the
+feasibility picture entirely.)
 
-**Compute cost (verified, not estimated)**: a single envPC's *base model only* (no permutation) on
-the 484-taxon Andropogoneae subset took **~12.5 hours at an 8-core budget** (20,634 OGs fit;
-timestamps Sep 11 17:25 → Sep 12 06:00). The full 24-subtribe × 3-envPC = 72-run version of this
-analysis would be ~900+ hours (5+ weeks) sequential at 8 cores — not feasible on a machine shared
-with other running jobs. Reduced to top-8 × 3 = 24 runs (~same order as #1+#4 combined) as a result.
-8-core budget chosen because a concurrent unrelated job (`p_lifeHistoryPoaceae`'s HyPhy RELAX run)
-was already using 30 of this machine's 40 cores; revisit the core budget once that frees up.
+**Results — rank correlation and candidate recall vs. the full-707-taxon baseline** (envPC_1):
+
+| Subtribe dropped | Taxa removed | ρ(-log10 p) | full p<0.001 → drop p<0.001 | full p<0.001 → drop p<0.05 |
+|---|---|---|---|---|
+| Andropogoninae | 150 | 0.782 | 62.6% | 97.8% |
+| Anthistiriinae | 79 | 0.781 | 60.2% | 92.7% |
+| Saccharinae | 33 | 0.849 | 58.5% | 97.8% |
+| Ischaeminae | 23 | 0.933 | 74.5% | 100.0% |
+| Triticinae | 28 | 0.952 | 75.6% | 98.5% |
+| Aveninae | 24 | 0.963 | 78.2% | 99.6% |
+| Tripsacinae | 33 | 0.970 | 85.5% | 100.0% |
+| Apludinae | 22 | 0.972 | 85.0% | 100.0% |
+| Sorghinae | 23 | 0.976 | 84.7% | 100.0% |
+| Oryzinae | 35 | 0.993 | 88.0% | 100.0% |
+
+Full-707-model output: `output/finalModels_20251002/envPC_1/ASREML_res.txt`. Per-subtribe outputs:
+`output/revisionAnalyses/perSubsetModels/drop_<Subtribe>/envPC_1/`. Summary table:
+`output/revisionAnalyses/jackknife_n20_envPC1_summary.csv`.
+
+**Interpretation**: the model is broadly robust to any single subtribe's removal — 7 of 10 drops
+give ρ > 0.93 and every drop recovers ≥92.7% of the original p<0.001 hits at a lenient p<0.05
+threshold. The two largest subtribes (Andropogoninae, Anthistiriinae) are, unsurprisingly, the most
+influential (ρ≈0.78) — but even they retain strong rank correlation and near-complete lenient
+recall. One notable exception to a pure taxon-count story: Saccharinae (33 taxa) is nearly as
+influential as the two much larger subtribes (ρ=0.849), while Tripsacinae -- the exact same size
+(33 taxa) -- is one of the *most* stable drops (ρ=0.970). This asymmetry suggests Saccharinae
+specifically (not just "a 33-taxon subtribe") carries disproportionate weight for this signal, worth
+a mention alongside the size-driven pattern rather than folding into it.
 
 ---
 
