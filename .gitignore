@@ -22,3 +22,46 @@ __pycache__/
 !data/DEG_study_metadata.csv
 !data/poaceaeRepAssemblies_32.txt
 !output/poaceaeHelixerOG_filtered_20250331.txt
+
+# --- Revision analysis 12G-12I: ESM2 mutagenesis-validation benchmark ---
+# Inputs. The large B73v5 references (30M peptide FASTA, 12M GFF3) are public
+# MaizeGDB downloads and stay untracked -- see DATA.md for the URLs. The HapMap
+# region extract is kept because regenerating it means downloading 5.75 GB of VCFs.
+!data/mutagenesisValidation/
+data/mutagenesisValidation/*
+!data/mutagenesisValidation/deleteriousMissenseMutationsMaize.txt
+!data/mutagenesisValidation/At_gene2mutate.txt
+!data/mutagenesisValidation/At.TAIR10.subset.trainingData.fa
+!data/mutagenesisValidation/MD5SUMS_sourcePackage
+!data/mutagenesisValidation/B73v5/
+data/mutagenesisValidation/B73v5/*
+!data/mutagenesisValidation/B73v5/Zm-B73-REFERENCE-NAM-5.0.fa.fai
+!data/mutagenesisValidation/B73v5/Zm-B73-REFERENCE-NAM-5.0_Zm00001eb.1.canonical_transcripts
+!data/mutagenesisValidation/hapmap282/
+data/mutagenesisValidation/hapmap282/*
+!data/mutagenesisValidation/hapmap282/hapmap282_targetGenes.vcf.gz
+!data/mutagenesisValidation/hapmap282/hapmap282_targetGenes.vcf.gz.tbi
+
+# Results. The ESM2 logit .npz files (259M arabidopsis, 6.3M maize) are NOT tracked;
+# the zero-shot score tables ARE, so steps 3+ (figures, PR/ROC) reproduce from git
+# alone without a GPU or the npz. Everything else here is regenerable via 12G-12I.
+!output/revisionAnalyses/
+output/revisionAnalyses/*
+!output/revisionAnalyses/mutagenesisValidation/
+output/revisionAnalyses/mutagenesisValidation/*
+!output/revisionAnalyses/mutagenesisValidation/At_ESM2_650M_summary.txt
+!output/revisionAnalyses/mutagenesisValidation/At_ESM2_650M_perGeneMeanByLabel.txt
+!output/revisionAnalyses/mutagenesisValidation/At_ESM2_650M_zeroShotScores.txt
+!output/revisionAnalyses/mutagenesisValidation/figure/
+output/revisionAnalyses/mutagenesisValidation/figure/*
+!output/revisionAnalyses/mutagenesisValidation/figure/*.png
+!output/revisionAnalyses/mutagenesisValidation/maize/
+output/revisionAnalyses/mutagenesisValidation/maize/*
+!output/revisionAnalyses/mutagenesisValidation/maize/maize_ESM2_650M_summary.txt
+!output/revisionAnalyses/mutagenesisValidation/maize/maize_ESM2_650M_perGeneMeanByLabel.txt
+!output/revisionAnalyses/mutagenesisValidation/maize/maize_ESM2_650M_zeroShotScores.txt
+!output/revisionAnalyses/mutagenesisValidation/maize/maize_deleterious_validation.txt
+!output/revisionAnalyses/mutagenesisValidation/maize/maize_neutral_summary.txt
+!output/revisionAnalyses/mutagenesisValidation/maize/figure/
+output/revisionAnalyses/mutagenesisValidation/maize/figure/*
+!output/revisionAnalyses/mutagenesisValidation/maize/figure/*.png

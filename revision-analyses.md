@@ -220,6 +220,77 @@ a mention alongside the size-driven pattern rather than folding into it.
 
 ---
 
+## 6. ESM2 zero-shot mutagenesis validation (arabidopsis + maize)
+
+Integrated from the standalone `protein_LLMscoring_pkg` (all 46 files verified against its
+shipped `MD5SUMS` before copying). Validates the ESM2 zero-shot score — the `scaledESM`
+predictor used by the stage-08 per-OG model — by asking whether it separates deleterious from
+neutral missense mutants relative to their wild-type protein. The revision extends the original
+arabidopsis benchmark to a small, **experimentally validated maize** set, showing the score works
+equally well on a second species.
+
+| dataset | genes | deleterious | neutral | PR AUC | ROC AUC |
+|---|---|---|---|---|---|
+| arabidopsis (TAIR10 subset) | 996 | 2,906 | 1,574 | 0.923 | 0.862 |
+| maize (B73v5, experimentally validated) | 35 | 54 | 53 | 0.956 | 0.965 |
+
+Overlay figure: `output/revisionAnalyses/mutagenesisValidation/figure/At_vs_maize_PR_ROC.png`.
+
+**Scripts** (drivers continue the 12A-12F series; reusable workers live in `src/`):
+
+| Script | Role |
+|---|---|
+| `notebook/12_revisionAnalyses/12G_buildDeleteriousSet.py` | maize: WT + deleterious FASTA from the validated mutation table, with a per-mutation validation report |
+| `notebook/12_revisionAnalyses/12H_fetchHapmapRegions.sh` | maize: download HapMap3.2.1 282-panel VCFs, extract the 35 gene regions |
+| `notebook/12_revisionAnalyses/12I_buildNeutralSet.py` | maize: pick common missense SNPs as the neutral set, assemble the final FASTA |
+| `src/4_ESM_logits.py` | step 1: per-residue ESM2 probabilities → `.npz` (**already in this repo, byte-identical to the package copy — not duplicated**) |
+| `src/10_logit2zeroShot_MutagenesisValidation.R` | step 2: `.npz` → per-sequence zero-shot score (see the divergence note below) |
+| `src/mutagenesisValidation_visualization.R` | step 3: gene-level contrast, PR/ROC, figures, tables |
+| `src/mutagenesisValidation_compareDatasets.R` | overlay PR/ROC of several datasets on one figure |
+
+**Divergence from the pipeline's own `src/10_logit2zeroShot.R` — read before reusing either.**
+The benchmark copy is a hardened rewrite of the same script and is *not* a drop-in replacement.
+Both are kept deliberately: `src/10_logit2zeroShot.R` is the provenance record for the published
+stage-07 → stage-08 results and stays frozen; the `_MutagenesisValidation` copy is what this
+benchmark runs. Differences:
+
+| | `10_logit2zeroShot.R` (pipeline) | `10_logit2zeroShot_MutagenesisValidation.R` |
+|---|---|---|
+| logit ↔ sequence matching | positional (`testfasta[[j]]`) | **by name** (`seqByID[[seqID]]`) |
+| gene/group key for z-scaling | hardcoded split on `":"` | `groupRegex` 4th arg, default `"_\| "` |
+| output `row.names` | `TRUE` | `FALSE` |
+| `RETICULATE_PYTHON` | hardcoded `/usr/bin/python` | overridable via env var |
+
+The grouping difference is the load-bearing one: stage-07 OG seqIDs look like
+`OG0006571:10wheat_assembly_jagger:0`, so the pipeline's `":"` split yields the orthogroup, while
+the benchmark default would yield `OG0006571:10wheat`. Swapping the files without passing
+`groupRegex=":"` would silently corrupt the `scaledESM` predictor. **Open item:** the
+positional-vs-name matching difference is a latent correctness question for the pipeline copy, not
+just a style change — if `4_ESM_logits.py`'s npz key order ever differs from the input FASTA record
+order, the pipeline version scores sequences against the wrong protein. Worth checking against real
+stage-07 inputs; tracked separately from this integration.
+
+**Environment**: `envs/environment-mutagenesisValidation-full.yml` (full conda export of the tested
+`pytorch-2-1` env), with minimal pins in `envs/requirements-mutagenesisValidation-{python,R}.txt`
+(torch 2.1.1, transformers 4.40.0, biopython 1.83, numpy 1.26.4; R needs reticulate, Biostrings,
+limma, PRROC). Kept as a separate env rather than merged into `environment-py.yml` — these pins are
+specific to the benchmark and merging risks disturbing a working solve. GPU helps only step 1.
+
+**What is and isn't tracked in git** (see `.gitignore`'s 12G-12I block and `DATA.md`):
+the ESM2 logit `.npz` files (259 MB arabidopsis, 6.3 MB maize) and the large public B73v5
+references (30 MB peptide FASTA, 12 MB GFF3) are **not** tracked. The zero-shot score tables **are**,
+so steps 3+ (figures, PR/ROC) reproduce from a clean clone without a GPU or the npz. The HapMap
+region extract is tracked because regenerating it means downloading 5.75 GB of VCFs.
+
+**Known caveats** (carried over from the source package, unchanged): 6 of the 35 maize genes have
+no eligible neutral site (`Zm00001eb153340, 190120, 194210, 215710, 234730, 373430`), so their
+deleterious mutants enter PR/ROC without a within-gene neutral comparator; `Zm00001eb336930` drew
+two SNPs in the same codon (N77S, N77D); and with 107 mutants total the maize AUCs have wide
+confidence intervals. `Zm00001eb252380_P001 A139T` is applied as **A140T** (an off-by-one in the
+source table) and flagged `OK_CORRECTED_FROM_A139T` in `maize_deleterious_validation.txt`.
+
+---
+
 ## Open items before implementation starts
 
 - Confirm the FPKM > 1 detectability threshold for tissue-expression breadth (#3), or supply a

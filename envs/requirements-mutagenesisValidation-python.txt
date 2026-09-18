@@ -1,0 +1,8 @@
+# Minimal pins for src/4_ESM_logits.py and src/maize_*.py (tested in conda env "pytorch-2-1")
+# python 3.x; a CUDA build of torch is only needed to compute ESM2 logits on GPU.
+torch==2.1.1
+transformers==4.40.0
+biopython==1.83
+numpy==1.26.4
+tqdm==4.66.4
+pandas

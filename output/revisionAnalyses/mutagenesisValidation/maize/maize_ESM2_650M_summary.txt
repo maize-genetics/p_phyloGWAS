@@ -1,0 +1,2 @@
+set	n_deleterious	n_neutral	PR_AUC	ROC_AUC	median_deleterious	median_neutral
+all genes	54	53	0.955779880143457	0.96470999301188	1.74294165130046	-0.0603585710219721
