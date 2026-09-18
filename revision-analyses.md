@@ -98,6 +98,36 @@ used for `PHYLOGWAS_ROOT`) — keeps `08E_power_simulation.sh`'s existing invoca
 unchanged while allowing an env-var-driven Andropogoneae rerun. Same simulation config otherwise
 (effect sizes, `n_sims=500`, scenarios), so it's a like-for-like power-vs-sample-size comparison.
 
+**ASR step** (`12D_andropogoneaeTransitionNodes.R`): the Andropogoneae-restricted reconstruction
+yields **24 toH + 18 toL = 42 transition nodes**, against **27 + 19 = 46** on the full 707-taxon
+tree. Only envPC1 is computed, since `powerSimulation_XY_revised.R` reads only
+`fromJSON(...)[[1]]`. Outputs: `output/revisionAnalyses/powerSimulation/andropogoneae_realTransition.json`
+and `andropogoneae_tree.nwk` (the 484-tip pruned tree).
+
+**Results** — power difference (Andropogoneae − full) at the 100% convergence level, across the
+full β range. Full run: `output/figure/power_df_merged.csv`; Andropogoneae run:
+`output/revisionAnalyses/powerSimulation/power_df_merged.csv` (176 rows each = 4 scenarios × 4
+convergence levels × 11 β).
+
+| Scenario | max power loss | max power gain | β range where curves differ at all |
+|---|---|---|---|
+| empirical transition | −0.036 (β=0.05) | +0.016 (β=0.00) | both saturate at 1.000 from β≥0.30 |
+| random transition − 1x | −0.032 (β=0.15) | +0.010 (β=0.25) | both ≥0.99 from β≥0.25 |
+| random transition − 2x | −0.054 (β=0.10) | +0.010 (β=0.00) | both ≥0.98 from β≥0.20 |
+| random transition − 1/2x | −0.006 (β=0.00) | **+0.092** (β=0.20) | Andropogoneae consistently *higher* |
+
+Type I error (β=0) stayed near nominal in both runs across all four scenarios: 0.038–0.066.
+
+**Interpretation**: restricting the tree to Andropogoneae costs **essentially no power**. Every
+difference in the empirical-transition scenario and the 1x/2x controls sits inside Monte-Carlo
+noise at `n_sims=500` (≈±0.04 near power 0.5). The 1/2x control is the one systematic departure,
+and it runs in the *opposite* direction to a sample-size penalty — Andropogoneae is up to +0.09
+higher. That is mechanistically consistent with the transition counts above: power in this design
+tracks the number of independent transition events (42 vs 46, a 9% difference), not the number of
+tips (484 vs 707, a 32% difference). The 1/2x scenario draws `n_trans × 0.5` nodes — 21 for
+Andropogoneae vs 23 for the full tree — into a tree with far fewer deep, tip-rich clades, which
+makes the drawn clades more evenly sized and the resulting contrast slightly cleaner.
+
 ## 3. Abundance/breadth confound check
 
 For each maize ortholog in `data/maxFPKM_v5.csv`: pull `maxFPKM` as the abundance predictor, and
@@ -107,6 +137,32 @@ threshold (proposed FPKM > 1; adjust if a different convention is preferred). Jo
 
 Fit `candidate_status (0/1, in the 330) ~ maxFPKM + tissue_breadth` (logistic regression), per
 envPC and/or pooled. Report coefficients, p-values, and a plot.
+
+**As run** (`12C_abundanceBreadthConfound.R`): breadth = count of per-tissue FPKM columns above
+`FPKM_THRESHOLD` (default **1**, env-overridable), giving a 0–23 tissue count (median 21). After
+joining `maxFPKM_v5.csv` to the OG→ZmID mapping, **16,773 OG–gene pairs** carry expression data,
+of which **288 of the 330 candidates** are recoverable (147 envPC1 / 88 envPC2 / 60 envPC3 — the
+shortfall is candidates with no maize ortholog or no expression record). Both predictors are
+z-scaled, so coefficients are per-SD on the logit scale. Outputs:
+`output/revisionAnalyses/abundanceBreadth/{og_abundance_breadth_table.csv,glm_results.csv}`.
+
+**Results**:
+
+| Model | `scale(maxFPKM)` β (p) | `scale(tissue_breadth)` β (p) |
+|---|---|---|
+| pooled (all 330) | −0.045 (p=0.705) | +0.023 (p=0.696) |
+| envPC1 | −0.115 (p=0.612) | **+0.181 (p=0.048)** |
+| envPC2 | +0.010 (p=0.897) | +0.010 (p=0.928) |
+| envPC3 | −0.206 (p=0.629) | **−0.270 (p=0.021)** |
+
+**Interpretation**: no evidence that candidate status is confounded by protein abundance or
+expression breadth. `maxFPKM` is null everywhere (all p ≥ 0.61, including pooled). Breadth is null
+pooled and in envPC2, and marginal in envPC1 and envPC3 — but those two point in **opposite
+directions** (envPC1 positive, envPC3 negative). Across 8 tests, two hits at p=0.048 and p=0.021
+is roughly what noise produces (neither survives any multiple-testing correction across the 8),
+and a genuine detectability/abundance confound would have to push candidate status consistently one
+way, not split by sign across envPCs. The pooled model — the direct test of the reviewer's
+question — is unambiguously null on both predictors.
 
 ## 4. One-tip-per-species downsampling
 
