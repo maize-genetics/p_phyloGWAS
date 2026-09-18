@@ -274,6 +274,60 @@ influential as the two much larger subtribes (ρ=0.849), while Tripsacinae -- th
 specifically (not just "a 33-taxon subtribe") carries disproportionate weight for this signal, worth
 a mention alongside the size-driven pattern rather than folding into it.
 
+### 5b. How many transition events does each jackknife actually remove?
+
+`12J_jackknifeTransitionLoss.R`. The full-707 envPC1 ASR is computed **once** and its 46 transition
+clades (27 toH + 19 toL, spanning 149 transition-carrying tips) are then held **fixed**; each
+jackknife is scored purely structurally — what fraction of each fixed clade's tips the drop removes.
+
+**Why the ASR is not re-run per jackknife.** Re-running it conflates genuine loss of
+transition-bearing lineages with re-estimation effects: dropping taxa shifts the
+`quantile(trait, .3)`/`quantile(trait, .7)` cutoffs and the `fastAnc` CIs, so edges that previously
+missed the threshold get newly called. Scored that way, three subtribes appear to **gain**
+transitions (Oryzinae +3, Triticinae +2, Aveninae +2) despite removing *zero* transition-carrying
+tips — a pure artifact. Holding the ASR fixed removes that confound, and since nothing is
+re-detected there is no "retained vs lost" judgement to make: a clade is wiped, partially eroded,
+or untouched.
+
+| Subtribe dropped | taxa | clades wiped (toH/toL) | partial | untouched | tips lost | % of transition tips | ρ |
+|---|---|---|---|---|---|---|---|
+| Andropogoninae | 150 | **14** (8/6) | 1 | 31 | 51 | **34.2%** | 0.782 |
+| Anthistiriinae | 79 | **11** (8/3) | 1 | 34 | 35 | **23.5%** | 0.781 |
+| Sorghinae | 23 | 2 (2/0) | 0 | 44 | 6 | 4.0% | 0.976 |
+| Saccharinae | 33 | 1 (0/1) | 0 | 45 | 9 | 6.0% | 0.849 |
+| Apludinae | 22 | 1 (1/0) | 0 | 45 | 7 | 4.7% | 0.972 |
+| Ischaeminae | 23 | 1 (1/0) | 0 | 45 | 3 | 2.0% | 0.933 |
+| Tripsacinae | 33 | 1 (1/0) | 0 | 45 | 2 | 1.3% | 0.970 |
+| Aveninae | 24 | 0 | 0 | 46 | 0 | 0.0% | 0.963 |
+| Oryzinae | 35 | 0 | 0 | 46 | 0 | 0.0% | 0.993 |
+| Triticinae | 28 | 0 | 0 | 46 | 0 | 0.0% | 0.952 |
+
+Correlation with the jackknife rank correlation ρ: `tips_lost` **Pearson −0.889** (Spearman −0.607),
+`clades_wiped` −0.867 (−0.488), versus plain `taxa_dropped` −0.800 (−0.476). Output:
+`output/revisionAnalyses/jackknife_transitionLoss_fixedASR_envPC1.csv`.
+
+**Transition clades are almost perfectly nested within subtribes.** Across all 460 clade × subtribe
+combinations there is exactly **one** partially-eroded clade (Anthistiriinae); every other clade is
+either wiped outright or completely untouched. Both transition clades and subtribes are
+monophyletic, so a clade is nearly always wholly inside or wholly outside a dropped subtribe. This
+is why `clades_wiped` and `tips_lost` carry almost the same information here, and why "wiped" is the
+natural unit.
+
+**Interpretation**: transition loss predicts destabilization better than taxon loss, and the two
+biggest drops are cleanly explained — Andropogoninae and Anthistiriinae remove 34% and 24% of all
+transition-carrying tips (14 and 11 of the 46 clades outright), and have the two lowest ρ. This is
+the same mechanism analysis #2 identified independently from the power simulation: what matters is
+the number of independent transition events, not the number of tips. Two different analyses
+converging on that conclusion is worth stating explicitly in the manuscript.
+
+It also reframes, without fully resolving, the **Saccharinae** anomaly from §5. Saccharinae removes
+6.0% of transition-carrying tips — the third-most of any subtribe — so its third-lowest ρ is at
+least *rank-consistent* with the predictor, rather than the flat contradiction it appeared to be on
+taxon count alone. But the slope is still steep: Apludinae removes 4.7% and sits at ρ=0.972 versus
+Saccharinae's 0.849, and Saccharinae has the lowest strict recall of all ten drops (58.5%) despite
+wiping only a single toL clade. So a Saccharinae-specific effect beyond transition count remains
+plausible; the natural next probe is which individual OGs drive its recall drop.
+
 ---
 
 ## 6. ESM2 zero-shot mutagenesis validation (arabidopsis + maize)
