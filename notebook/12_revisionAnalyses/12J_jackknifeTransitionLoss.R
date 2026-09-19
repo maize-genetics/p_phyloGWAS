@@ -1,5 +1,13 @@
-# Analysis #5 follow-up (revision-analyses.md): how many ASR transition events does
-# each leave-one-subtribe-out jackknife actually remove?
+# Analysis #5 follow-up (revision-analyses.md): what does each leave-one-subtribe-out
+# jackknife actually remove? Scores each dropped subtribe on two independent predictor
+# families and relates both to the jackknife's observed rank-correlation stability:
+#
+#   (1) TRANSITION LOSS  -- how many ASR transition events the drop removes
+#   (2) ENVIRONMENTAL SPREAD -- how much envPC1 variance/range the subtribe spans
+#
+# (1) is the stronger global predictor; (2) is what distinguishes the Saccharinae /
+# Tripsacinae matched pair (identical taxon count and identical clades wiped, but
+# 2x the envPC1 range and a 0.12 gap in rho). See revision-analyses.md section 5b.
 #
 # METHOD NOTE -- why the ASR is computed ONCE and then held fixed:
 # The obvious implementation is to re-run the ASR on each jackknifed taxon set and
@@ -113,6 +121,15 @@ subtribeSizes <- table(tax$subtribe[tax$assemblyID %in% baseCommon & !is.na(tax$
 subtribes <- names(sort(subtribeSizes[subtribeSizes >= MIN_SUBTRIBE_N], decreasing = TRUE))
 cat(sprintf("Scoring %d subtribes with >= %d taxa in the base set\n\n", length(subtribes), MIN_SUBTRIBE_N))
 
+# envPC1 values on the model's own 707-taxon trait basis, for the spread metrics.
+# Note this is the same trait the ASR above reconstructs, read from the table the
+# stage-08 models are actually fit on.
+envData <- read.table(file.path(PHYLOGWAS_ROOT, "output/envData_707Poaceae_20250804.txt"), header = TRUE)
+pc1 <- envData[[sprintf("envPC_%d", ENVPC_IDX)]]
+names(pc1) <- rownames(envData)
+grandMean <- mean(pc1)
+q30 <- quantile(pc1, .3); q70 <- quantile(pc1, .7)   # the ASR's own transition thresholds
+
 res <- data.frame()
 for (st in subtribes) {
   dropped <- intersect(rownames(tax)[!is.na(tax$subtribe) & tax$subtribe == st], baseCommon)
@@ -121,16 +138,31 @@ for (st in subtribes) {
   before <- sapply(clades, length)
   after  <- sapply(clades, function(cl) length(intersect(cl, keep)))
 
+  # --- (2) environmental spread of the dropped subtribe ---
+  v <- pc1[intersect(dropped, names(pc1))]
+  # frac_low/frac_high: does the subtribe straddle the transition thresholds, or sit
+  # entirely on one side? A clade wholly on one side contributes little contrast even
+  # if its mean is environmentally extreme -- see the eccentricity note in 5b.
   res <- rbind(res, data.frame(
     subtribe         = st,
     taxa_dropped     = length(dropped),
+    # (1) transition loss
     clades_wiped     = sum(after == 0),                     # transition removed outright
     clades_partial   = sum(after > 0 & after < before),     # eroded but still present
     clades_untouched = sum(after == before),
     wiped_toH        = sum(after == 0 & direction == "toH"),
     wiped_toL        = sum(after == 0 & direction == "toL"),
     tips_lost        = sum(before - after),
-    pct_tips_lost    = round(100 * sum(before - after) / sum(before), 1)))
+    pct_tips_lost    = round(100 * sum(before - after) / sum(before), 1),
+    # (2) environmental spread
+    pc1_sd           = round(sd(v), 3),
+    pc1_range        = round(diff(range(v)), 3),
+    pc1_iqr          = round(IQR(v), 3),
+    pc1_mean         = round(mean(v), 3),
+    pc1_eccentricity = round(abs(mean(v) - grandMean), 3),
+    pct_totalSS      = round(100 * sum((v - grandMean)^2) / sum((pc1 - grandMean)^2), 1),
+    frac_below_q30   = round(mean(v < q30), 2),
+    frac_above_q70   = round(mean(v > q70), 2)))
 }
 
 # --- join the jackknife stability metrics, if that run has completed ---
@@ -138,16 +170,44 @@ jkPath <- file.path(PHYLOGWAS_ROOT, "output/revisionAnalyses/jackknife_n20_envPC
 if (file.exists(jkPath) && ENVPC_IDX == 1) {
   jk  <- read.csv(jkPath)
   res <- merge(res, jk[, c("subtribe", "rho", "recall_p001", "recall_p05")], by = "subtribe", all.x = TRUE)
-  res <- res[order(-res$clades_wiped, -res$tips_lost), ]
-  cat("--- transition loss vs jackknife stability ---\n")
-  print(res, row.names = FALSE)
-  ok <- !is.na(res$rho)
+  res <- res[order(res$rho), ]
+  ok  <- !is.na(res$rho)
+
+  cat("--- (1) transition loss ---\n")
+  print(res[, c("subtribe","taxa_dropped","clades_wiped","clades_partial","clades_untouched",
+                "tips_lost","pct_tips_lost","rho")], row.names = FALSE)
+
+  cat("\n--- (2) envPC1 spread of the dropped subtribe ---\n")
+  print(res[, c("subtribe","taxa_dropped","pc1_sd","pc1_range","pc1_eccentricity",
+                "pct_totalSS","frac_below_q30","frac_above_q70","rho")], row.names = FALSE)
+
   cat("\n--- correlation with rho ---\n")
-  for (v in c("clades_wiped", "tips_lost", "pct_tips_lost", "taxa_dropped")) {
-    cat(sprintf("  %-14s Pearson %+.3f   Spearman %+.3f\n", v,
+  for (v in c("pct_tips_lost", "tips_lost", "clades_wiped", "taxa_dropped",
+              "pc1_range", "pc1_sd", "pct_totalSS", "pc1_eccentricity")) {
+    cat(sprintf("  %-17s Pearson %+.3f   Spearman %+.3f\n", v,
                 cor(res[[v]][ok], res$rho[ok]),
                 cor(res[[v]][ok], res$rho[ok], method = "spearman")))
   }
+
+  # Descriptive only -- n=10, so treat the incremental R2 as suggestive, not established.
+  cat("\n--- variance explained (n=10, descriptive) ---\n")
+  r2 <- function(f) summary(lm(f, data = res[ok, ]))$r.squared
+  cat(sprintf("  rho ~ pct_tips_lost              R2 = %.3f\n", r2(rho ~ pct_tips_lost)))
+  cat(sprintf("  rho ~ pc1_range                  R2 = %.3f\n", r2(rho ~ pc1_range)))
+  cat(sprintf("  rho ~ taxa_dropped               R2 = %.3f\n", r2(rho ~ taxa_dropped)))
+  both <- lm(rho ~ pct_tips_lost + pc1_range, data = res[ok, ])
+  cat(sprintf("  rho ~ pct_tips_lost + pc1_range  R2 = %.3f  (pc1_range p = %.3f)\n",
+              summary(both)$r.squared, coef(summary(both))["pc1_range", 4]))
+
+  # Which subtribes does transition loss alone fail to explain?
+  fit <- lm(rho ~ pct_tips_lost, data = res[ok, ])
+  resid_tbl <- data.frame(subtribe = res$subtribe[ok],
+                          pct_tips_lost = res$pct_tips_lost[ok],
+                          pc1_range = res$pc1_range[ok],
+                          rho = res$rho[ok],
+                          residual = round(resid(fit), 3))
+  cat("\n--- residuals from transition loss alone (most over-destabilized first) ---\n")
+  print(resid_tbl[order(resid_tbl$residual), ], row.names = FALSE)
 } else {
   res <- res[order(-res$clades_wiped, -res$tips_lost), ]
   print(res, row.names = FALSE)

@@ -325,8 +325,60 @@ It also reframes, without fully resolving, the **Saccharinae** anomaly from §5.
 least *rank-consistent* with the predictor, rather than the flat contradiction it appeared to be on
 taxon count alone. But the slope is still steep: Apludinae removes 4.7% and sits at ρ=0.972 versus
 Saccharinae's 0.849, and Saccharinae has the lowest strict recall of all ten drops (58.5%) despite
-wiping only a single toL clade. So a Saccharinae-specific effect beyond transition count remains
-plausible; the natural next probe is which individual OGs drive its recall drop.
+wiping only a single toL clade. Its residual from a transition-loss-only fit is −0.078, more than
+double the next largest — so a Saccharinae-specific effect is real. The `12J` spread metrics below
+give the most plausible account of it.
+
+### 5b-ii. Environmental spread of each dropped subtribe
+
+Second predictor family, computed in the same `12J` loop: how much envPC1 variance each subtribe
+spans, on the model's own 707-taxon trait basis (`output/envData_707Poaceae_20250804.txt`).
+
+| Subtribe dropped | taxa | envPC1 SD | envPC1 range | eccentricity | % total SS | frac < q30 | frac > q70 | ρ |
+|---|---|---|---|---|---|---|---|---|
+| Anthistiriinae | 79 | 0.76 | 2.92 | 0.03 | 6.4 | 0.25 | 0.24 | 0.781 |
+| Andropogoninae | 150 | 0.69 | 3.55 | 0.42 | 13.6 | 0.11 | 0.40 | 0.782 |
+| **Saccharinae** | 33 | **0.96** | **3.54** | 0.41 | 4.9 | 0.42 | 0.12 | 0.849 |
+| Ischaeminae | 23 | 0.70 | 2.75 | 0.80 | 3.6 | 0.04 | 0.52 | 0.933 |
+| Triticinae | 28 | 0.67 | 3.03 | 1.30 | 8.4 | 0.82 | 0.00 | 0.952 |
+| Aveninae | 24 | 0.58 | 2.11 | 0.92 | 4.0 | 0.62 | 0.00 | 0.963 |
+| **Tripsacinae** | 33 | 0.59 | 1.84 | 0.23 | 1.8 | 0.18 | 0.27 | 0.970 |
+| Apludinae | 22 | 0.70 | 2.98 | 0.18 | 1.6 | 0.14 | 0.23 | 0.972 |
+| Sorghinae | 23 | 0.80 | 2.21 | 0.19 | 2.1 | 0.30 | 0.35 | 0.976 |
+| Oryzinae | 35 | 0.37 | 1.20 | 1.06 | 6.2 | 0.00 | 0.86 | 0.993 |
+
+Correlations with ρ, all predictors together:
+
+| Predictor | Pearson | Spearman | R² (univariate) |
+|---|---|---|---|
+| % transition tips lost | **−0.889** | −0.607 | **0.790** |
+| clades wiped | −0.867 | −0.488 | — |
+| taxa dropped | −0.800 | −0.476 | 0.641 |
+| envPC1 range | −0.698 | −0.673 | 0.488 |
+| % of total envPC1 SS | −0.641 | −0.564 | — |
+| envPC1 SD (within) | −0.488 | −0.395 | — |
+| eccentricity (\|mean − grand mean\|) | **+0.395** | +0.152 | — |
+
+**The matched pair.** Saccharinae and Tripsacinae have identical taxon count (33) *and* identical
+clades wiped (1), yet ρ 0.849 vs 0.970 and strict recall 58.5% vs 85.5%. What separates them is
+environmental spread: Saccharinae has the **highest within-subtribe envPC1 SD of all ten** (0.96 vs
+0.59) and nearly **twice** the range (3.54 vs 1.84) — its range essentially matches Andropogoninae's
+(3.55) on a fifth of the taxa. That is the cleanest available explanation for the §5 anomaly:
+Saccharinae is the most environmentally heterogeneous clade in the set, so removing it costs more
+contrast than its size or transition count implies.
+
+**Spread does not replace transition loss as the global predictor**, though. Univariate R² is 0.488
+for range vs 0.790 for transition loss; adding range to transition loss lifts R² to 0.851 but at
+p=0.133 with n=10, which is suggestive rather than established. Report it as the explanation for the
+Saccharinae residual specifically, not as a second confirmed main effect.
+
+**Eccentricity runs the opposite way** (r = **+0.395**): subtribes whose mean envPC1 sits far from
+the grand mean are *more* stable to drop, not less. The threshold fractions show why — Oryzinae is
+0% below q30 / 86% above q70 and Triticinae is 82% / 0%, so both are environmentally extreme but
+sit wholly on one side of the transition thresholds and therefore generate almost no within-clade
+transitions. Environmental **extremeness** and environmental **heterogeneity** are distinct
+properties with opposite consequences here, and the manuscript should keep them separate rather
+than collapsing both into "environmentally unusual".
 
 ---
 
