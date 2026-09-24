@@ -453,6 +453,59 @@ source table) and flagged `OK_CORRECTED_FROM_A139T` in `maize_deleterious_valida
 
 ---
 
+## 7. Per-assembly statistics (12K)
+
+`12K_assemblyStats.sh` (driver, GNU parallel) + `12K_assemblyStats.py` (one assembly → one row).
+Output: `output/assemblyStats/assemblyStats_727.tsv` (tracked in git), one row per file in
+`data/assemblies/`, keyed by `assemblyID` = filename minus `.fa.gz`. All 727 assemblies are
+included, so it joins to any metadata version (687 match `Poaceae_metadata_highErrorFiltered_2025.10.08.tsv`;
+the other 40 were filtered out upstream). Metadata already carries BUSCO, so this adds contiguity
+and composition only.
+
+| Column group | Columns | Definition |
+|---|---|---|
+| As deposited | `num_seqs`, `total_length`, `min/mean/max_length`, `N50`, `L50`, `N90`, `L90` | over sequences as they appear in the FASTA; L50 = number of sequences reaching half the total length |
+| Composition | `GC_pct`, `N_count`, `N_pct` | GC over A/C/G/T only, so gaps and IUPAC codes don't dilute it |
+| Contig-level | `contig_count`, `contig_N50/L50/N90/L90` | sequences split at runs of ≥10 N (QUAST convention), gaps removed; equals the as-deposited stats for ungapped assemblies |
+| Size bins | `num_seqs_ge1kb`, `pct_length_ge1kb`, `num_seqs_ge10kb`, `pct_length_ge10kb` | count, and % of total length, in sequences ≥1 kb / ≥10 kb |
+
+No minimum-length filter (short-read assemblies already carry megahit's 200 bp floor).
+
+**Why contig-level matters here**: the set spans short-read contig assemblies (e.g. AN21TNTL0074:
+5.96 M contigs, N50 471 bp, no Ns) and gap-scaffolded / chromosome-level ones (212 of 727 contain
+Ns, 210 have ≥10-N gaps). Scaffold N50 on the latter mostly measures how far scaffolding got — e.g.
+*B. distachyon* Tek-4 is 8 pseudomolecules with N50 132 Mb but contig N50 8.8 kb. Use
+`contig_N50` for cross-technology comparisons.
+
+**Validation**: totals, counts, N50 and N counts match `seqkit stats` exactly. Two deliberate
+differences — `GC_pct` excludes Ns from the denominator (seqkit's doesn't), and seqkit's
+`N50_num` column is *not* L50 (for AN21TNTL0074 it reports 13,357, but 13,357 contigs capped at
+58.7 kb cannot reach half of 2.78 Gb; the correct L50 is 1,026,425). All structural invariants hold
+across 727 rows (contig N50 ≤ N50, contig count ≥ sequence count, N90 ≤ N50, L90 ≥ L50, no NAs).
+Runtime: 135 min at 8 parallel jobs over 504 GB; ≤2.5 GB RAM per job.
+
+**Finding — high GC flags contamination.** Grass nuclear genomes sit around 44–47% GC; 23
+assemblies exceed 50%, up to 62.1% (AN21TNTL0344, *Schizachyrium nodulosum*). All are Illumina
+short-read, mostly Andropogoneae. Against the independent read-level QC in `fullQCData_20240819.txt`
+(412 short-read assemblies joinable), GC tracks bacterial read fraction (Spearman ρ = +0.34), and the
+median bacterial fraction rises sharply by GC bin: 0.69 (<46%) → 0.89 (46–50%) → 5.25 (50–54%,
+n=13) → **18.41 (>54%, n=9)**. **22 of the 23 are in the 707-taxon model set.**
+
+Whether that biases the association results is an open question, not established. Bacterial
+contigs shouldn't yield grass OG hits, so feature *values* are probably unaffected; the more
+plausible risk is **spurious absence calls** — a contaminated, fragmented grass fraction fails to
+recover a gene that is actually present, inflating `PAV = 0`. Suggestive case: two of the eight
+`PAV = 0` taxa behind OG0018915's PAV term are on this list (AN22TNTL148, and AN21TS29 with N50
+403 bp). A direct test would be to rerun a subset of models excluding these 22, or to check whether
+they carry disproportionately many PAV = 0 calls genome-wide.
+
+Other extremes worth knowing before adding columns to metadata: `N_pct` up to 65.5% (AANG_UGA4,
+not in filtered metadata) and 40.1% (Msac_v3); `total_length` up to 28.9 Gb (SRR23951516, not in
+filtered metadata) and 16.6 Gb for the short-read *Lolium arundinaceum* assembly (37.3 M contigs,
+N50 439 bp).
+
+---
+
 ## Open items before implementation starts
 
 - Confirm the FPKM > 1 detectability threshold for tissue-expression breadth (#3), or supply a

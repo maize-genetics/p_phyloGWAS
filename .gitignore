@@ -23,6 +23,11 @@ __pycache__/
 !data/poaceaeRepAssemblies_32.txt
 !output/poaceaeHelixerOG_filtered_20250331.txt
 
+# --- Revision analysis 12K: per-assembly statistics (727 rows, small) ---
+!output/assemblyStats/
+output/assemblyStats/*
+!output/assemblyStats/assemblyStats_727.tsv
+
 # --- Revision analysis 12G-12I: ESM2 mutagenesis-validation benchmark ---
 # Inputs. The large B73v5 references (30M peptide FASTA, 12M GFF3) are public
 # MaizeGDB downloads and stay untracked -- see DATA.md for the URLs. The HapMap
