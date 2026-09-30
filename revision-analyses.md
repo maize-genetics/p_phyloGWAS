@@ -506,6 +506,85 @@ N50 439 bp).
 
 ---
 
+## 8. Are gene hits on contigs long enough to hold the gene? (12L)
+
+**Question**: short-read contig N50 is low (median 1.2 kb, §7). Does that mean the gene space
+is fragmented, or is N50 dominated by intergenic/repeat fragments?
+
+`12L_hitContigLength.sh` (driver, GNU parallel) + `12L_hitContigLength.py` (one assembly) record,
+for every miniprot mRNA hit in `output/orthofinderMiniProt{,_additionalOGs}/`, its host contig
+(split at ≥10 N, same rule as 12K), the distance to either contig end, and the query coverage
+against `poaceaeHelixerOG_ancSeq_gapRemoved_v2_20240909.fa`. Per-hit tables (531 MB, gitignored)
+go to `output/hitContigLength/perHit/`. `12L_hitContigLength_summary.R` then restricts to rank-1
+hits of OGs tested in envPC1–3, and writes `output/hitContigLength/hitContigLength_727.tsv`
+(tracked; one row per assembly, joins to `assemblyStats_727.tsv`) plus figures. Runtime was
+119 min at 8 jobs.
+
+"Host contig longer than the hit" is true by construction, so each hit is scored against an
+external yardstick:
+
+| Metric | Definition |
+|---|---|
+| expected gene span | per OG, median genomic span (introns included) of full-length (q_cov ≥ 0.9), gap-free rank-1 hits in long-read assemblies |
+| `pct_holds_gene` | host contig ≥ expected span of that OG |
+| `pct_edge` | hit ends within 50 bp of a contig end |
+| `pct_edge_truncated` | edge and q_cov < 0.9, i.e. cut off by the assembly break |
+
+Long vs short read comes from the metadata `technology` field (PacBio/Nanopore → long-read).
+Two "long-read" entries behave like short-read assemblies (Bruz, "Illumina; PacBio", contig N50
+3.4 kb; SRR23951516, "Nanopore", 1.5 kb). Some NCBI Illumina assemblies are scaffolded and
+behave like long-read ones. Neither changes the conclusions.
+
+**Gene length**: 19,078 model OGs have an expected span. Median 2.3 kb (10th–90th percentile
+0.5–5.8 kb; 99th 14.4 kb). The median coding length is 1.1 kb, so the median span/CDS ratio is
+1.9.
+
+**Results, 707 model taxa** (per-assembly median [10th–90th percentile]):
+
+| | short-read (518) | long-read (189) |
+|---|---|---|
+| contig N50, all contigs | 1.2 kb [0.5–12 kb] | 5.5 Mb |
+| median length of gene-bearing contigs | **7.5 kb** [3.3–28 kb] | 6.2 Mb |
+| % hits on a contig ≥ expected gene span | **88%** [66–99%] | 100% |
+| % hits edge-truncated | **15.5%** [1.1–35%] | 0% |
+| % hits with q_cov ≥ 0.9 | 72% [49–92%] | 97% |
+
+Pooled over 9.8 M short-read rank-1 hits, 85.3% sit on a contig long enough for the full gene
+and 16.9% are edge-truncated. Over 3.6 M long-read hits the figures are 99.9% and 0.2%.
+
+**Truncation varies between assemblies, and N50 barely predicts it.** Among short-read assemblies,
+158 are at ≤5%, 52 at 5–10%, 94 at 10–20%, 98 at 20–30%, 98 at 30–40% and 18 above 40%. The
+20–100% band is PanAnd/SRA almost entirely (213 of 214). The truncation rate tracks BUSCO
+fragmented count (Spearman ρ = **+0.93**) and gene-bearing contig length (ρ = −0.89) much more
+closely than contig N50 (ρ = −0.41). So it measures gene-space quality in agreement with an
+independent metric, and it is not an artifact of the 50 bp / 0.9 thresholds.
+
+**Truncation rises with gene length**, so contig breaks inside long genes explain it, not
+gene space that is missing from the assembly (`hitContigLength_byGeneSpan.tsv`):
+
+| expected span | ≤1 kb | 1–2 kb | 2–4 kb | 4–8 kb | 8–16 kb | >16 kb |
+|---|---|---|---|---|---|---|
+| short-read: % on contig ≥ span | 98.1 | 93.1 | 84.3 | 71.0 | 51.7 | 26.7 |
+| short-read: % edge-truncated | 7.7 | 15.2 | 19.3 | 23.7 | 27.4 | 24.4 |
+| long-read: % edge-truncated | 0.1 | 0.2 | 0.2 | 0.2 | 0.2 | 0.3 |
+
+**Conclusion**: contig N50 understates short-read gene-space quality. Gene-bearing contigs are
+about 6× longer than N50, and 85% of hits sit on a contig longer than the gene's expected span.
+The remaining truncation is real (17% of hits). It is concentrated in long genes and in a
+subset of assemblies. A truncated hit is still called present, so PAV calls are robust. What it
+reduces is query coverage, which the model carries as the `PAV:queryCov` covariate. A possible
+sensitivity check, not run: refit the top candidates without the 116 short-read model taxa
+above 30% truncation.
+
+Figures (`output/hitContigLength/figure/`, gitignored):
+- `12L_hitContig_vs_contigN50.png`
+- `12L_hitContig_metrics.png`
+- `12L_edgeTruncated_hist.png`
+- `12L_expectedSpan_hist.png`
+- `12L_edgeTruncated_byGeneSpan.png`
+
+---
+
 ## Open items before implementation starts
 
 - Confirm the FPKM > 1 detectability threshold for tissue-expression breadth (#3), or supply a

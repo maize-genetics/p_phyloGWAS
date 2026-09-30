@@ -1,0 +1,13 @@
+class	span_bin	hits	pct_holds_gene	pct_edge_truncated
+long-read	(0,1000]	805896	100	0.1
+long-read	(1000,2000]	771331	99.9	0.2
+long-read	(2000,4000]	1176874	99.9	0.2
+long-read	(4000,8000]	631088	99.8	0.2
+long-read	(8000,16000]	142836	99.7	0.2
+long-read	(16000,Inf]	24094	98.7	0.3
+short-read	(0,1000]	2220721	98.1	7.7
+short-read	(1000,2000]	2121554	93.1	15.2
+short-read	(2000,4000]	3230781	84.3	19.3
+short-read	(4000,8000]	1733148	71	23.7
+short-read	(8000,16000]	391384	51.7	27.4
+short-read	(16000,Inf]	66194	26.7	24.4
