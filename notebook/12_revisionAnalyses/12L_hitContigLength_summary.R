@@ -3,7 +3,10 @@
 #
 # Scope: rank-1 hits (the copy each assembly contributes first) of OGs tested in
 # the envPC1-3 models. All 727 assemblies are summarised; in_model_taxa flags the
-# 707 used in the models.
+# 686 the models were actually fit on: the 707 trait-table taxa that also have rows
+# in the master data table. The other 21 were removed upstream for extensive
+# premature stop codons (likely sequencing artifacts); the model script's inner
+# join drops them silently.
 #
 # Per hit:
 #   expected span = median genomic span (introns included) of that OG's rank-1
@@ -25,7 +28,10 @@ fig_dir <- file.path(out_dir, "figure"); dir.create(fig_dir, showWarnings = FALS
 # ---- inputs ----
 model_OG <- unique(unlist(lapply(1:3, function(k)
   fread(sprintf("output/finalModels_20251002/envPC_%d/ASREML_res.txt", k), select = "OG")$OG)))
-model_taxa <- rownames(read.table("output/envData_707Poaceae_20250804.txt", header = TRUE))
+model_taxa <- intersect(
+  rownames(read.table("output/envData_707Poaceae_20250804.txt", header = TRUE)),
+  unique(fread("output/masterDataTable_PAVFill_20251001.txt", select = "assemblyID", nThread = 8)$assemblyID))
+cat(length(model_taxa), "model taxa\n")
 
 meta <- fread("data/Poaceae_metadata_filtered_2025.08.28.tsv", select = c("assemblyID", "technology", "source"))
 meta[, class := fifelse(grepl("pacbio|nanopore|\\bONT\\b|promethion|minion", technology, ignore.case = TRUE),
@@ -71,7 +77,7 @@ fwrite(exp_span, file.path(out_dir, "expectedSpan_perOG.tsv"), sep = "\t")
 m <- summ[in_model_taxa == TRUE]
 q <- function(x) sprintf("%s [%s-%s]", format(median(x), big.mark = ","),
                          format(quantile(x, .1), big.mark = ","), format(quantile(x, .9), big.mark = ","))
-cat("\nPer-assembly medians [10th-90th pct], 707 model taxa\n")
+cat("\nPer-assembly medians [10th-90th pct], 686 model taxa\n")
 print(m[, .(n = .N,
             contig_N50           = q(contig_N50),
             hitContig_len        = q(median_hitContig_len),
@@ -79,7 +85,7 @@ print(m[, .(n = .N,
             pct_edge             = q(pct_edge),
             pct_edge_truncated   = q(pct_edge_truncated),
             pct_q_cov_ge90       = q(pct_q_cov_ge90)), by = class])
-cat("\nPooled rank-1 hits, 707 model taxa\n")
+cat("\nPooled rank-1 hits, 686 model taxa\n")
 print(hits[assemblyID %in% model_taxa, .(
   hits = .N,
   pct_holds_gene     = round(100 * mean(holds_gene, na.rm = TRUE), 1),
@@ -108,11 +114,11 @@ byspan <- hits[assemblyID %in% model_taxa & !is.na(exp_span),
                  pct_holds_gene     = round(100 * mean(holds_gene), 1),
                  pct_edge_truncated = round(100 * mean(edge_trunc), 1)),
                by = .(class, span_bin = cut(exp_span, span_bins, dig.lab = 6))][order(class, span_bin)]
-cat("\nPooled rank-1 hits by expected gene span, 707 model taxa\n")
+cat("\nPooled rank-1 hits by expected gene span, 686 model taxa\n")
 print(byspan)
 fwrite(byspan, file.path(out_dir, "hitContigLength_byGeneSpan.tsv"), sep = "\t")
 
-# ---- figures (707 model taxa) ----
+# ---- figures (686 model taxa) ----
 theme_set(theme_bw(base_size = 12))
 cols <- c("long-read" = "#1b6ca8", "short-read" = "#d0892b")
 p1 <- ggplot(m, aes(contig_N50, median_hitContig_len, colour = class)) +
@@ -189,7 +195,7 @@ p5 <- ggplot(byspan, aes(span_bin, pct_edge_truncated, fill = class)) +
   geom_col(position = position_dodge(.8), width = .75) +
   scale_fill_manual(values = cols) +
   labs(x = "Expected gene span (bp)", y = "% of rank-1 hits edge-truncated", fill = NULL,
-       title = "Edge truncation by gene length", subtitle = "Pooled hits, 707 model taxa") +
+       title = "Edge truncation by gene length", subtitle = "Pooled hits, 686 model taxa") +
   theme(legend.position = "bottom")
 ggsave(file.path(fig_dir, "12L_edgeTruncated_byGeneSpan.png"), p5, width = 8, height = 5, dpi = 300)
 cat("\nwrote", file.path(out_dir, "hitContigLength_727.tsv"), "and figures in", fig_dir, "\n")

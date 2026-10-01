@@ -6,18 +6,36 @@ stays untouched until this is merged back the same way `refactor-cleanup` was.
 
 ## Key numbers, verified directly against the actual data (not assumed)
 
-The base taxon population for every analysis below is **`output/envData_707Poaceae_20250804.txt`'s
-707 taxa** — this is literally what `rownames(envDf)` means in `src/12_runPermulation_perOGModel.R`,
-i.e. the exact set the original stage-08 models were fit on. The taxonomy file
+Every subset below is built from **`output/envData_707Poaceae_20250804.txt`'s 707 taxa**, the
+trait table passed to `src/12_runPermulation_perOGModel.R`. The taxonomy file
 (`data/Poaceae_taxonomic_groups_subtribeAdded_SKH20250402.csv`) has 805 rows, a superset; every
-count below is restricted to the 707 that actually matter.
+count below is restricted to these 707.
+
+**The per-OG models were fit on 686 of them, not 707** (found 2026-10-01). 21 trait-table taxa
+have no rows in `masterDataTable_PAVFill_20251001.txt`. They were removed upstream for extensive
+premature stop codons, which are likely sequencing artifacts. The model script inner-joins the
+trait table with the master table, so these 21 silently drop out of every model fit, both the
+original stage-08 runs and every revision rerun. Fitted results are unaffected, because the drop
+has always happened at run time. Only the "707" labels for the modeled set were wrong.
+
+What the 21 do still feed:
+- tree pruning and rooting (ASM1935983v1, the rooting outgroup, is one of them);
+- the ASR and transition-node counts, which run on the trait table;
+- the power-simulation trees.
+
+So 707-tip numbers for ASR, transitions and power are correct as stated. The dropped taxa are 6
+Andropogoneae (ASM2203655v1, CPNAM-Leoti, ChrysopogonNigritanus_v1.0, Cs-A1013-Draft-PanAnd-1.0,
+Cs-KelloggPI219580-DRAFT-PanAnd-1.0, Hd-A1025-Draft-PanAnd-1.0) and 15 others: AANG_UGA4,
+ASM155179v1, ASM155180v1, ASM1935983v1, ASM2160514v1, ASM3027231v1, ASM3189477v1, ASM980554v1,
+Bruz, C_purpureuscv._Purple, O_longistaminata_v1.0, PauV1, Ragi_PR202_v._2.0, SRR23951516 and
+TSU_Scap_1. Modeled taxon counts per analysis are given alongside the trait-table counts below.
 
 | Quantity | Value | Source |
 |---|---|---|
 | "330 top candidates" (full-set analysis) | 330 unique OGs | Union of `output/candidateOG_envPC{1,2,3}.txt` (160+109+68), filtered on empirical permutation `emp_p ≤ 0.001` in `notebook/11_candidateOGInvestigation/11A_candidateOGInvestigation.ipynb` |
-| Andropogoneae taxa | 483 of 707 (484 as actually run, see below) | `tribe` column, taxonomy CSV, restricted to the 707 |
+| Andropogoneae taxa | 483 of 707 (484-row trait table, see below; **477 modeled**) | `tribe` column, taxonomy CSV, restricted to the 707 |
 | Subtribes with ≥5 taxa | 24 (of 51 total) | `subtribe` column, restricted to the 707 |
-| Unique species | 569 of 707 | `Species` column, restricted to the 707; 87 species have >1 assembly (224 assemblies total) |
+| Unique species | 569 of 707 (**557 modeled** in #4; 560 of the 686) | `Species` column, restricted to the 707; 87 species have >1 assembly (224 assemblies total) |
 
 One taxon in the 707, **`AN21TNTL0178`** (*Sorghum arundinaceum*), has no row in the taxonomy CSV
 at all — it's excluded by default from every taxonomy-driven subset below (Andropogoneae, subtribe
@@ -32,9 +50,9 @@ actual designated outgroup, `clade="outgroup"`) must be present in every subset 
 script errors out at rooting before fitting a single OG. It's `subtribe`-NA and the sole assembly
 for its species, so one-tip-per-species (569) and all 24 subtribe-drops already keep it naturally
 — only the **Andropogoneae-only subset needs it force-included, making that population 484 taxa,
-not 483** (mirrors the original full-707 analysis, which already includes this same outgroup taxon
-as part of its own population — a negligible 1/484 addition, not a real contamination of the
-intended comparison).
+not 483** (mirrors the original full-set trait table, which also includes this outgroup). The
+outgroup has no master-table rows, so it only roots the tree and is never in a model fit. The
+Andropogoneae-only models therefore contain no non-Andropogoneae taxa at all.
 
 ## Why this is mostly a data-subsetting exercise, not new modeling code
 
@@ -52,7 +70,8 @@ genuinely new data.
 ## 1. Andropogoneae-only association model
 
 Build a trait table = `envData_707Poaceae_20250804.txt` filtered to the 483 Andropogoneae
-`assemblyID`s, plus the forced rooting outgroup (484 total, see above). Rerun
+`assemblyID`s, plus the forced rooting outgroup (484 total, see above; 477 Andropogoneae modeled
+after the master-table join). Rerun
 `12_runPermulation_perOGModel.R` unchanged (new `dir.trait`, new `dir.out`) for envPC_1/2/3,
 permulation on.
 
@@ -64,7 +83,7 @@ permulation on.
 **Deviation from plan:** permulation was run for envPC_1 initially, but convergence on the
 183-taxon-smaller subset turned out to be far too low to be useful — the `topOG_list` OGs (already
 selected for having a strong signal under the *real* trait) converge on the order of 3-6% of the
-time per permuted-trait iteration (vs ~100% on the original full-707 runs), so completing even one
+time per permuted-trait iteration (vs ~100% on the original full-set runs), so completing even one
 envPC's 1000-iteration permulation loop would take 35+ hours and still leave most OGs `NA` under a
 sane minimum-converged-permutations threshold. Per author's direction, replaced the emp_p-based
 330-concordance check with a raw-`p<0.001` threshold comparison (a looser, uncorrected proxy) —
@@ -172,6 +191,12 @@ the existing high-error-filter QC criteria (the same logic behind
 `data/Poaceae_metadata_highErrorFiltered_2025.10.08.tsv`); the 483 single-assembly species pass
 through unchanged; `AN21TNTL0178` excluded per the default above. **Result: 569 taxa, 138 dropped.**
 
+Of the 569, **557 were modeled**. 12 picks are among the 21 taxa absent from the master table. For
+3 of those species (*Cenchrus purpureus*, *Urochloa ruziziensis*, *Paspalum vaginatum*) another
+assembly of the same species is in the model set (ASM2264469v1, Embrapa_Uruz_1.0,
+P.vaginatum_v3.1), so a pick restricted to the 686 would have given 560 species. This was not
+rerun: 3 species out of 560 is too small to matter.
+
 - Rerun the ASR step on this pruned set — check whether transition-node calls stay stable versus
   full taxon sampling.
 - Rerun `12_runPermulation_perOGModel.R` unchanged on this taxon subset for envPC_1/2/3 — same
@@ -217,7 +242,8 @@ nominally significant (p<0.05) here. Base-model fits: 96.6% / 98.5% / 98.4% conv
 
 ## 5. Leave-one-subtribe-out jackknife
 
-**Final scope**: the **10 subtribes with >20 taxa** within the 707, **envPC_1 only** (not all 3),
+**Final scope**: the **10 subtribes with >20 taxa** within the 707 (the same 10 within the 686),
+**envPC_1 only** (not all 3),
 base-model fit with permulation off (same rationale as #1/#4: see the emp_p fix commit — permulation
 convergence collapses on any taxon-reduced subset, and this analysis's question — does dropping one
 lineage destabilize the raw association ranking — doesn't need it):
@@ -245,22 +271,22 @@ envPC at 8 cores, 5+ weeks for the full 72-run version" estimate was based on in
 slower and far less informative than assumed on taxon-reduced subsets; dropping it changed the
 feasibility picture entirely.)
 
-**Results — rank correlation and candidate recall vs. the full-707-taxon baseline** (envPC_1):
+**Results — rank correlation and candidate recall vs. the full-set baseline (686 modeled taxa)** (envPC_1):
 
-| Subtribe dropped | Taxa removed | ρ(-log10 p) | full p<0.001 → drop p<0.001 | full p<0.001 → drop p<0.05 |
+| Subtribe dropped | Taxa removed (trait table / modeled) | ρ(-log10 p) | full p<0.001 → drop p<0.001 | full p<0.001 → drop p<0.05 |
 |---|---|---|---|---|
-| Andropogoninae | 150 | 0.782 | 62.6% | 97.8% |
-| Anthistiriinae | 79 | 0.781 | 60.2% | 92.7% |
-| Saccharinae | 33 | 0.849 | 58.5% | 97.8% |
-| Ischaeminae | 23 | 0.933 | 74.5% | 100.0% |
-| Triticinae | 28 | 0.952 | 75.6% | 98.5% |
-| Aveninae | 24 | 0.963 | 78.2% | 99.6% |
-| Tripsacinae | 33 | 0.970 | 85.5% | 100.0% |
-| Apludinae | 22 | 0.972 | 85.0% | 100.0% |
-| Sorghinae | 23 | 0.976 | 84.7% | 100.0% |
-| Oryzinae | 35 | 0.993 | 88.0% | 100.0% |
+| Andropogoninae | 150 / 149 | 0.782 | 62.6% | 97.8% |
+| Anthistiriinae | 79 / 79 | 0.781 | 60.2% | 92.7% |
+| Saccharinae | 33 / 33 | 0.849 | 58.5% | 97.8% |
+| Ischaeminae | 23 / 23 | 0.933 | 74.5% | 100.0% |
+| Triticinae | 28 / 27 | 0.952 | 75.6% | 98.5% |
+| Aveninae | 24 / 24 | 0.963 | 78.2% | 99.6% |
+| Tripsacinae | 33 / 33 | 0.970 | 85.5% | 100.0% |
+| Apludinae | 22 / 22 | 0.972 | 85.0% | 100.0% |
+| Sorghinae | 23 / 22 | 0.976 | 84.7% | 100.0% |
+| Oryzinae | 35 / 31 | 0.993 | 88.0% | 100.0% |
 
-Full-707-model output: `output/finalModels_20251002/envPC_1/ASREML_res.txt`. Per-subtribe outputs:
+Full-set model output: `output/finalModels_20251002/envPC_1/ASREML_res.txt`. Per-subtribe outputs:
 `output/revisionAnalyses/perSubsetModels/drop_<Subtribe>/envPC_1/`. Summary table:
 `output/revisionAnalyses/jackknife_n20_envPC1_summary.csv`.
 
@@ -489,7 +515,7 @@ assemblies exceed 50%, up to 62.1% (AN21TNTL0344, *Schizachyrium nodulosum*). Al
 short-read, mostly Andropogoneae. Against the independent read-level QC in `fullQCData_20240819.txt`
 (412 short-read assemblies joinable), GC tracks bacterial read fraction (Spearman ρ = +0.34), and the
 median bacterial fraction rises sharply by GC bin: 0.69 (<46%) → 0.89 (46–50%) → 5.25 (50–54%,
-n=13) → **18.41 (>54%, n=9)**. **22 of the 23 are in the 707-taxon model set.**
+n=13) → **18.41 (>54%, n=9)**. **22 of the 23 are in the model set** (all 22 are among the 686 modeled taxa).
 
 Whether that biases the association results is an open question, not established. Bacterial
 contigs shouldn't yield grass OG hits, so feature *values* are probably unaffected; the more
@@ -531,29 +557,32 @@ external yardstick:
 | `pct_edge_truncated` | edge and q_cov < 0.9, i.e. cut off by the assembly break |
 
 Long vs short read comes from the metadata `technology` field (PacBio/Nanopore → long-read).
-Two "long-read" entries behave like short-read assemblies (Bruz, "Illumina; PacBio", contig N50
-3.4 kb; SRR23951516, "Nanopore", 1.5 kb). Some NCBI Illumina assemblies are scaffolded and
-behave like long-read ones. Neither changes the conclusions.
+Some NCBI Illumina assemblies are scaffolded and behave like long-read ones. Two "long-read"
+entries that behave like short-read assemblies (Bruz, SRR23951516) are among the 21 taxa the
+models never saw (see the 686 note at the top), so they don't affect the summary below.
+
+Results are restricted to the **686 taxa the models were actually fit on**. The summary script
+takes the 707 trait-table taxa and intersects them with the assemblies in the master table.
 
 **Gene length**: 19,078 model OGs have an expected span. Median 2.3 kb (10th–90th percentile
 0.5–5.8 kb; 99th 14.4 kb). The median coding length is 1.1 kb, so the median span/CDS ratio is
 1.9.
 
-**Results, 707 model taxa** (per-assembly median [10th–90th percentile]):
+**Results, 686 model taxa** (per-assembly median [10th–90th percentile]):
 
-| | short-read (518) | long-read (189) |
+| | short-read (516) | long-read (170) |
 |---|---|---|
-| contig N50, all contigs | 1.2 kb [0.5–12 kb] | 5.5 Mb |
-| median length of gene-bearing contigs | **7.5 kb** [3.3–28 kb] | 6.2 Mb |
+| contig N50, all contigs | 1.2 kb [0.5–12 kb] | 8.2 Mb |
+| median length of gene-bearing contigs | **7.5 kb** [3.3–28 kb] | 8.1 Mb |
 | % hits on a contig ≥ expected gene span | **88%** [66–99%] | 100% |
 | % hits edge-truncated | **15.5%** [1.1–35%] | 0% |
 | % hits with q_cov ≥ 0.9 | 72% [49–92%] | 97% |
 
 Pooled over 9.8 M short-read rank-1 hits, 85.3% sit on a contig long enough for the full gene
-and 16.9% are edge-truncated. Over 3.6 M long-read hits the figures are 99.9% and 0.2%.
+and 16.9% are edge-truncated. Over 3.2 M long-read hits the figures are 100.0% and 0.1%.
 
 **Truncation varies between assemblies, and N50 barely predicts it.** Among short-read assemblies,
-158 are at ≤5%, 52 at 5–10%, 94 at 10–20%, 98 at 20–30%, 98 at 30–40% and 18 above 40%. The
+158 are at ≤5%, 51 at 5–10%, 93 at 10–20%, 98 at 20–30%, 98 at 30–40% and 18 above 40%. The
 20–100% band is PanAnd/SRA almost entirely (213 of 214). The truncation rate tracks BUSCO
 fragmented count (Spearman ρ = **+0.93**) and gene-bearing contig length (ρ = −0.89) much more
 closely than contig N50 (ρ = −0.41). So it measures gene-space quality in agreement with an
@@ -564,9 +593,9 @@ gene space that is missing from the assembly (`hitContigLength_byGeneSpan.tsv`):
 
 | expected span | ≤1 kb | 1–2 kb | 2–4 kb | 4–8 kb | 8–16 kb | >16 kb |
 |---|---|---|---|---|---|---|
-| short-read: % on contig ≥ span | 98.1 | 93.1 | 84.3 | 71.0 | 51.7 | 26.7 |
-| short-read: % edge-truncated | 7.7 | 15.2 | 19.3 | 23.7 | 27.4 | 24.4 |
-| long-read: % edge-truncated | 0.1 | 0.2 | 0.2 | 0.2 | 0.2 | 0.3 |
+| short-read: % on contig ≥ span | 98.1 | 93.1 | 84.3 | 70.9 | 51.6 | 26.6 |
+| short-read: % edge-truncated | 7.7 | 15.2 | 19.3 | 23.7 | 27.5 | 24.5 |
+| long-read: % edge-truncated | 0.0 | 0.1 | 0.1 | 0.1 | 0.1 | 0.2 |
 
 **Conclusion**: contig N50 understates short-read gene-space quality. Gene-bearing contigs are
 about 6× longer than N50, and 85% of hits sit on a contig longer than the gene's expected span.
