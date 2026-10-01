@@ -127,6 +127,30 @@ p1 <- ggplot(m, aes(contig_N50, median_hitContig_len, colour = class)) +
   theme(legend.position = "bottom")
 ggsave(file.path(fig_dir, "12L_hitContig_vs_contigN50.png"), p1, width = 7, height = 6.5, dpi = 300)
 
+# Short-read contig assemblies only: drop anything with N gaps (scaffolded),
+# and mark the expected-gene-span percentiles as the yardstick.
+nN <- fread("output/assemblyStats/assemblyStats_727.tsv", select = c("assemblyID", "N_count"))
+src <- merge(m[class == "short-read"], nN, by = "assemblyID")[N_count == 0]
+pq <- c(.5, .75, .9, .95, .99)
+span_q <- data.table(pct = sprintf("%d%%", 100 * pq), bp = quantile(exp_span$exp_span, pq))
+span_q[, lab := sprintf("%s of genes ≤ %s", pct, scales::label_number(scale_cut = scales::cut_si("b"), accuracy = .1)(bp))]
+p1b <- ggplot(src, aes(contig_N50, median_hitContig_len)) +
+  geom_hline(data = span_q, aes(yintercept = bp), colour = "grey40", linetype = 3) +
+  geom_text(data = span_q, aes(x = Inf, y = bp, label = lab), hjust = 1.02, vjust = -.4,
+            size = 3.2, colour = "grey30") +
+  geom_abline(linetype = 2, colour = "grey60") +
+  geom_point(alpha = .6, size = 1.4, colour = cols[["short-read"]]) +
+  scale_x_log10(labels = scales::label_number(scale_cut = scales::cut_si("b"))) +
+  scale_y_log10(labels = scales::label_number(scale_cut = scales::cut_si("b"))) +
+  labs(x = "Contig N50 (all contigs)", y = "Median length of contigs carrying a gene hit",
+       title = "Short-read contig assemblies: gene-bearing contigs vs. contig N50",
+       subtitle = sprintf("%d ungapped short-read model taxa\ndotted = percentiles of expected gene span; dashed = 1:1",
+                          nrow(src)))
+ggsave(file.path(fig_dir, "12L_hitContig_vs_contigN50_shortRead.png"), p1b, width = 8, height = 6.5, dpi = 300)
+cat(sprintf("\nUngapped short-read assemblies (n = %d): median gene-bearing contig %s bp; %d of them below the median gene span\n",
+            nrow(src), format(median(src$median_hitContig_len), big.mark = ","),
+            sum(src$median_hitContig_len < median(exp_span$exp_span))))
+
 long <- melt(m, id.vars = c("assemblyID", "class"),
              measure.vars = c("pct_holds_gene", "pct_q_cov_ge90", "pct_edge", "pct_edge_truncated"))
 long[, variable := factor(variable,

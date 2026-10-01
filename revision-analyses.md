@@ -578,6 +578,10 @@ above 30% truncation.
 
 Figures (`output/hitContigLength/figure/`, gitignored):
 - `12L_hitContig_vs_contigN50.png`
+- `12L_hitContig_vs_contigN50_shortRead.png`: the 467 ungapped short-read model taxa, with
+  expected-span percentiles marked. Median contig N50 is 1.0 kb and the median gene-bearing contig
+  is 6.8 kb, about 5× longer. The median gene-bearing contig exceeds the median gene span (2.3 kb)
+  in 463 of 467 assemblies, the 90th percentile (5.8 kb) in 271, and the 99th (14.4 kb) in 94.
 - `12L_hitContig_metrics.png`
 - `12L_edgeTruncated_hist.png`
 - `12L_expectedSpan_hist.png`
