@@ -74,6 +74,7 @@ spTre.rooted.filtered <- keep.tip(spTre.rooted, commonID)
 # Rooting already happened on the full tree above, before any pruning, so (unlike
 # 12_runPermulation_perOGModel.R) no outgroup needs to survive this subsetting -- but
 # the taxon list itself already force-includes the outgroup via 12A's writeSubset().
+fullID <- commonID   # full taxon set, for the fixed (full-set) percentile cutoffs below
 oneTipTaxa <- rownames(read.table(file.path(PHYLOGWAS_ROOT, "output/revisionAnalyses/traitTables/envData_oneTipPerSpecies.txt"), header = TRUE))
 commonID <- intersect(commonID, oneTipTaxa)
 cat(sprintf("One-tip-per-species taxa with tree + ePC + metadata coverage: %d\n", length(commonID)))
@@ -83,51 +84,86 @@ rooted_tree <- keep.tip(spTre.rooted.filtered, commonID)
 outDir <- file.path(PHYLOGWAS_ROOT, "output/revisionAnalyses/oneTipPerSpeciesASR")
 dir.create(outDir, recursive = TRUE, showWarnings = FALSE)
 
-results <- list()
-for (i in 1:3) {
-  cat(sprintf("\n--- envPC_%d ---\n", i))
-  tree.sub <- keep.tip(rooted_tree, intersect(commonID, rownames(ePCs$synthetic.environmental.traits)))
-  tree.sub <- multi2di(tree.sub)
-  cat(sprintf("Final ASR tree: %d tips\n", Ntip(tree.sub)))
-
-  trait <- na.omit(ePCs$synthetic.environmental.traits[, i])
-  names(trait) <- rownames(ePCs$synthetic.environmental.traits)
-  trait <- trait[tree.sub$tip.label]
-
+# Transition calls use the 30th/70th percentiles of the trait as cutoffs. Two versions
+# for the one-tip set:
+#   own   -- percentiles of the 569-taxon subset itself (the original behaviour)
+#   fixed -- percentiles of the full taxon set, as in the full-set ASR, so that a change
+#            in counts reflects the dropped tips rather than shifted cutoffs.
+# The ASR (fastAnc) is the same for both; only the cutoffs differ. The full-set ASR is
+# recomputed here too, so the clade-matching below needs no external inputs.
+asr_calls <- function(tips, i, cuts) {
+  tree.sub <- multi2di(keep.tip(spTre.rooted.filtered, tips))
+  trait <- ePCs$synthetic.environmental.traits[tree.sub$tip.label, i]
+  names(trait) <- tree.sub$tip.label
   fit <- fastAnc(tree.sub, trait, var = TRUE, CI = TRUE)
-
-  td <- data.frame(node = 1:Ntip(tree.sub), ace = trait, var = 0, upper = trait, lower = trait)
-  nd <- data.frame(node = (Ntip(tree.sub) + 1):(Ntip(tree.sub) + Nnode(tree.sub)),
-                    ace = fit$ace, var = fit$var, upper = fit$CI95[, 2], lower = fit$CI95[, 1])
-  d <- rbind(td, nd)
-  d$node <- as.numeric(d$node)
-  plotTree <- dplyr::full_join(tree.sub, d, by = "node")
-
-  edgeState <- apply(plotTree@phylo$edge, c(1, 2), function(x) d[d$node == x, 2])
-  edgeStateUpper <- apply(plotTree@phylo$edge, c(1, 2), function(x) d[d$node == x, 4])
-  edgeStateLower <- apply(plotTree@phylo$edge, c(1, 2), function(x) d[d$node == x, 5])
-
-  toL <- edgeStateLower[, 1] > edgeStateUpper[, 2] & edgeState[, 2] < quantile(trait, .3) & edgeState[, 1] > quantile(trait, .3)
-  toH <- edgeStateLower[, 2] > edgeStateUpper[, 1] & edgeState[, 2] > quantile(trait, .7) & edgeState[, 1] < quantile(trait, .7)
-  cat(sprintf("Raw transition edges: toH=%d toL=%d\n", sum(toH, na.rm = TRUE), sum(toL, na.rm = TRUE)))
-
-  nodetoH <- keep_most_ancestral(plotTree@phylo, plotTree@phylo$edge[toH, 2])
-  nodetoL <- keep_most_ancestral(plotTree@phylo, plotTree@phylo$edge[toL, 2])
-  cat(sprintf("After keep_most_ancestral: toH=%d toL=%d\n", length(nodetoH), length(nodetoL)))
-
-  # Tip-membership sets for each transition node, restricted to the common one-tip-per-species
-  # taxon set -- used downstream to compare against the full-707-taxon calls by shared-tip
-  # overlap rather than raw node number (node IDs aren't comparable across differently-pruned
-  # trees).
-  tipsetH <- lapply(nodetoH, function(nd) sort(tree.sub$tip.label[Descendants(tree.sub, nd, type = "tips")[[1]]]))
-  tipsetL <- lapply(nodetoL, function(nd) sort(tree.sub$tip.label[Descendants(tree.sub, nd, type = "tips")[[1]]]))
-
-  results[[i]] <- list(nodetoH = nodetoH, nodetoL = nodetoL, tipsetH = tipsetH, tipsetL = tipsetL)
+  d <- rbind(data.frame(node = 1:Ntip(tree.sub), ace = trait, var = 0, upper = trait, lower = trait),
+             data.frame(node = (Ntip(tree.sub) + 1):(Ntip(tree.sub) + Nnode(tree.sub)),
+                        ace = fit$ace, var = fit$var, upper = fit$CI95[, 2], lower = fit$CI95[, 1]))
+  E <- tree.sub$edge
+  st <- matrix(d$ace[E], ncol = 2); up <- matrix(d$upper[E], ncol = 2); lo <- matrix(d$lower[E], ncol = 2)
+  out <- list(tree = tree.sub, trait = trait)
+  for (cn in names(cuts)) {
+    cl <- cuts[[cn]]
+    toL <- lo[, 1] > up[, 2] & st[, 2] < cl[1] & st[, 1] > cl[1]
+    toH <- lo[, 2] > up[, 1] & st[, 2] > cl[2] & st[, 1] < cl[2]
+    nodes <- list(H = keep_most_ancestral(tree.sub, E[toH, 2]), L = keep_most_ancestral(tree.sub, E[toL, 2]))
+    out[[cn]] <- lapply(nodes, function(ns) list(nodes = ns,
+      tipsets = lapply(ns, function(nd) sort(tree.sub$tip.label[Descendants(tree.sub, nd, type = "tips")[[1]]]))))
+  }
+  out
 }
 
+jaccard <- function(a, b) length(intersect(a, b)) / length(union(a, b))
+best_j <- function(sets, against) vapply(sets, function(a)
+  if (length(against)) max(vapply(against, jaccard, numeric(1), a = a)) else 0, numeric(1))
+
+fullTips <- intersect(fullID, rownames(ePCs$synthetic.environmental.traits))
+oneTips  <- intersect(commonID, rownames(ePCs$synthetic.environmental.traits))
+results <- list(); counts <- list(); match <- list()
+for (i in 1:3) {
+  cat(sprintf("\n--- envPC_%d ---\n", i))
+  cutFull <- quantile(ePCs$synthetic.environmental.traits[fullTips, i], c(.3, .7))
+  cutOwn  <- quantile(ePCs$synthetic.environmental.traits[oneTips, i], c(.3, .7))
+  full <- asr_calls(fullTips, i, list(full = cutFull))
+  one  <- asr_calls(oneTips, i, list(own = cutOwn, fixed = cutFull))
+  cat(sprintf("Full (%d tips): toH=%d toL=%d | one-tip (%d tips) own: toH=%d toL=%d, fixed: toH=%d toL=%d\n",
+              Ntip(full$tree), length(full$full$H$nodes), length(full$full$L$nodes), Ntip(one$tree),
+              length(one$own$H$nodes), length(one$own$L$nodes), length(one$fixed$H$nodes), length(one$fixed$L$nodes)))
+  counts[[i]] <- data.frame(envPC = i, cut30_own = cutOwn[1], cut70_own = cutOwn[2],
+    cut30_full = cutFull[1], cut70_full = cutFull[2],
+    toH_full = length(full$full$H$nodes), toL_full = length(full$full$L$nodes),
+    toH_own = length(one$own$H$nodes), toL_own = length(one$own$L$nodes),
+    toH_fixed = length(one$fixed$H$nodes), toL_fixed = length(one$fixed$L$nodes))
+
+  # Clade matching by shared tips, on the one-tip taxa. Recall direction: is each full-set
+  # transition clade still called? A full clade whose tips are all duplicate-species
+  # assemblies has no tips left after downsampling ("removed").
+  for (dir in c("H", "L")) {
+    fullSets <- lapply(full$full[[dir]]$tipsets, intersect, oneTips)
+    removed <- lengths(fullSets) == 0
+    for (cn in c("own", "fixed")) {
+      oneSets <- one[[cn]][[dir]]$tipsets
+      jr <- best_j(fullSets[!removed], oneSets)          # full -> one-tip (recall)
+      jp <- best_j(oneSets, fullSets[!removed])          # one-tip -> full (precision)
+      match[[length(match) + 1]] <- data.frame(envPC = i, direction = paste0("to", dir), cutoff = cn,
+        full_clades = length(fullSets), removed_by_downsampling = sum(removed),
+        recovered_J50 = sum(jr >= .5), recovered_any = sum(jr > 0), lost = sum(jr == 0),
+        mean_J_full_to_onetip = round(mean(jr), 3),
+        onetip_clades = length(oneSets), onetip_matched_J50 = sum(jp >= .5),
+        mean_J_onetip_to_full = round(mean(jp), 3))
+    }
+  }
+  results[[i]] <- list(full = full$full, own = one$own, fixed = one$fixed)
+}
+
+cc <- do.call(rbind, counts); mm <- do.call(rbind, match)
 saveRDS(results, file.path(outDir, "oneTipPerSpecies_transitionNodes.rds"))
+write.csv(cc, file.path(outDir, "oneTipPerSpecies_transitionCounts_ownVsFixedCutoff.csv"), row.names = FALSE)
+write.csv(mm, file.path(outDir, "oneTipPerSpecies_cladeMatching.csv"), row.names = FALSE)
+cat("\nTransition counts:\n"); print(cc, row.names = FALSE)
+cat("\nClade matching (Jaccard on one-tip taxa):\n"); print(mm, row.names = FALSE)
 write.tree(rooted_tree, file.path(outDir, "oneTipPerSpecies_tree.nwk"))
-write(rjson::toJSON(lapply(results, function(x) list(x$nodetoH, x$nodetoL))),
+write(rjson::toJSON(lapply(results, function(x) list(x$own$H$nodes, x$own$L$nodes))),
       file = file.path(outDir, "oneTipPerSpecies_realTransition.json"))
 
 cat(sprintf("\nWrote outputs to %s\n", outDir))
