@@ -618,6 +618,64 @@ Figures (`output/hitContigLength/figure/`, gitignored):
 
 ---
 
+## 9. Corrected high-confidence candidate count: 17 → 27
+
+**This changes a reported result.** The submitted manuscript reports 17 high-confidence
+candidate OGs. The correct number is **27**.
+
+**The three-layer filter** (`notebook/11_candidateOGInvestigation/11A_candidateOGInvestigation.ipynb`).
+A high-confidence candidate must pass all three layers:
+- empirical permulation p ≤ 0.001 in the phylogenetic mixed model (the 330);
+- overlap with a-priori stress-responsive DE genes;
+- significant RELAX in either direction of that envPC axis (−log10 p > 3): cold/warm for envPC1,
+  drought/wet for envPC2, sand/clay for envPC3.
+
+**The error.** For envPC2 and envPC3, the RELAX layer referenced a nonexistent column on the wrong
+data frame (`hyphy_drought$wet`, `hyphy_clay$wet`). R silently evaluates that to `NULL`, so the
+layer kept only the drought- and sand-significant OGs. Wet- and clay-significant OGs were dropped.
+envPC1 used the correct pattern and was unaffected. Fixed in `57cd4e1` (2026-07-30).
+`9d746f6` writes the result to `output/finalCandidateOGs_summary.txt` and corrects the Fig 6A
+Sankey counts.
+
+| envPC | Phylogenetic candidates also RELAX-significant (Fig 6A selection column) | Final candidates, original | Final candidates, corrected |
+|---|---|---|---|
+| envPC1 | 30 | 10 | 10 |
+| envPC2 | 19 → 28 | 6 | **10** |
+| envPC3 | 5 → 13 | 1 | **7** |
+| **Total** | | **17** | **27** |
+
+**The 10 restored OGs**, all of which pass on the previously dropped direction only (RELAX
+−log10 p and k for that direction; k < 1 = relaxed, k > 1 = intensified selection):
+
+| envPC | OG | Maize | Rice | emp_p | RELAX (restored direction) | A-priori DE |
+|---|---|---|---|---|---|---|
+| envPC2 | OG0000650 | Zm00001eb055490 | Os03t0720300 | 0 | wet 3.09, k = 1.18 | cold, heat |
+| envPC2 | OG0006551 | Zm00001eb192050 | Os02t0805200 | 0 | wet 3.53, k = 0.79 | heat, drought |
+| envPC2 | OG0016407 | Zm00001eb139920 | Os01t0750300 | 0 | wet 6.05, k = 1.28 | waterlogging |
+| envPC2 | OG0024206 | Zm00001eb308860 | Os07t0280200 | 0 | wet 3.52, k = 0.82 | heat |
+| envPC3 | OG0002496 | Zm00001eb014980 | Os03t0311600 | 0 | clay 3.78, k = 0.77 | cold |
+| envPC3 | OG0002543 | Zm00001eb139420 | Os12t0164600 | 0 | clay 5.33, k = 0.85 | cold, heat |
+| envPC3 | OG0004864 | Zm00001eb195080 | Os12t0107700 | 0.001 | clay 6.75, k = 0.90 | drought, waterlogging |
+| envPC3 | OG0006771 | Zm00001eb155630 | Os01t0702300 | 0.001 | clay 6.89, k = 0.82 | drought |
+| envPC3 | OG0010994 | Zm00001eb415960 | Os08t0156600 | 0.001 | clay 4.61, k = 0.74 | cold, waterlogging |
+| envPC3 | OG0011610 | Zm00001eb189890 | Os02t0729400 | 0.001 | clay 3.37, k = 0.86 | cold, heat |
+
+The 17 original candidates are unchanged. The fix only adds OGs.
+
+**Downstream.**
+- *Updated already:*
+  - `output/finalCandidateOGs_summary.txt` (27 rows).
+  - Fig 6A Sankey (`src/fig6a_sankey_v2.py`). Its selection-shift column went from 30/19/5 to
+    30/28/13 and its expression column from 10/6/1 to 10/10/7.
+  - The gene-lookup dashboard (`p_phyloGWASGeneLookup`), which reads the summary table.
+- *Not affected:* revision analyses #1–#8. They evaluate the 330 empirical-p candidates or raw
+  model p-values, which sit upstream of the RELAX layer.
+- *Still to do:* update the manuscript text, figure legends and supplementary tables that cite
+  17 candidates, or 6/1 for envPC2/envPC3. Any per-candidate discussion should also cover the
+  10 restored OGs.
+
+---
+
 ## Open items before implementation starts
 
 - Confirm the FPKM > 1 detectability threshold for tissue-expression breadth (#3), or supply a
