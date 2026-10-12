@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Build the file-server archive manifest for p_phyloGWAS (read-only; copies nothing).
 
-Assigns every file under the repo (and the GIS rasters in the sibling repo p_evolBNI) to one
+Assigns every file under the repo (plus the GIS raster tarball from the sibling repo p_evolBNI) to one
 archive category, or to "excluded" / "unclassified":
 
   repo          git-tracked files + .git/
-  T1-raw        GIS rasters + small public references (DATA.md T1 rows kept locally)
+  T1-raw        GIS rasters (as p_evolBNI/data/GIS_env_data.tar.gz) + small public references
   T2            DATA.md T2 rows (regenerable intermediates)
   intermediate  master data tables + HyPhy/RELAX runs (not in DATA.md, kept by choice)
   results       model inputs/outputs, candidate tables, figures, revision outputs
@@ -35,7 +35,9 @@ OUT = os.path.join(REPO, "output", "archive")
 # (category, prefixes relative to the repo root). A prefix ending in "/" matches a directory.
 RULES = [
     ("excluded", [
-        "data/assemblies/", "output/distPerMSA/", "output/OrthoFinder/", "output/finalModels/",
+        "data/assemblies/", "output/distPerMSA/", "output/finalModels/",
+        # OrthoFinder scratch (all-vs-all BLAST etc.); the results themselves are kept below
+        "output/OrthoFinder/Results_Jun06/WorkingDirectory/",
         "output/functionPredictionPerOG_20250331.txt", "output/functionPredictionPerOG_20250423.txt",
         "output/functionPredictionPerOG_20250504.txt", "output/distToB73_Charlie",
         "output/jonathanOG/", "output/archive/", "Rplots.pdf",
@@ -75,6 +77,7 @@ RULES = [
         "output/functionPredictionPerOG_20251023.txt", "output/TableS", "output/figure/",
         "output/powerSimulation/", "output/assemblyStats/", "output/hitContigLength/",
         "output/revisionAnalyses/",
+        "output/OrthoFinder/",   # orthogroup definitions, gene trees, species tree (no scratch)
     ]),
 ]
 EXCLUDED_DIRS = tuple(p for p in RULES[0][1] if p.endswith("/"))
@@ -117,9 +120,12 @@ def main():
         p = os.path.join(REPO, d)
         if os.path.isdir(p):
             rows.append(("p_phyloGWAS/" + d, "excluded", -1))
-    gis = os.path.join(EVOL, "data", "GIS_env_data")
-    for rel, size in walk(gis):
-        rows.append(("p_evolBNI/data/GIS_env_data/" + rel, "T1-raw", size))
+    # GIS rasters: the 2024-05-29 tarball, not the unpacked folder. The tarball holds every
+    # file in GIS_env_data/ (GSDE and WorldClim as their original .zip downloads; the folder
+    # also has them unzipped, ~160 GB) plus three FAO-GAEZ rasters the folder lacks.
+    # Checked file-by-file 2026-10-12; restore recipe in README_ARCHIVE.md.
+    gis_tar = os.path.join(EVOL, "data", "GIS_env_data.tar.gz")
+    rows.append(("p_evolBNI/data/GIS_env_data.tar.gz", "T1-raw", os.path.getsize(gis_tar)))
 
     cats = defaultdict(lambda: [0, 0])
     unc = defaultdict(lambda: [0, 0])
