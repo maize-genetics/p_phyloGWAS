@@ -1,0 +1,764 @@
+# Revision analyses
+
+Plan for the five robustness analyses requested in review, before the next round of revision.
+Work happens on the `revision-analyses` branch; `main` (tagged `v0.1.0`, the reviewed submission)
+stays untouched until this is merged back the same way `refactor-cleanup` was.
+
+## Key numbers, verified directly against the actual data (not assumed)
+
+Every subset below is built from **`output/envData_707Poaceae_20250804.txt`'s 707 taxa**, the
+trait table passed to `src/12_runPermulation_perOGModel.R`. The taxonomy file
+(`data/Poaceae_taxonomic_groups_subtribeAdded_SKH20250402.csv`) has 805 rows, a superset; every
+count below is restricted to these 707.
+
+**The per-OG models were fit on 686 of them, not 707** (found 2026-10-01). 21 trait-table taxa
+have no rows in `masterDataTable_PAVFill_20251001.txt`. They were removed upstream for extensive
+premature stop codons, which are likely sequencing artifacts. The model script inner-joins the
+trait table with the master table, so these 21 silently drop out of every model fit, both the
+original stage-08 runs and every revision rerun. Fitted results are unaffected, because the drop
+has always happened at run time. Only the "707" labels for the modeled set were wrong.
+
+What the 21 do still feed:
+- tree pruning and rooting (ASM1935983v1, the rooting outgroup, is one of them);
+- the ASR and transition-node counts, which run on the trait table;
+- the power-simulation trees.
+
+**Update (2026-10-07):** the full-set ASR and power simulation now use the **687-taxon tree**: the
+686 modelled taxa plus the rooting outgroup ASM1935983v1. See §10. Sections that compare against
+the full-set ASR or power run (#2, #4, #5b) still use the 707-tip baseline, as noted in §10.
+
+The dropped taxa are 6
+Andropogoneae (ASM2203655v1, CPNAM-Leoti, ChrysopogonNigritanus_v1.0, Cs-A1013-Draft-PanAnd-1.0,
+Cs-KelloggPI219580-DRAFT-PanAnd-1.0, Hd-A1025-Draft-PanAnd-1.0) and 15 others: AANG_UGA4,
+ASM155179v1, ASM155180v1, ASM1935983v1, ASM2160514v1, ASM3027231v1, ASM3189477v1, ASM980554v1,
+Bruz, C_purpureuscv._Purple, O_longistaminata_v1.0, PauV1, Ragi_PR202_v._2.0, SRR23951516 and
+TSU_Scap_1. Modeled taxon counts per analysis are given alongside the trait-table counts below.
+
+| Quantity | Value | Source |
+|---|---|---|
+| "330 top candidates" (full-set analysis) | 330 unique OGs | Union of `output/candidateOG_envPC{1,2,3}.txt` (160+109+68), filtered on empirical permutation `emp_p ≤ 0.001` in `notebook/11_candidateOGInvestigation/11A_candidateOGInvestigation.ipynb` |
+| Andropogoneae taxa | 483 of 707 (484-row trait table, see below; **477 modeled**) | `tribe` column, taxonomy CSV, restricted to the 707 |
+| Subtribes with ≥5 taxa | 24 (of 51 total) | `subtribe` column, restricted to the 707 |
+| Unique species | 569 of 707 (**557 modeled** in #4; 560 of the 686) | `Species` column, restricted to the 707; 87 species have >1 assembly (224 assemblies total) |
+
+One taxon in the 707, **`AN21TNTL0178`** (*Sorghum arundinaceum*), has no row in the taxonomy CSV
+at all — it's excluded by default from every taxonomy-driven subset below (Andropogoneae, subtribe
+jackknife, one-tip-per-species), which is exactly what produces the 569 figure above. It can be
+added back with a one-row taxonomy-CSV fix later if desired (would make it 570 for the
+one-tip-per-species analysis, and +1 Andropogoneae/Sorghinae tip for #1/#2).
+
+**Rooting constraint (found via a real failed run, not assumed):**
+`12_runPermulation_perOGModel.R` prunes the tree to the trait table's taxa *before* rooting
+(`keep.tip()` then `root(spTre, "ASM1935983v1")`) — so `ASM1935983v1` (*Pharus latifolius*, the
+actual designated outgroup, `clade="outgroup"`) must be present in every subset trait table, or the
+script errors out at rooting before fitting a single OG. It's `subtribe`-NA and the sole assembly
+for its species, so one-tip-per-species (569) and all 24 subtribe-drops already keep it naturally
+— only the **Andropogoneae-only subset needs it force-included, making that population 484 taxa,
+not 483** (mirrors the original full-set trait table, which also includes this outgroup). The
+outgroup has no master-table rows, so it only roots the tree and is never in a model fit. The
+Andropogoneae-only models therefore contain no non-Andropogoneae taxa at all.
+
+## Why this is mostly a data-subsetting exercise, not new modeling code
+
+`src/12_runPermulation_perOGModel.R` (the per-OG ASReml model) derives its taxon set entirely from
+the trait table passed as its first CLI argument, then internally prunes the (already-rooted)
+species tree and master data table to match. **Analyses #1, #4's association half, and #5 need no
+changes to this script** — only new, taxon-filtered trait tables and output directories, via its
+existing 8-argument CLI interface (`dir.trait, dir.masterTab, dir.phyloK, dir.tree, responseVar,
+dir.out, permulation, GLM`). The ASR step (`src/S05_envPC_analysis.R`) is equally subset-agnostic.
+Only the power simulation needs a small code change, and only the abundance/breadth analysis needs
+genuinely new data.
+
+---
+
+## 1. Andropogoneae-only association model
+
+Build a trait table = `envData_707Poaceae_20250804.txt` filtered to the 483 Andropogoneae
+`assemblyID`s, plus the forced rooting outgroup (484 total, see above; 477 Andropogoneae modeled
+after the master-table join). Rerun
+`12_runPermulation_perOGModel.R` unchanged (new `dir.trait`, new `dir.out`) for envPC_1/2/3,
+permulation on.
+
+**Comparison to the full-set run:**
+- Spearman rank correlation of `-log10(raw p)` across all OGs tested in both runs (join on `OG`;
+  raw `p`, not `emp_p`, since `emp_p` isn't computed for most OGs).
+- Concordance of the 330: what fraction are also `emp_p ≤ 0.001` candidates in the Andropogoneae-only run.
+
+**Deviation from plan:** permulation was run for envPC_1 initially, but convergence on the
+183-taxon-smaller subset turned out to be far too low to be useful — the `topOG_list` OGs (already
+selected for having a strong signal under the *real* trait) converge on the order of 3-6% of the
+time per permuted-trait iteration (vs ~100% on the original full-set runs), so completing even one
+envPC's 1000-iteration permulation loop would take 35+ hours and still leave most OGs `NA` under a
+sane minimum-converged-permutations threshold. Per author's direction, replaced the emp_p-based
+330-concordance check with a raw-`p<0.001` threshold comparison (a looser, uncorrected proxy) —
+still informative, just not the same statistic. This also exposed and fixed a real, generic bug:
+`emp_p`'s old denominator was the fixed permutation count (1000) rather than the number that
+actually converged, which would have silently deflated `emp_p` (false significance) whenever
+permulation convergence was low — see `12_runPermulation_perOGModel.R`'s fix commit. All 3 envPCs'
+base-model fits (permulation off) ran cleanly: 94.3% / 97.4% / 96.5% converged.
+
+**Results (raw `p`, no permulation):**
+
+| envPC | OGs compared (both converged) | Spearman ρ(-log10 p) | full p<0.001 → subset p<0.001 (recall / precision) | full p<0.001 → subset p<0.05 (recall) |
+|---|---|---|---|---|
+| envPC_1 | 18,075 | 0.759 | 92/275 (33.5%) / 92/151 (60.9%) | 252/275 (91.6%) |
+| envPC_2 | 19,044 | 0.792 | 82/204 (40.2%) / 82/146 (56.2%) | 196/204 (96.1%) |
+| envPC_3 | 18,846 | 0.790 | 88/209 (42.1%) / 88/163 (54.0%) | 205/209 (98.1%) |
+
+The low p<0.001→p<0.001 recall is mostly a **power** effect, not signal disagreement: 92-98% of the
+full-set's significant OGs are still at least nominally significant (p<0.05) in the Andropogoneae
+subset. Moderately strong, consistent rank correlation (ρ≈0.76-0.79) across all three envPCs.
+
+## 2. Power simulation on the Andropogoneae tree
+
+Prune `output/PoaceaeTree_angiosperm353_astral_filtered_20250407.nwk` to the 484-taxon Andropogoneae
+subset (483 + rooting outgroup); rerun the ASR step on that pruned tree/trait subset to get an
+Andropogoneae-specific transition-node set (the equivalent of `output/powerSimulation/realTransition.json`).
+
+Small code change to `src/powerSimulation_XY_revised.R`: make `TREE_PATH`/`KMAT_PATH`/`TRANS_PATH`
+overridable via `Sys.getenv()`, defaulting to the current hardcoded values (same pattern already
+used for `PHYLOGWAS_ROOT`) — keeps `08E_power_simulation.sh`'s existing invocation working
+unchanged while allowing an env-var-driven Andropogoneae rerun. Same simulation config otherwise
+(effect sizes, `n_sims=500`, scenarios), so it's a like-for-like power-vs-sample-size comparison.
+
+**ASR step** (`12D_andropogoneaeTransitionNodes.R`): the Andropogoneae-restricted reconstruction
+yields **24 toH + 18 toL = 42 transition nodes**, against **27 + 19 = 46** on the full 707-taxon
+tree. Only envPC1 is computed, since `powerSimulation_XY_revised.R` reads only
+`fromJSON(...)[[1]]`. Outputs: `output/revisionAnalyses/powerSimulation/andropogoneae_realTransition.json`
+and `andropogoneae_tree.nwk` (the 484-tip pruned tree).
+
+**Results** — power difference (Andropogoneae − full) at the 100% convergence level, across the
+full β range. Full run: `output/figure/power_df_merged.csv` (707-tip tree; the full-set run has
+since moved to 687 tips, see §10, but power changes by ≤ 0.08 so this comparison stands);
+Andropogoneae run:
+`output/revisionAnalyses/powerSimulation/power_df_merged.csv` (176 rows each = 4 scenarios × 4
+convergence levels × 11 β).
+
+| Scenario | max power loss | max power gain | β range where curves differ at all |
+|---|---|---|---|
+| empirical transition | −0.036 (β=0.05) | +0.016 (β=0.00) | both saturate at 1.000 from β≥0.30 |
+| random transition − 1x | −0.032 (β=0.15) | +0.010 (β=0.25) | both ≥0.99 from β≥0.25 |
+| random transition − 2x | −0.054 (β=0.10) | +0.010 (β=0.00) | both ≥0.98 from β≥0.20 |
+| random transition − 1/2x | −0.006 (β=0.00) | **+0.092** (β=0.20) | Andropogoneae consistently *higher* |
+
+Type I error (β=0) stayed near nominal in both runs across all four scenarios: 0.038–0.066.
+
+**Interpretation**: restricting the tree to Andropogoneae costs **essentially no power**. Every
+difference in the empirical-transition scenario and the 1x/2x controls sits inside Monte-Carlo
+noise at `n_sims=500` (≈±0.04 near power 0.5). The 1/2x control is the one systematic departure,
+and it runs in the *opposite* direction to a sample-size penalty — Andropogoneae is up to +0.09
+higher. That is mechanistically consistent with the transition counts above: power in this design
+tracks the number of independent transition events (42 vs 46, a 9% difference), not the number of
+tips (484 vs 707, a 32% difference). The 1/2x scenario draws `n_trans × 0.5` nodes — 21 for
+Andropogoneae vs 23 for the full tree — into a tree with far fewer deep, tip-rich clades, which
+makes the drawn clades more evenly sized and the resulting contrast slightly cleaner.
+
+## 3. Abundance/breadth confound check
+
+For each maize ortholog in `data/maxFPKM_v5.csv`: pull `maxFPKM` as the abundance predictor, and
+compute tissue-expression breadth = count of per-tissue FPKM columns clearing a detectability
+threshold (proposed FPKM > 1; adjust if a different convention is preferred). Join to OG via the
+`ZmID` columns already in `output/finalModels_20251002/envPC_*/ASREML_res_empPadded_homologAdded.txt`.
+
+Fit `candidate_status (0/1, in the 330) ~ maxFPKM + tissue_breadth` (logistic regression), per
+envPC and/or pooled. Report coefficients, p-values, and a plot.
+
+**As run** (`12C_abundanceBreadthConfound.R`): breadth = count of per-tissue FPKM columns above
+`FPKM_THRESHOLD` (default **1**, env-overridable), giving a 0–23 tissue count (median 21). After
+joining `maxFPKM_v5.csv` to the OG→ZmID mapping, **16,773 OG–gene pairs** carry expression data,
+of which **288 of the 330 candidates** are recoverable (147 envPC1 / 88 envPC2 / 60 envPC3 — the
+shortfall is candidates with no maize ortholog or no expression record). Both predictors are
+z-scaled, so coefficients are per-SD on the logit scale. Outputs:
+`output/revisionAnalyses/abundanceBreadth/{og_abundance_breadth_table.csv,glm_results.csv}`.
+
+**Results**:
+
+| Model | `scale(maxFPKM)` β (p) | `scale(tissue_breadth)` β (p) |
+|---|---|---|
+| pooled (all 330) | −0.045 (p=0.705) | +0.023 (p=0.696) |
+| envPC1 | −0.115 (p=0.612) | **+0.181 (p=0.048)** |
+| envPC2 | +0.010 (p=0.897) | +0.010 (p=0.928) |
+| envPC3 | −0.206 (p=0.629) | **−0.270 (p=0.021)** |
+
+**Interpretation**: no evidence that candidate status is confounded by protein abundance or
+expression breadth. `maxFPKM` is null everywhere (all p ≥ 0.61, including pooled). Breadth is null
+pooled and in envPC2, and marginal in envPC1 and envPC3 — but those two point in **opposite
+directions** (envPC1 positive, envPC3 negative). Across 8 tests, two hits at p=0.048 and p=0.021
+is roughly what noise produces (neither survives any multiple-testing correction across the 8),
+and a genuine detectability/abundance confound would have to push candidate status consistently one
+way, not split by sign across envPCs. The pooled model — the direct test of the reviewer's
+question — is unambiguously null on both predictors.
+
+## 4. One-tip-per-species downsampling
+
+Within the 707: 87 species have multiple assemblies (224 assemblies total among them — e.g. Zea
+mays, Triticum aestivum, Hordeum vulgare at 5 each). For each, keep the assembly ranking best under
+the existing high-error-filter QC criteria (the same logic behind
+`data/Poaceae_metadata_highErrorFiltered_2025.10.08.tsv`); the 483 single-assembly species pass
+through unchanged; `AN21TNTL0178` excluded per the default above. **Result: 569 taxa, 138 dropped.**
+
+Of the 569, **557 were modeled**. 12 picks are among the 21 taxa absent from the master table. For
+3 of those species (*Cenchrus purpureus*, *Urochloa ruziziensis*, *Paspalum vaginatum*) another
+assembly of the same species is in the model set (ASM2264469v1, Embrapa_Uruz_1.0,
+P.vaginatum_v3.1), so a pick restricted to the 686 would have given 560 species. This was not
+rerun: 3 species out of 560 is too small to matter.
+
+- Rerun the ASR step on this pruned set — check whether transition-node calls stay stable versus
+  full taxon sampling.
+- Rerun `12_runPermulation_perOGModel.R` unchanged on this taxon subset for envPC_1/2/3 — same
+  rank-correlation + 330-concordance comparison as analysis #1.
+
+**Results — ASR transition-node stability** (`12E_oneTipPerSpeciesTransitionNodes.R`; permulation
+dropped here too, for the same reason as analysis #1 above):
+
+Transition-clade counts (toH / toL), full-707 vs one-tip-per-species (569):
+
+| envPC | Full (707) | One-tip (569) |
+|---|---|---|
+| envPC_1 | 27 / 19 | 22 / 20 |
+| envPC_2 | 21 / 22 | 18 / 22 |
+| envPC_3 | 27 / 30 | 24 / 31 |
+
+Tip-membership stability (each one-tip clade matched to its best-overlapping full-set clade by
+Jaccard similarity, restricted to the shared 569-taxon overlap):
+
+| envPC | toH mean Jaccard (≥0.5 match rate) | toL mean Jaccard (≥0.5 match rate) |
+|---|---|---|
+| envPC_1 | 0.955 (21/22) | 0.750 (15/20) |
+| envPC_2 | 0.944 (17/18) | 0.864 (19/22) |
+| envPC_3 | 0.878 (21/24) | 0.871 (27/31) |
+
+Transition-node calls are stable under this downsampling: counts are close across the board, and
+75-95.5% of one-tip-per-species clades substantially overlap (Jaccard ≥ 0.5) a full-set clade in
+every envPC × direction combination — expected, since dropping only redundant duplicate-species
+assemblies doesn't change the underlying species-level tree topology ASR depends on.
+
+**Results — association model** (raw `p`, no permulation, same deviation as analysis #1):
+
+| envPC | OGs compared (both converged) | Spearman ρ(-log10 p) | full p<0.001 → subset p<0.001 (recall / precision) | full p<0.001 → subset p<0.05 (recall) |
+|---|---|---|---|---|
+| envPC_1 | 18,099 | 0.793 | 100/275 (36.4%) / 100/172 (58.1%) | 266/275 (96.7%) |
+| envPC_2 | 19,095 | 0.914 | 78/204 (38.2%) / 78/92 (84.8%) | 203/204 (99.5%) |
+| envPC_3 | 18,981 | 0.861 | 78/211 (37.0%) / 78/107 (72.9%) | 210/211 (99.5%) |
+
+Noticeably stronger than the Andropogoneae comparison (ρ 0.79-0.91 vs 0.76-0.79) — expected, since
+one-tip-per-species keeps 569 taxa spanning the whole tree rather than restricting to one clade,
+preserving far more phylogenetic breadth. 97-99.5% of the full-set's p<0.001 hits remain at least
+nominally significant (p<0.05) here. Base-model fits: 96.6% / 98.5% / 98.4% converged.
+
+## 5. Leave-one-subtribe-out jackknife
+
+**Final scope**: the **10 subtribes with >20 taxa** within the 707 (the same 10 within the 686),
+**envPC_1 only** (not all 3),
+base-model fit with permulation off (same rationale as #1/#4: see the emp_p fix commit — permulation
+convergence collapses on any taxon-reduced subset, and this analysis's question — does dropping one
+lineage destabilize the raw association ranking — doesn't need it):
+
+Andropogoninae (150), Anthistiriinae (79), Oryzinae (35), Tripsacinae (33), Saccharinae (33),
+Triticinae (28), Aveninae (24), Ischaeminae (23), Sorghinae (23), Apludinae (22).
+
+This covers Andropogoneae's own largest subtribes (Andropogoninae, Anthistiriinae, Tripsacinae,
+Saccharinae, Ischaeminae, Sorghinae) plus the largest non-Andropogoneae lineages (Oryzinae,
+Triticinae, Aveninae, Apludinae). The remaining 14 subtribes with 5-20 taxa are deferred, not
+abandoned. (Scope evolved during the session: originally top-8 by count under a permulation-
+inclusive, 8-core estimate of 5+ weeks; that estimate turned out to be based on the wrong bottleneck
+-- see below -- so the real constraint is much lighter and the cutoff was raised to >20 taxa, adding
+Sorghinae and Apludinae, at 32 cores and permulation off.)
+
+For each, built a trait table excluding that subtribe's assemblies (everyone else — including the
+39 NA-subtribe taxa and `AN21TNTL0178` — stays in), ran `12_runPermulation_perOGModel.R` (base model
+only, `12B_runSubsetModels.sh`'s new `PERMULATION=FALSE ENVPCS="1"` overrides).
+
+**Compute cost (verified, not estimated)**: at 32 cores, permulation off, each run took ~3.0-3.5
+hours (199 min average across the 10). All 10 completed cleanly: 92.3-99.9% convergence, zero
+`vpc.char`/crash errors. Total wall-clock: ~33 hours sequential. (The original "~12.5 hours per
+envPC at 8 cores, 5+ weeks for the full 72-run version" estimate was based on including the
+1000-iteration permulation loop, which -- per the emp_p fix commit -- turned out to be both far
+slower and far less informative than assumed on taxon-reduced subsets; dropping it changed the
+feasibility picture entirely.)
+
+**Results — rank correlation and candidate recall vs. the full-set baseline (686 modeled taxa)** (envPC_1):
+
+| Subtribe dropped | Taxa removed (trait table / modeled) | ρ(-log10 p) | full p<0.001 → drop p<0.001 | full p<0.001 → drop p<0.05 |
+|---|---|---|---|---|
+| Andropogoninae | 150 / 149 | 0.782 | 62.6% | 97.8% |
+| Anthistiriinae | 79 / 79 | 0.781 | 60.2% | 92.7% |
+| Saccharinae | 33 / 33 | 0.849 | 58.5% | 97.8% |
+| Ischaeminae | 23 / 23 | 0.933 | 74.5% | 100.0% |
+| Triticinae | 28 / 27 | 0.952 | 75.6% | 98.5% |
+| Aveninae | 24 / 24 | 0.963 | 78.2% | 99.6% |
+| Tripsacinae | 33 / 33 | 0.970 | 85.5% | 100.0% |
+| Apludinae | 22 / 22 | 0.972 | 85.0% | 100.0% |
+| Sorghinae | 23 / 22 | 0.976 | 84.7% | 100.0% |
+| Oryzinae | 35 / 31 | 0.993 | 88.0% | 100.0% |
+
+Full-set model output: `output/finalModels_20251002/envPC_1/ASREML_res.txt`. Per-subtribe outputs:
+`output/revisionAnalyses/perSubsetModels/drop_<Subtribe>/envPC_1/`. Summary table:
+`output/revisionAnalyses/jackknife_n20_envPC1_summary.csv`.
+
+**Interpretation**: the model is broadly robust to any single subtribe's removal — 7 of 10 drops
+give ρ > 0.93 and every drop recovers ≥92.7% of the original p<0.001 hits at a lenient p<0.05
+threshold. The two largest subtribes (Andropogoninae, Anthistiriinae) are, unsurprisingly, the most
+influential (ρ≈0.78) — but even they retain strong rank correlation and near-complete lenient
+recall. One notable exception to a pure taxon-count story: Saccharinae (33 taxa) is nearly as
+influential as the two much larger subtribes (ρ=0.849), while Tripsacinae -- the exact same size
+(33 taxa) -- is one of the *most* stable drops (ρ=0.970). This asymmetry suggests Saccharinae
+specifically (not just "a 33-taxon subtribe") carries disproportionate weight for this signal, worth
+a mention alongside the size-driven pattern rather than folding into it.
+
+### 5b. How many transition events does each jackknife actually remove?
+
+`12J_jackknifeTransitionLoss.R`. The full-707 envPC1 ASR is computed **once** and its 46 transition
+clades (27 toH + 19 toL, spanning 149 transition-carrying tips) are then held **fixed**; each
+jackknife is scored purely structurally — what fraction of each fixed clade's tips the drop removes.
+
+**Why the ASR is not re-run per jackknife.** Re-running it conflates genuine loss of
+transition-bearing lineages with re-estimation effects: dropping taxa shifts the
+`quantile(trait, .3)`/`quantile(trait, .7)` cutoffs and the `fastAnc` CIs, so edges that previously
+missed the threshold get newly called. Scored that way, three subtribes appear to **gain**
+transitions (Oryzinae +3, Triticinae +2, Aveninae +2) despite removing *zero* transition-carrying
+tips — a pure artifact. Holding the ASR fixed removes that confound, and since nothing is
+re-detected there is no "retained vs lost" judgement to make: a clade is wiped, partially eroded,
+or untouched.
+
+| Subtribe dropped | taxa | clades wiped (toH/toL) | partial | untouched | tips lost | % of transition tips | ρ |
+|---|---|---|---|---|---|---|---|
+| Andropogoninae | 150 | **14** (8/6) | 1 | 31 | 51 | **34.2%** | 0.782 |
+| Anthistiriinae | 79 | **11** (8/3) | 1 | 34 | 35 | **23.5%** | 0.781 |
+| Sorghinae | 23 | 2 (2/0) | 0 | 44 | 6 | 4.0% | 0.976 |
+| Saccharinae | 33 | 1 (0/1) | 0 | 45 | 9 | 6.0% | 0.849 |
+| Apludinae | 22 | 1 (1/0) | 0 | 45 | 7 | 4.7% | 0.972 |
+| Ischaeminae | 23 | 1 (1/0) | 0 | 45 | 3 | 2.0% | 0.933 |
+| Tripsacinae | 33 | 1 (1/0) | 0 | 45 | 2 | 1.3% | 0.970 |
+| Aveninae | 24 | 0 | 0 | 46 | 0 | 0.0% | 0.963 |
+| Oryzinae | 35 | 0 | 0 | 46 | 0 | 0.0% | 0.993 |
+| Triticinae | 28 | 0 | 0 | 46 | 0 | 0.0% | 0.952 |
+
+Correlation with the jackknife rank correlation ρ: `tips_lost` **Pearson −0.889** (Spearman −0.607),
+`clades_wiped` −0.867 (−0.488), versus plain `taxa_dropped` −0.800 (−0.476). Output:
+`output/revisionAnalyses/jackknife_transitionLoss_fixedASR_envPC1.csv`.
+
+**Transition clades are almost perfectly nested within subtribes.** Across all 460 clade × subtribe
+combinations there is exactly **one** partially-eroded clade (Anthistiriinae); every other clade is
+either wiped outright or completely untouched. Both transition clades and subtribes are
+monophyletic, so a clade is nearly always wholly inside or wholly outside a dropped subtribe. This
+is why `clades_wiped` and `tips_lost` carry almost the same information here, and why "wiped" is the
+natural unit.
+
+**Interpretation**: transition loss predicts destabilization better than taxon loss, and the two
+biggest drops are cleanly explained — Andropogoninae and Anthistiriinae remove 34% and 24% of all
+transition-carrying tips (14 and 11 of the 46 clades outright), and have the two lowest ρ. This is
+the same mechanism analysis #2 identified independently from the power simulation: what matters is
+the number of independent transition events, not the number of tips. Two different analyses
+converging on that conclusion is worth stating explicitly in the manuscript.
+
+It also reframes, without fully resolving, the **Saccharinae** anomaly from §5. Saccharinae removes
+6.0% of transition-carrying tips — the third-most of any subtribe — so its third-lowest ρ is at
+least *rank-consistent* with the predictor, rather than the flat contradiction it appeared to be on
+taxon count alone. But the slope is still steep: Apludinae removes 4.7% and sits at ρ=0.972 versus
+Saccharinae's 0.849, and Saccharinae has the lowest strict recall of all ten drops (58.5%) despite
+wiping only a single toL clade. Its residual from a transition-loss-only fit is −0.078, more than
+double the next largest — so a Saccharinae-specific effect is real. The `12J` spread metrics below
+give the most plausible account of it.
+
+### 5b-ii. Environmental spread of each dropped subtribe
+
+Second predictor family, computed in the same `12J` loop: how much envPC1 variance each subtribe
+spans, on the model's own 707-taxon trait basis (`output/envData_707Poaceae_20250804.txt`).
+
+| Subtribe dropped | taxa | envPC1 SD | envPC1 range | eccentricity | % total SS | frac < q30 | frac > q70 | ρ |
+|---|---|---|---|---|---|---|---|---|
+| Anthistiriinae | 79 | 0.76 | 2.92 | 0.03 | 6.4 | 0.25 | 0.24 | 0.781 |
+| Andropogoninae | 150 | 0.69 | 3.55 | 0.42 | 13.6 | 0.11 | 0.40 | 0.782 |
+| **Saccharinae** | 33 | **0.96** | **3.54** | 0.41 | 4.9 | 0.42 | 0.12 | 0.849 |
+| Ischaeminae | 23 | 0.70 | 2.75 | 0.80 | 3.6 | 0.04 | 0.52 | 0.933 |
+| Triticinae | 28 | 0.67 | 3.03 | 1.30 | 8.4 | 0.82 | 0.00 | 0.952 |
+| Aveninae | 24 | 0.58 | 2.11 | 0.92 | 4.0 | 0.62 | 0.00 | 0.963 |
+| **Tripsacinae** | 33 | 0.59 | 1.84 | 0.23 | 1.8 | 0.18 | 0.27 | 0.970 |
+| Apludinae | 22 | 0.70 | 2.98 | 0.18 | 1.6 | 0.14 | 0.23 | 0.972 |
+| Sorghinae | 23 | 0.80 | 2.21 | 0.19 | 2.1 | 0.30 | 0.35 | 0.976 |
+| Oryzinae | 35 | 0.37 | 1.20 | 1.06 | 6.2 | 0.00 | 0.86 | 0.993 |
+
+Correlations with ρ, all predictors together:
+
+| Predictor | Pearson | Spearman | R² (univariate) |
+|---|---|---|---|
+| % transition tips lost | **−0.889** | −0.607 | **0.790** |
+| clades wiped | −0.867 | −0.488 | — |
+| taxa dropped | −0.800 | −0.476 | 0.641 |
+| envPC1 range | −0.698 | −0.673 | 0.488 |
+| % of total envPC1 SS | −0.641 | −0.564 | — |
+| envPC1 SD (within) | −0.488 | −0.395 | — |
+| eccentricity (\|mean − grand mean\|) | **+0.395** | +0.152 | — |
+
+**The matched pair.** Saccharinae and Tripsacinae have identical taxon count (33) *and* identical
+clades wiped (1), yet ρ 0.849 vs 0.970 and strict recall 58.5% vs 85.5%. What separates them is
+environmental spread: Saccharinae has the **highest within-subtribe envPC1 SD of all ten** (0.96 vs
+0.59) and nearly **twice** the range (3.54 vs 1.84) — its range essentially matches Andropogoninae's
+(3.55) on a fifth of the taxa. That is the cleanest available explanation for the §5 anomaly:
+Saccharinae is the most environmentally heterogeneous clade in the set, so removing it costs more
+contrast than its size or transition count implies.
+
+**Spread does not replace transition loss as the global predictor**, though. Univariate R² is 0.488
+for range vs 0.790 for transition loss; adding range to transition loss lifts R² to 0.851 but at
+p=0.133 with n=10, which is suggestive rather than established. Report it as the explanation for the
+Saccharinae residual specifically, not as a second confirmed main effect.
+
+**Eccentricity runs the opposite way** (r = **+0.395**): subtribes whose mean envPC1 sits far from
+the grand mean are *more* stable to drop, not less. The threshold fractions show why — Oryzinae is
+0% below q30 / 86% above q70 and Triticinae is 82% / 0%, so both are environmentally extreme but
+sit wholly on one side of the transition thresholds and therefore generate almost no within-clade
+transitions. Environmental **extremeness** and environmental **heterogeneity** are distinct
+properties with opposite consequences here, and the manuscript should keep them separate rather
+than collapsing both into "environmentally unusual".
+
+---
+
+## 6. ESM2 zero-shot mutagenesis validation (arabidopsis + maize)
+
+Integrated from the standalone `protein_LLMscoring_pkg` (all 46 files verified against its
+shipped `MD5SUMS` before copying). Validates the ESM2 zero-shot score — the `scaledESM`
+predictor used by the stage-08 per-OG model — by asking whether it separates deleterious from
+neutral missense mutants relative to their wild-type protein. The revision extends the original
+arabidopsis benchmark to a small, **experimentally validated maize** set, showing the score works
+equally well on a second species.
+
+| dataset | genes | deleterious | neutral | PR AUC | ROC AUC |
+|---|---|---|---|---|---|
+| arabidopsis (TAIR10 subset) | 996 | 2,906 | 1,574 | 0.923 | 0.862 |
+| maize (B73v5, experimentally validated) | 35 | 54 | 53 | 0.956 | 0.965 |
+
+Overlay figure: `output/revisionAnalyses/mutagenesisValidation/figure/At_vs_maize_PR_ROC.png`.
+
+**Scripts** (drivers continue the 12A-12F series; reusable workers live in `src/`):
+
+| Script | Role |
+|---|---|
+| `notebook/12_revisionAnalyses/12G_buildDeleteriousSet.py` | maize: WT + deleterious FASTA from the validated mutation table, with a per-mutation validation report |
+| `notebook/12_revisionAnalyses/12H_fetchHapmapRegions.sh` | maize: download HapMap3.2.1 282-panel VCFs, extract the 35 gene regions |
+| `notebook/12_revisionAnalyses/12I_buildNeutralSet.py` | maize: pick common missense SNPs as the neutral set, assemble the final FASTA |
+| `src/4_ESM_logits.py` | step 1: per-residue ESM2 probabilities → `.npz` (**already in this repo, byte-identical to the package copy — not duplicated**) |
+| `src/10_logit2zeroShot_MutagenesisValidation.R` | step 2: `.npz` → per-sequence zero-shot score (see the divergence note below) |
+| `src/mutagenesisValidation_visualization.R` | step 3: gene-level contrast, PR/ROC, figures, tables |
+| `src/mutagenesisValidation_compareDatasets.R` | overlay PR/ROC of several datasets on one figure |
+
+**Divergence from the pipeline's own `src/10_logit2zeroShot.R` — read before reusing either.**
+The benchmark copy is a hardened rewrite of the same script and is *not* a drop-in replacement.
+Both are kept deliberately: `src/10_logit2zeroShot.R` is the provenance record for the published
+stage-07 → stage-08 results and stays frozen; the `_MutagenesisValidation` copy is what this
+benchmark runs. Differences:
+
+| | `10_logit2zeroShot.R` (pipeline) | `10_logit2zeroShot_MutagenesisValidation.R` |
+|---|---|---|
+| logit ↔ sequence matching | positional (`testfasta[[j]]`) | **by name** (`seqByID[[seqID]]`) |
+| gene/group key for z-scaling | hardcoded split on `":"` | `groupRegex` 4th arg, default `"_\| "` |
+| output `row.names` | `TRUE` | `FALSE` |
+| `RETICULATE_PYTHON` | hardcoded `/usr/bin/python` | overridable via env var |
+
+The grouping difference is the load-bearing one: stage-07 OG seqIDs look like
+`OG0006571:10wheat_assembly_jagger:0`, so the pipeline's `":"` split yields the orthogroup, while
+the benchmark default would yield `OG0006571:10wheat`. Swapping the files without passing
+`groupRegex=":"` would silently corrupt the `scaledESM` predictor. **Open item:** the
+positional-vs-name matching difference is a latent correctness question for the pipeline copy, not
+just a style change — if `4_ESM_logits.py`'s npz key order ever differs from the input FASTA record
+order, the pipeline version scores sequences against the wrong protein. Worth checking against real
+stage-07 inputs; tracked separately from this integration.
+
+**Environment**: `envs/environment-mutagenesisValidation-full.yml` (full conda export of the tested
+`pytorch-2-1` env), with minimal pins in `envs/requirements-mutagenesisValidation-{python,R}.txt`
+(torch 2.1.1, transformers 4.40.0, biopython 1.83, numpy 1.26.4; R needs reticulate, Biostrings,
+limma, PRROC). Kept as a separate env rather than merged into `environment-py.yml` — these pins are
+specific to the benchmark and merging risks disturbing a working solve. GPU helps only step 1.
+
+**What is and isn't tracked in git** (see `.gitignore`'s 12G-12I block and `DATA.md`):
+the ESM2 logit `.npz` files (259 MB arabidopsis, 6.3 MB maize) and the large public B73v5
+references (30 MB peptide FASTA, 12 MB GFF3) are **not** tracked. The zero-shot score tables **are**,
+so steps 3+ (figures, PR/ROC) reproduce from a clean clone without a GPU or the npz. The HapMap
+region extract is tracked because regenerating it means downloading 5.75 GB of VCFs.
+
+**Known caveats** (carried over from the source package, unchanged): 6 of the 35 maize genes have
+no eligible neutral site (`Zm00001eb153340, 190120, 194210, 215710, 234730, 373430`), so their
+deleterious mutants enter PR/ROC without a within-gene neutral comparator; `Zm00001eb336930` drew
+two SNPs in the same codon (N77S, N77D); and with 107 mutants total the maize AUCs have wide
+confidence intervals. `Zm00001eb252380_P001 A139T` is applied as **A140T** (an off-by-one in the
+source table) and flagged `OK_CORRECTED_FROM_A139T` in `maize_deleterious_validation.txt`.
+
+---
+
+## 7. Per-assembly statistics (12K)
+
+`12K_assemblyStats.sh` (driver, GNU parallel) + `12K_assemblyStats.py` (one assembly → one row).
+Output: `output/assemblyStats/assemblyStats_727.tsv` (tracked in git), one row per file in
+`data/assemblies/`, keyed by `assemblyID` = filename minus `.fa.gz`. All 727 assemblies are
+included, so it joins to any metadata version (687 match `Poaceae_metadata_highErrorFiltered_2025.10.08.tsv`;
+the other 40 were filtered out upstream). Metadata already carries BUSCO, so this adds contiguity
+and composition only.
+
+| Column group | Columns | Definition |
+|---|---|---|
+| As deposited | `num_seqs`, `total_length`, `min/mean/max_length`, `N50`, `L50`, `N90`, `L90` | over sequences as they appear in the FASTA; L50 = number of sequences reaching half the total length |
+| Composition | `GC_pct`, `N_count`, `N_pct` | GC over A/C/G/T only, so gaps and IUPAC codes don't dilute it |
+| Contig-level | `contig_count`, `contig_N50/L50/N90/L90` | sequences split at runs of ≥10 N (QUAST convention), gaps removed; equals the as-deposited stats for ungapped assemblies |
+| Size bins | `num_seqs_ge1kb`, `pct_length_ge1kb`, `num_seqs_ge10kb`, `pct_length_ge10kb` | count, and % of total length, in sequences ≥1 kb / ≥10 kb |
+
+No minimum-length filter (short-read assemblies already carry megahit's 200 bp floor).
+
+**Why contig-level matters here**: the set spans short-read contig assemblies (e.g. AN21TNTL0074:
+5.96 M contigs, N50 471 bp, no Ns) and gap-scaffolded / chromosome-level ones (212 of 727 contain
+Ns, 210 have ≥10-N gaps). Scaffold N50 on the latter mostly measures how far scaffolding got — e.g.
+*B. distachyon* Tek-4 is 8 pseudomolecules with N50 132 Mb but contig N50 8.8 kb. Use
+`contig_N50` for cross-technology comparisons.
+
+**Validation**: totals, counts, N50 and N counts match `seqkit stats` exactly. Two deliberate
+differences — `GC_pct` excludes Ns from the denominator (seqkit's doesn't), and seqkit's
+`N50_num` column is *not* L50 (for AN21TNTL0074 it reports 13,357, but 13,357 contigs capped at
+58.7 kb cannot reach half of 2.78 Gb; the correct L50 is 1,026,425). All structural invariants hold
+across 727 rows (contig N50 ≤ N50, contig count ≥ sequence count, N90 ≤ N50, L90 ≥ L50, no NAs).
+Runtime: 135 min at 8 parallel jobs over 504 GB; ≤2.5 GB RAM per job.
+
+**Finding — high GC flags contamination.** Grass nuclear genomes sit around 44–47% GC; 23
+assemblies exceed 50%, up to 62.1% (AN21TNTL0344, *Schizachyrium nodulosum*). All are Illumina
+short-read, mostly Andropogoneae. Against the independent read-level QC in `fullQCData_20240819.txt`
+(412 short-read assemblies joinable), GC tracks bacterial read fraction (Spearman ρ = +0.34), and the
+median bacterial fraction rises sharply by GC bin: 0.69 (<46%) → 0.89 (46–50%) → 5.25 (50–54%,
+n=13) → **18.41 (>54%, n=9)**. **22 of the 23 are in the model set** (all 22 are among the 686 modeled taxa).
+
+Whether that biases the association results is an open question, not established. Bacterial
+contigs shouldn't yield grass OG hits, so feature *values* are probably unaffected; the more
+plausible risk is **spurious absence calls** — a contaminated, fragmented grass fraction fails to
+recover a gene that is actually present, inflating `PAV = 0`. Suggestive case: two of the eight
+`PAV = 0` taxa behind OG0018915's PAV term are on this list (AN22TNTL148, and AN21TS29 with N50
+403 bp). A direct test would be to rerun a subset of models excluding these 22, or to check whether
+they carry disproportionately many PAV = 0 calls genome-wide.
+
+Other extremes worth knowing before adding columns to metadata: `N_pct` up to 65.5% (AANG_UGA4,
+not in filtered metadata) and 40.1% (Msac_v3); `total_length` up to 28.9 Gb (SRR23951516, not in
+filtered metadata) and 16.6 Gb for the short-read *Lolium arundinaceum* assembly (37.3 M contigs,
+N50 439 bp).
+
+---
+
+## 8. Are gene hits on contigs long enough to hold the gene? (12L)
+
+**Question**: short-read contig N50 is low (median 1.2 kb, §7). Does that mean the gene space
+is fragmented, or is N50 dominated by intergenic/repeat fragments?
+
+`12L_hitContigLength.sh` (driver, GNU parallel) + `12L_hitContigLength.py` (one assembly) record,
+for every miniprot mRNA hit in `output/orthofinderMiniProt{,_additionalOGs}/`, its host contig
+(split at ≥10 N, same rule as 12K), the distance to either contig end, and the query coverage
+against `poaceaeHelixerOG_ancSeq_gapRemoved_v2_20240909.fa`. Per-hit tables (531 MB, gitignored)
+go to `output/hitContigLength/perHit/`. `12L_hitContigLength_summary.R` then restricts to rank-1
+hits of OGs tested in envPC1–3, and writes `output/hitContigLength/hitContigLength_727.tsv`
+(tracked; one row per assembly, joins to `assemblyStats_727.tsv`) plus figures. Runtime was
+119 min at 8 jobs.
+
+"Host contig longer than the hit" is true by construction, so each hit is scored against an
+external yardstick:
+
+| Metric | Definition |
+|---|---|
+| expected gene span | per OG, median genomic span (introns included) of full-length (q_cov ≥ 0.9), gap-free rank-1 hits in long-read assemblies |
+| `pct_holds_gene` | host contig ≥ expected span of that OG |
+| `pct_edge` | hit ends within 50 bp of a contig end |
+| `pct_edge_truncated` | edge and q_cov < 0.9, i.e. cut off by the assembly break |
+
+Long vs short read comes from the metadata `technology` field (PacBio/Nanopore → long-read).
+Some NCBI Illumina assemblies are scaffolded and behave like long-read ones. Two "long-read"
+entries that behave like short-read assemblies (Bruz, SRR23951516) are among the 21 taxa the
+models never saw (see the 686 note at the top), so they don't affect the summary below.
+
+Results are restricted to the **686 taxa the models were actually fit on**. The summary script
+takes the 707 trait-table taxa and intersects them with the assemblies in the master table.
+
+**Gene length**: 19,078 model OGs have an expected span. Median 2.3 kb (10th–90th percentile
+0.5–5.8 kb; 99th 14.4 kb). The median coding length is 1.1 kb, so the median span/CDS ratio is
+1.9.
+
+**Results, 686 model taxa** (per-assembly median [10th–90th percentile]):
+
+| | short-read (516) | long-read (170) |
+|---|---|---|
+| contig N50, all contigs | 1.2 kb [0.5–12 kb] | 8.2 Mb |
+| median length of gene-bearing contigs | **7.5 kb** [3.3–28 kb] | 8.1 Mb |
+| % hits on a contig ≥ expected gene span | **88%** [66–99%] | 100% |
+| % hits edge-truncated | **15.5%** [1.1–35%] | 0% |
+| % hits with q_cov ≥ 0.9 | 72% [49–92%] | 97% |
+
+Pooled over 9.8 M short-read rank-1 hits, 85.3% sit on a contig long enough for the full gene
+and 16.9% are edge-truncated. Over 3.2 M long-read hits the figures are 100.0% and 0.1%.
+
+**Truncation varies between assemblies, and N50 barely predicts it.** Among short-read assemblies,
+158 are at ≤5%, 51 at 5–10%, 93 at 10–20%, 98 at 20–30%, 98 at 30–40% and 18 above 40%. The
+20–100% band is PanAnd/SRA almost entirely (213 of 214). The truncation rate tracks BUSCO
+fragmented count (Spearman ρ = **+0.93**) and gene-bearing contig length (ρ = −0.89) much more
+closely than contig N50 (ρ = −0.41). So it measures gene-space quality in agreement with an
+independent metric, and it is not an artifact of the 50 bp / 0.9 thresholds.
+
+**Truncation rises with gene length**, so contig breaks inside long genes explain it, not
+gene space that is missing from the assembly (`hitContigLength_byGeneSpan.tsv`):
+
+| expected span | ≤1 kb | 1–2 kb | 2–4 kb | 4–8 kb | 8–16 kb | >16 kb |
+|---|---|---|---|---|---|---|
+| short-read: % on contig ≥ span | 98.1 | 93.1 | 84.3 | 70.9 | 51.6 | 26.6 |
+| short-read: % edge-truncated | 7.7 | 15.2 | 19.3 | 23.7 | 27.5 | 24.5 |
+| long-read: % edge-truncated | 0.0 | 0.1 | 0.1 | 0.1 | 0.1 | 0.2 |
+
+**Conclusion**: contig N50 understates short-read gene-space quality. Gene-bearing contigs are
+about 6× longer than N50, and 85% of hits sit on a contig longer than the gene's expected span.
+The remaining truncation is real (17% of hits). It is concentrated in long genes and in a
+subset of assemblies. A truncated hit is still called present, so PAV calls are robust. What it
+reduces is query coverage, which the model carries as the `PAV:queryCov` covariate. A possible
+sensitivity check, not run: refit the top candidates without the 116 short-read model taxa
+above 30% truncation.
+
+Figures (`output/hitContigLength/figure/`, gitignored):
+- `12L_hitContig_vs_contigN50.png`
+- `12L_hitContig_vs_contigN50_shortRead.png`: the 467 ungapped short-read model taxa, with
+  expected-span percentiles marked. Median contig N50 is 1.0 kb and the median gene-bearing contig
+  is 6.8 kb, about 5× longer. The median gene-bearing contig exceeds the median gene span (2.3 kb)
+  in 463 of 467 assemblies, the 90th percentile (5.8 kb) in 271, and the 99th (14.4 kb) in 94.
+- `12L_hitContig_metrics.png`
+- `12L_edgeTruncated_hist.png`
+- `12L_expectedSpan_hist.png`
+- `12L_edgeTruncated_byGeneSpan.png`
+
+---
+
+## 9. Corrected high-confidence candidate count: 17 → 27
+
+**This changes a reported result.** The submitted manuscript reports 17 high-confidence
+candidate OGs. The correct number is **27**.
+
+**The three-layer filter** (`notebook/11_candidateOGInvestigation/11A_candidateOGInvestigation.ipynb`).
+A high-confidence candidate must pass all three layers:
+- empirical permulation p ≤ 0.001 in the phylogenetic mixed model (the 330);
+- overlap with a-priori stress-responsive DE genes;
+- significant RELAX in either direction of that envPC axis (−log10 p > 3): cold/warm for envPC1,
+  drought/wet for envPC2, sand/clay for envPC3.
+
+**The error.** For envPC2 and envPC3, the RELAX layer referenced a nonexistent column on the wrong
+data frame (`hyphy_drought$wet`, `hyphy_clay$wet`). R silently evaluates that to `NULL`, so the
+layer kept only the drought- and sand-significant OGs. Wet- and clay-significant OGs were dropped.
+envPC1 used the correct pattern and was unaffected. Fixed in `57cd4e1` (2026-07-30).
+`9d746f6` writes the result to `output/finalCandidateOGs_summary.txt` and corrects the Fig 6A
+Sankey counts.
+
+| envPC | Phylogenetic candidates also RELAX-significant (Fig 6A selection column) | Final candidates, original | Final candidates, corrected |
+|---|---|---|---|
+| envPC1 | 30 | 10 | 10 |
+| envPC2 | 19 → 28 | 6 | **10** |
+| envPC3 | 5 → 13 | 1 | **7** |
+| **Total** | | **17** | **27** |
+
+**The 10 restored OGs**, all of which pass on the previously dropped direction only (RELAX
+−log10 p and k for that direction; k < 1 = relaxed, k > 1 = intensified selection):
+
+| envPC | OG | Maize | Rice | emp_p | RELAX (restored direction) | A-priori DE |
+|---|---|---|---|---|---|---|
+| envPC2 | OG0000650 | Zm00001eb055490 | Os03t0720300 | 0 | wet 3.09, k = 1.18 | cold, heat |
+| envPC2 | OG0006551 | Zm00001eb192050 | Os02t0805200 | 0 | wet 3.53, k = 0.79 | heat, drought |
+| envPC2 | OG0016407 | Zm00001eb139920 | Os01t0750300 | 0 | wet 6.05, k = 1.28 | waterlogging |
+| envPC2 | OG0024206 | Zm00001eb308860 | Os07t0280200 | 0 | wet 3.52, k = 0.82 | heat |
+| envPC3 | OG0002496 | Zm00001eb014980 | Os03t0311600 | 0 | clay 3.78, k = 0.77 | cold |
+| envPC3 | OG0002543 | Zm00001eb139420 | Os12t0164600 | 0 | clay 5.33, k = 0.85 | cold, heat |
+| envPC3 | OG0004864 | Zm00001eb195080 | Os12t0107700 | 0.001 | clay 6.75, k = 0.90 | drought, waterlogging |
+| envPC3 | OG0006771 | Zm00001eb155630 | Os01t0702300 | 0.001 | clay 6.89, k = 0.82 | drought |
+| envPC3 | OG0010994 | Zm00001eb415960 | Os08t0156600 | 0.001 | clay 4.61, k = 0.74 | cold, waterlogging |
+| envPC3 | OG0011610 | Zm00001eb189890 | Os02t0729400 | 0.001 | clay 3.37, k = 0.86 | cold, heat |
+
+The 17 original candidates are unchanged. The fix only adds OGs.
+
+**Downstream.**
+- *Updated already:*
+  - `output/finalCandidateOGs_summary.txt` (27 rows).
+  - Fig 6A Sankey (`src/fig6a_sankey_v2.py`). Its selection-shift column went from 30/19/5 to
+    30/28/13 and its expression column from 10/6/1 to 10/10/7.
+  - The gene-lookup dashboard (`p_phyloGWASGeneLookup`), which reads the summary table.
+- *Not affected:* revision analyses #1–#8. They evaluate the 330 empirical-p candidates or raw
+  model p-values, which sit upstream of the RELAX layer.
+- *Still to do:* update the manuscript text, figure legends and supplementary tables that cite
+  17 candidates, or 6/1 for envPC2/envPC3. Any per-candidate discussion should also cover the
+  10 restored OGs.
+
+---
+
+## 10. Full-set ASR and power simulation on the 687-taxon tree
+
+**Why.** The 20 trait-table taxa without gene data (the 21 listed at the top, minus the outgroup)
+were removed upstream for extensive premature stop codons, which are likely sequencing artifacts.
+Keeping them in the tree, the ASR and the power simulation meant defending 20 tips the models
+never use. The full-set basis is now the 686 modelled taxa plus the rooting outgroup ASM1935983v1
+(*Pharus latifolius*), i.e. the 687 assemblies in `data/Poaceae_metadata_highErrorFiltered_2025.10.08.tsv`.
+
+**Tree.** The tree is pruned, not rebuilt: `keep.tip()` on the rooted ASTRAL tree, then
+`multi2di()`. That gives the induced subtree of the 687 taxa. Pruning leaves the shared path
+length between any two remaining tips unchanged, so the existing
+`phyloK_728Poaceae_astral_20250407.txt` stays valid as is. Written by 06B to
+`output/powerSimulation/tree.nwk` (687 tips, binary, rooted). The 22 highlighted Fig 1A clades all
+survive pruning with unchanged membership apart from the dropped tips. Seven lose tips:
+Andropogoninae 146→145, Sorghinae 26→25, Chrysopogoninae 16→13, Cenchrinae 12→11,
+Eleusininae 12→10, Triticinae 27→26, Oryzinae 35→31. Eight species leave the data set entirely,
+so the 687 assemblies represent **561 species** (taxonomy CSV `Species`, same method as the 569
+for the 707).
+
+**ASR transitions** (06B, cutoffs at the 30th/70th percentiles of the 687 taxa;
+`output/powerSimulation/realTransition.json`). The cutoffs move by ≤ 0.02 from the 707 values,
+and using the 707 cutoffs instead changes totals by at most one.
+
+| envPC | 707 tips (toH / toL) | 687 tips (toH / toL) | 707 clades recovered in the 687 tree (Jaccard ≥ 0.5) |
+|---|---|---|---|
+| envPC1 | 27 / 19 (46) | 26 / 17 (**43**) | 42 of 46 |
+| envPC2 | 21 / 22 (43) | 20 / 23 (**43**) | 42 of 43 |
+| envPC3 | 27 / 30 (57) | 24 / 30 (**54**) | 54 of 57 |
+
+**Power simulation.** `src/powerSimulation_XY_revised.R` was run unchanged in method on the 687
+tree and the 43 envPC1 transitions. The four scenarios ran as separate jobs (`POWERSIM_SCENARIOS`;
+seeds identical to a single full run). Results are in
+`output/revisionAnalyses/powerSimulation_687/<scenario>/power_df_merged.csv`. The runs were done
+on 2026-10-07; logs are `log/powerSim687_*.log`. One bug was fixed in the process: the ½× random
+scenario now uses `round(n_trans × 0.5)` = 22 branches. With 43 transitions the unrounded 21.5
+would have made the node sampler draw every independent node it could find. The 707 run (23
+branches) was unaffected.
+
+Every point has 500 valid replicates. Type I error at θ = 0 is 0.046–0.058 for the empirical
+scenario and 0.022–0.064 across the random ones.
+
+θ needed for 80% power (linear interpolation), 687 tree (707 tree in brackets):
+
+| Scenario (branches) | 100% | 80% | 50% | 30% |
+|---|---|---|---|---|
+| Empirical (43) | 0.137 (0.138) | 0.176 (0.174) | 0.275 (0.276) | 0.471 (0.481) |
+| Random ½× (22) | 0.294 (0.288) | 0.371 (0.379) | not reached | not reached |
+| Random 1× (43) | 0.178 (0.172) | 0.232 (0.214) | 0.358 (0.347) | not reached |
+| Random 2× (86) | 0.127 (0.122) | 0.147 (0.146) | 0.248 (0.237) | 0.413 (0.404) |
+
+"Not reached" means power stays below 0.8 up to θ = 0.5. Point by point, power differs from the
+707 run by at most 0.06–0.08 in any scenario, within simulation noise at 500 replicates. **No
+conclusion of the power analysis changes.** At the empirical scenario's co-shift counts
+(43 / 34 / 22 / 13 branches at 100 / 80 / 50 / 30% convergence), the empirical scenario remains
+more powerful than random 1× at the same branch count.
+
+**Figures** (`output/revisionAnalyses/powerSimulation/`):
+- `Fig_powerSim_vertical_17.4cm.{png,pdf}`: new Fig 2B–C, a toy-tree illustration plus the
+  empirical power curve, drawn by `12M_powerSimIllustration.R` and `12M_powerCurve.R`.
+- `FigS_powerCurve_byScenario_17.4cm.{png,pdf}`: supplementary figure, with the four scenarios as
+  facets and convergence levels as lines. It replaces the convergence-faceted `Fig2_revised.png`.
+
+**Still on the 707-tip baseline.** These compare against the full-set ASR or power run and were
+not rerun:
+- #2, the Andropogoneae power comparison (the baseline differs by ≤ 0.08, see above);
+- #4, the one-tip-per-species ASR comparison;
+- #5b, transition loss per jackknife (46 envPC1 clades);
+- 12F, power vs transition count.
+
+Each is a direct rerun against the new tree if a fully consistent set is wanted. The ASR and
+transition numbers in Fig 1 and the main text should now use the 687 counts above.
+
+---
+
+## Open items before implementation starts
+
+- Confirm the FPKM > 1 detectability threshold for tissue-expression breadth (#3), or supply a
+  preferred alternative.
+- Decide whether `AN21TNTL0178` should be added to the taxonomy CSV (with its correct
+  tribe/subtribe) before these analyses run, or left excluded as the default above.

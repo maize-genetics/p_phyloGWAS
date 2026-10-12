@@ -28,10 +28,15 @@ library(parallel)
 
 PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
 
-TREE_PATH   <- file.path(PHYLOGWAS_ROOT, "output/powerSimulation/tree.nwk")
-KMAT_PATH   <- file.path(PHYLOGWAS_ROOT, "output/phyloK_728Poaceae_astral_20250407.txt")
-TRANS_PATH  <- file.path(PHYLOGWAS_ROOT, "output/powerSimulation/realTransition.json")
-OUTPUT_DIR  <- file.path(PHYLOGWAS_ROOT, "output/figure")
+# Paths and core count are overridable via env vars (default = original hardcoded
+# values, so this script's normal invocation from 08E_power_simulation.sh is
+# unaffected) -- lets a revision-analysis rerun (e.g. on an Andropogoneae-only
+# tree) point at different inputs/outputs and a different core budget without
+# touching this file again.
+TREE_PATH   <- Sys.getenv("POWERSIM_TREE_PATH", unset = file.path(PHYLOGWAS_ROOT, "output/powerSimulation/tree.nwk"))
+KMAT_PATH   <- Sys.getenv("POWERSIM_KMAT_PATH", unset = file.path(PHYLOGWAS_ROOT, "output/phyloK_728Poaceae_astral_20250407.txt"))
+TRANS_PATH  <- Sys.getenv("POWERSIM_TRANS_PATH", unset = file.path(PHYLOGWAS_ROOT, "output/powerSimulation/realTransition.json"))
+OUTPUT_DIR  <- Sys.getenv("POWERSIM_OUTPUT_DIR", unset = file.path(PHYLOGWAS_ROOT, "output/figure"))
 
 # Simulation parameters
 sigma2_Y      <- 0.5
@@ -44,7 +49,7 @@ beta_range    <- seq(0, 0.5, by = 0.05)
 n_X           <- 1   # X traits per replicate
 n_sims        <- 500    # simulation replicates per (beta, scenario, prop)
 alpha         <- 0.05
-n_cores       <- 10
+n_cores       <- as.integer(Sys.getenv("N_CORES", unset = "10"))
 MASTER_SEED   <- 42
 
 # =============================================================================
@@ -132,8 +137,21 @@ scenarios <- list(
   "empirical transition"   = list(type = "fixed",  nodes = transition_nodes),
   "random transition - 1x" = list(type = "random", n = n_trans),
   "random transition - 2x" = list(type = "random", n = n_trans * 2),
-  "random transition - 1/2x" = list(type = "random", n = n_trans * .5)
+  "random transition - 1/2x" = list(type = "random", n = round(n_trans * .5))
 )
+# round(): sample_independent_nodes() stops at length(selected) == n, so a fractional
+# n (e.g. 21.5 for 43 transitions) would never stop and would draw every independent node.
+
+# Optional: run only some scenarios (comma-separated names), e.g. to split the work
+# across parallel jobs. Seeds are derived from each scenario's position in the full
+# list above, so a subset run reproduces exactly what the full run would give.
+scenario_order <- names(scenarios)
+run_scenarios  <- Sys.getenv("POWERSIM_SCENARIOS", unset = "")
+if (nzchar(run_scenarios)) {
+  run_scenarios <- trimws(strsplit(run_scenarios, ",")[[1]])
+  stopifnot(all(run_scenarios %in% scenario_order))
+  scenarios <- scenarios[run_scenarios]
+}
 
 # =============================================================================
 # 4. SIMULATION FUNCTIONS  (sigma2_resid now uses config value)
@@ -262,7 +280,7 @@ for (sc_name in names(scenarios)) {
     # Derive a deterministic seed for this (scenario, prop) combination so
     # results are reproducible across runs without fixing a global state
     combo_seed <- MASTER_SEED +
-                  match(sc_name, names(scenarios)) * 100 + pi * 10
+                  match(sc_name, scenario_order) * 100 + pi * 10
 
     set.seed(combo_seed)   # seeds the L'Ecuyer streams for child processes
 

@@ -27,6 +27,15 @@ Every file listed here is small enough (~8.7 MB combined) to just live in this r
 `data/busco_gene_OG_20250828.txt`, `data/maize_busco.tsv`,
 `output/poaceaeHelixerOG_filtered_20250331.txt`.
 
+The ESM2 mutagenesis-validation benchmark (revision analysis 12G-12I, see its own section below)
+adds a second tracked group, ~6 MB combined: its inputs under `data/mutagenesisValidation/`
+(the validated maize mutation table, the arabidopsis benchmark FASTA, the HapMap region extract,
+and the small B73v5 index/transcript lists) plus its headline results under
+`output/revisionAnalyses/mutagenesisValidation/` (zero-shot score tables, PR/ROC + score-distribution
+figures, per-gene summaries, and the deleterious/neutral validation tables). The large pieces —
+the ESM2 logit `.npz` files and the public B73v5 peptide FASTA/GFF3 — are deliberately excluded;
+see that section for how to regenerate or re-download them.
+
 Everything else in this manifest is one of:
 - **Large T1 raw/reference data, deposited externally** — marked "external, link TBD" below
   until the author provides the actual link/DOI. Destination by category: genome assemblies →
@@ -115,3 +124,19 @@ Everything else in this manifest is one of:
 Both model weights are pulled directly from HuggingFace at runtime — no separate file to
 gather. (Software tools — RAxML, HyPhy, miniprot, ASReml-R, etc. — are tracked in
 `WORKFLOW.md`'s "Tools used across stages" table, not here; this manifest is data only.)
+
+## ESM2 mutagenesis-validation benchmark (revision analysis 12G-12I)
+
+Inputs for the ESM2 zero-shot validation described in `revision-analyses.md` §6. Integrated from
+the standalone `protein_LLMscoring_pkg`; `data/mutagenesisValidation/MD5SUMS_sourcePackage` is that
+package's shipped checksum file, kept as the provenance record for every file copied over.
+
+| Data | Path | Used by | Tier |
+|---|---|---|---|
+| Experimentally validated deleterious missense mutations (maize, B73v5 protein IDs with isoform) | `data/mutagenesisValidation/deleteriousMissenseMutationsMaize.txt` (tracked on GitHub, 1.5 KB) — the novel input for this analysis. 53/54 match the reference protein; the one exception is documented in `revision-analyses.md` §6 | 12G | T1 |
+| Arabidopsis mutant benchmark FASTA (TAIR10 subset; WT + `_neutralMut_N` / `_mut_N` records) | `data/mutagenesisValidation/At.TAIR10.subset.trainingData.fa` (tracked on GitHub, 3.9 MB) — from the 2024-06 hackathon analysis | step 1-3 (arabidopsis half) | T1 |
+| Arabidopsis gene list from the original analysis | `data/mutagenesisValidation/At_gene2mutate.txt` (tracked on GitHub, 12 KB) — not read by the pipeline, kept for provenance | — | T1 |
+| B73v5 peptide FASTA + GFF3 | `data/mutagenesisValidation/B73v5/` — **not tracked** (30 MB + 12 MB). Public MaizeGDB release `Zm-B73-REFERENCE-NAM-5.0`, annotation `Zm00001eb.1`: GFF3 from https://download.maizegdb.org/Zm-B73-REFERENCE-NAM-5.0/Zm-B73-REFERENCE-NAM-5.0_Zm00001eb.1.gff3.gz, peptide FASTA from the same release. Protein `_P###` ↔ transcript `_T###`. The small `.fai` and canonical-transcript list **are** tracked | 12G, 12I | T1 |
+| B73v5 genome FASTA (2.2 GB) | **not shipped and not tracked** — needed only by `12I`. Same MaizeGDB release; symlink your copy into `data/mutagenesisValidation/B73v5/` (the tracked `.fai` matches it) | 12I | T1 |
+| HapMap3.2.1 282-panel VCF, 35-gene region extract | `data/mutagenesisValidation/hapmap282/hapmap282_targetGenes.vcf.gz` (+ `.tbi`) — tracked on GitHub (789 KB) despite being derived, because regenerating it via `12H` means downloading 5.75 GB of per-chromosome VCFs. Source: HapMap3.2.1, 282 association panel ([Bukowski et al. 2018, *GigaScience*](https://doi.org/10.1093/gigascience/gix134)), lifted to B73v5 and SnpEff-annotated by MaizeGDB (Panzea_HapMap3.2.1_282, 277 samples): https://iastate.app.box.com/s/9edkm5f51q88ltzrb0hxaz4p36fdsr7q/folder/364949363629 — Box file ids are recorded in `12H_fetchHapmapRegions.sh` | 12I | T1 |
+| ESM2 per-residue logits (`.npz`) | `output/revisionAnalyses/mutagenesisValidation/{,maize/}*_logits.npz` — **not tracked** (259 MB arabidopsis, 6.3 MB maize). Regenerate with `src/4_ESM_logits.py` (GPU recommended; the 142-sequence maize set runs on CPU). The downstream zero-shot score tables **are** tracked, so figures/PR-ROC reproduce without these | step 2 | T2 |
