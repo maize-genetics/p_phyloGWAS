@@ -137,8 +137,21 @@ scenarios <- list(
   "empirical transition"   = list(type = "fixed",  nodes = transition_nodes),
   "random transition - 1x" = list(type = "random", n = n_trans),
   "random transition - 2x" = list(type = "random", n = n_trans * 2),
-  "random transition - 1/2x" = list(type = "random", n = n_trans * .5)
+  "random transition - 1/2x" = list(type = "random", n = round(n_trans * .5))
 )
+# round(): sample_independent_nodes() stops at length(selected) == n, so a fractional
+# n (e.g. 21.5 for 43 transitions) would never stop and would draw every independent node.
+
+# Optional: run only some scenarios (comma-separated names), e.g. to split the work
+# across parallel jobs. Seeds are derived from each scenario's position in the full
+# list above, so a subset run reproduces exactly what the full run would give.
+scenario_order <- names(scenarios)
+run_scenarios  <- Sys.getenv("POWERSIM_SCENARIOS", unset = "")
+if (nzchar(run_scenarios)) {
+  run_scenarios <- trimws(strsplit(run_scenarios, ",")[[1]])
+  stopifnot(all(run_scenarios %in% scenario_order))
+  scenarios <- scenarios[run_scenarios]
+}
 
 # =============================================================================
 # 4. SIMULATION FUNCTIONS  (sigma2_resid now uses config value)
@@ -267,7 +280,7 @@ for (sc_name in names(scenarios)) {
     # Derive a deterministic seed for this (scenario, prop) combination so
     # results are reproducible across runs without fixing a global state
     combo_seed <- MASTER_SEED +
-                  match(sc_name, names(scenarios)) * 100 + pi * 10
+                  match(sc_name, scenario_order) * 100 + pi * 10
 
     set.seed(combo_seed)   # seeds the L'Ecuyer streams for child processes
 

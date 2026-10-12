@@ -1,7 +1,9 @@
 # Power curve for the empirical-transition scenario, one line per convergence level
 # (redraw of Fig2_empiricalTransition_byConvergence, without the title).
 #
-# Input: output/figure/power_df_merged.csv, written by src/powerSimulation_XY_revised.R.
+# Input: the 687-tip power simulation (src/powerSimulation_XY_revised.R run per scenario
+# into output/revisionAnalyses/powerSimulation_687/<scenario>/power_df_merged.csv; see
+# power_data() below) and output/powerSimulation/realTransition.json (687-tip tree).
 # Defines power_curve_plot(), which 12M_powerSimIllustration.R sources to build the
 # combined figure (Fig 2B-C), and power_curve_by_scenario() for the supplementary
 # figure. Run directly, it saves the standalone curve and the supplementary figure.
@@ -12,14 +14,26 @@ suppressMessages({library(ggplot2)})
 
 PHYLOGWAS_ROOT <- Sys.getenv("PHYLOGWAS_ROOT", unset = "/workdir/sh2246/p_phyloGWAS")
 
+# Power results on the 687-tip tree: one power_df_merged.csv per scenario job.
+POWER_DIR <- file.path(PHYLOGWAS_ROOT, "output/revisionAnalyses/powerSimulation_687")
+power_data <- function(scenarios = NULL) {
+  f <- list.files(POWER_DIR, pattern = "^power_df_merged\\.csv$", recursive = TRUE, full.names = TRUE)
+  d <- do.call(rbind, lapply(f, read.csv))
+  if (!is.null(scenarios)) {
+    miss <- setdiff(scenarios, d$scenario)
+    if (length(miss)) stop("power results missing for: ", paste(miss, collapse = ", "))
+    d <- d[d$scenario %in% scenarios, ]
+  }
+  d
+}
+
 # Sequential (viridis) colours: convergence is ordered, so lightness encodes it.
 CONV_PAL <- c("100%" = "#440154", "80%" = "#3B528B", "50%" = "#21918C", "30%" = "#5EC962")
 
 # base_size in pt. legend_inside puts the legend in the empty lower-right corner,
 # which saves width when the panel sits next to another one.
 power_curve_plot <- function(base_size = 13, legend_inside = FALSE, title = NULL) {
-  d <- read.csv(file.path(PHYLOGWAS_ROOT, "output/figure/power_df_merged.csv"))
-  e <- d[d$scenario == "empirical transition", ]
+  e <- power_data("empirical transition")
   e$convergence <- factor(e$convergence, levels = names(CONV_PAL))
   k <- base_size / 13                       # scale line and point sizes with the text
   # Legend: convergence level and the number of co-shift branches it implies, i.e.
@@ -52,7 +66,8 @@ power_curve_plot <- function(base_size = 13, legend_inside = FALSE, title = NULL
 # as lines (same style as power_curve_plot). Each facet is labelled with the number
 # of transition branches its scenario draws; co-shift branches = that x convergence.
 power_curve_by_scenario <- function(base_size = 8) {
-  d <- read.csv(file.path(PHYLOGWAS_ROOT, "output/figure/power_df_merged.csv"))
+  d <- power_data(c("empirical transition", "random transition - 1/2x",
+                    "random transition - 1x", "random transition - 2x"))
   d$convergence <- factor(d$convergence, levels = names(CONV_PAL))
   n_trans <- length(unlist(rjson::fromJSON(
     file = file.path(PHYLOGWAS_ROOT, "output/powerSimulation/realTransition.json"))[[1]]))
@@ -62,6 +77,7 @@ power_curve_by_scenario <- function(base_size = 8) {
               sprintf("Random, \u00bd\u00d7 (%d branches)", round(n_trans * .5)),
               sprintf("Random, 1\u00d7 (%d branches)", n_trans),
               sprintf("Random, 2\u00d7 (%d branches)", n_trans * 2))
+  # round(n_trans * .5) matches the simulation's own rounding for the 1/2x scenario.
   d$scenario <- factor(d$scenario, levels = names(sc), labels = sc_lab)
   k <- base_size / 13
   ggplot(d, aes(beta, power, colour = convergence, fill = convergence)) +
@@ -87,8 +103,11 @@ if (sys.nframe() == 0) {
   cat("wrote", out, "\n")
   # Supplementary figure (replaces the convergence-faceted Fig2_revised layout).
   stem <- file.path(dirname(out), "FigS_powerCurve_byScenario_17.4cm")
-  ggsave(paste0(stem, ".png"), power_curve_by_scenario(), width = 17.4, height = 11, units = "cm", dpi = 600)
-  ggsave(paste0(stem, ".pdf"), power_curve_by_scenario(), width = 17.4, height = 11, units = "cm",
-         device = cairo_pdf)
-  cat("wrote", stem, "{png,pdf}\n")
+  # Needs all four scenario runs; skipped (with a message) until they are done.
+  fs <- tryCatch(power_curve_by_scenario(), error = function(e) { message("skip supplementary figure: ", conditionMessage(e)); NULL })
+  if (!is.null(fs)) {
+    ggsave(paste0(stem, ".png"), fs, width = 17.4, height = 11, units = "cm", dpi = 600)
+    ggsave(paste0(stem, ".pdf"), fs, width = 17.4, height = 11, units = "cm", device = cairo_pdf)
+    cat("wrote", stem, "{png,pdf}\n")
+  }
 }
