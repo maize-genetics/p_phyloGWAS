@@ -23,7 +23,11 @@ What the 21 do still feed:
 - the ASR and transition-node counts, which run on the trait table;
 - the power-simulation trees.
 
-So 707-tip numbers for ASR, transitions and power are correct as stated. The dropped taxa are 6
+**Update (2026-10-07):** the full-set ASR and power simulation now use the **687-taxon tree**: the
+686 modelled taxa plus the rooting outgroup ASM1935983v1. See §10. Sections that compare against
+the full-set ASR or power run (#2, #4, #5b) still use the 707-tip baseline, as noted in §10.
+
+The dropped taxa are 6
 Andropogoneae (ASM2203655v1, CPNAM-Leoti, ChrysopogonNigritanus_v1.0, Cs-A1013-Draft-PanAnd-1.0,
 Cs-KelloggPI219580-DRAFT-PanAnd-1.0, Hd-A1025-Draft-PanAnd-1.0) and 15 others: AANG_UGA4,
 ASM155179v1, ASM155180v1, ASM1935983v1, ASM2160514v1, ASM3027231v1, ASM3189477v1, ASM980554v1,
@@ -124,7 +128,9 @@ tree. Only envPC1 is computed, since `powerSimulation_XY_revised.R` reads only
 and `andropogoneae_tree.nwk` (the 484-tip pruned tree).
 
 **Results** — power difference (Andropogoneae − full) at the 100% convergence level, across the
-full β range. Full run: `output/figure/power_df_merged.csv`; Andropogoneae run:
+full β range. Full run: `output/figure/power_df_merged.csv` (707-tip tree; the full-set run has
+since moved to 687 tips, see §10, but power changes by ≤ 0.08 so this comparison stands);
+Andropogoneae run:
 `output/revisionAnalyses/powerSimulation/power_df_merged.csv` (176 rows each = 4 scenarios × 4
 convergence levels × 11 β).
 
@@ -673,6 +679,80 @@ The 17 original candidates are unchanged. The fix only adds OGs.
 - *Still to do:* update the manuscript text, figure legends and supplementary tables that cite
   17 candidates, or 6/1 for envPC2/envPC3. Any per-candidate discussion should also cover the
   10 restored OGs.
+
+---
+
+## 10. Full-set ASR and power simulation on the 687-taxon tree
+
+**Why.** The 20 trait-table taxa without gene data (the 21 listed at the top, minus the outgroup)
+were removed upstream for extensive premature stop codons, which are likely sequencing artifacts.
+Keeping them in the tree, the ASR and the power simulation meant defending 20 tips the models
+never use. The full-set basis is now the 686 modelled taxa plus the rooting outgroup ASM1935983v1
+(*Pharus latifolius*), i.e. the 687 assemblies in `data/Poaceae_metadata_highErrorFiltered_2025.10.08.tsv`.
+
+**Tree.** The tree is pruned, not rebuilt: `keep.tip()` on the rooted ASTRAL tree, then
+`multi2di()`. That gives the induced subtree of the 687 taxa. Pruning leaves the shared path
+length between any two remaining tips unchanged, so the existing
+`phyloK_728Poaceae_astral_20250407.txt` stays valid as is. Written by 06B to
+`output/powerSimulation/tree.nwk` (687 tips, binary, rooted). The 22 highlighted Fig 1A clades all
+survive pruning with unchanged membership apart from the dropped tips. Seven lose tips:
+Andropogoninae 146→145, Sorghinae 26→25, Chrysopogoninae 16→13, Cenchrinae 12→11,
+Eleusininae 12→10, Triticinae 27→26, Oryzinae 35→31. Eight species leave the data set entirely,
+so the 687 assemblies represent **561 species** (taxonomy CSV `Species`, same method as the 569
+for the 707).
+
+**ASR transitions** (06B, cutoffs at the 30th/70th percentiles of the 687 taxa;
+`output/powerSimulation/realTransition.json`). The cutoffs move by ≤ 0.02 from the 707 values,
+and using the 707 cutoffs instead changes totals by at most one.
+
+| envPC | 707 tips (toH / toL) | 687 tips (toH / toL) | 707 clades recovered in the 687 tree (Jaccard ≥ 0.5) |
+|---|---|---|---|
+| envPC1 | 27 / 19 (46) | 26 / 17 (**43**) | 42 of 46 |
+| envPC2 | 21 / 22 (43) | 20 / 23 (**43**) | 42 of 43 |
+| envPC3 | 27 / 30 (57) | 24 / 30 (**54**) | 54 of 57 |
+
+**Power simulation.** `src/powerSimulation_XY_revised.R` was run unchanged in method on the 687
+tree and the 43 envPC1 transitions. The four scenarios ran as separate jobs (`POWERSIM_SCENARIOS`;
+seeds identical to a single full run). Results are in
+`output/revisionAnalyses/powerSimulation_687/<scenario>/power_df_merged.csv`. The runs were done
+on 2026-10-07; logs are `log/powerSim687_*.log`. One bug was fixed in the process: the ½× random
+scenario now uses `round(n_trans × 0.5)` = 22 branches. With 43 transitions the unrounded 21.5
+would have made the node sampler draw every independent node it could find. The 707 run (23
+branches) was unaffected.
+
+Every point has 500 valid replicates. Type I error at θ = 0 is 0.046–0.058 for the empirical
+scenario and 0.022–0.064 across the random ones.
+
+θ needed for 80% power (linear interpolation), 687 tree (707 tree in brackets):
+
+| Scenario (branches) | 100% | 80% | 50% | 30% |
+|---|---|---|---|---|
+| Empirical (43) | 0.137 (0.138) | 0.176 (0.174) | 0.275 (0.276) | 0.471 (0.481) |
+| Random ½× (22) | 0.294 (0.288) | 0.371 (0.379) | not reached | not reached |
+| Random 1× (43) | 0.178 (0.172) | 0.232 (0.214) | 0.358 (0.347) | not reached |
+| Random 2× (86) | 0.127 (0.122) | 0.147 (0.146) | 0.248 (0.237) | 0.413 (0.404) |
+
+"Not reached" means power stays below 0.8 up to θ = 0.5. Point by point, power differs from the
+707 run by at most 0.06–0.08 in any scenario, within simulation noise at 500 replicates. **No
+conclusion of the power analysis changes.** At the empirical scenario's co-shift counts
+(43 / 34 / 22 / 13 branches at 100 / 80 / 50 / 30% convergence), the empirical scenario remains
+more powerful than random 1× at the same branch count.
+
+**Figures** (`output/revisionAnalyses/powerSimulation/`):
+- `Fig_powerSim_vertical_17.4cm.{png,pdf}`: new Fig 2B–C, a toy-tree illustration plus the
+  empirical power curve, drawn by `12M_powerSimIllustration.R` and `12M_powerCurve.R`.
+- `FigS_powerCurve_byScenario_17.4cm.{png,pdf}`: supplementary figure, with the four scenarios as
+  facets and convergence levels as lines. It replaces the convergence-faceted `Fig2_revised.png`.
+
+**Still on the 707-tip baseline.** These compare against the full-set ASR or power run and were
+not rerun:
+- #2, the Andropogoneae power comparison (the baseline differs by ≤ 0.08, see above);
+- #4, the one-tip-per-species ASR comparison;
+- #5b, transition loss per jackknife (46 envPC1 clades);
+- 12F, power vs transition count.
+
+Each is a direct rerun against the new tree if a fully consistent set is wanted. The ASR and
+transition numbers in Fig 1 and the main text should now use the 687 counts above.
 
 ---
 
